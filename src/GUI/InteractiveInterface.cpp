@@ -1,4 +1,5 @@
 #include "InteractiveInterface.hpp"
+#include <cstdint>	
 
 namespace gui
 {
@@ -16,7 +17,7 @@ InteractiveInterface::InteractiveInterface(sf::RenderWindow* window, unsigned in
 		SpriteWrapper::createTexture(std::string{ textureName }, std::move(writingCursorTexture), SpriteWrapper::Reserved::No);
 	}
 
-	addDynamicSprite(std::string{ writingCursorIdentifier }, textureName, { 0, 0 }, { 5.f, 25.f }, sf::IntRect{}, sf::degrees(0), Alignment::Left);
+	addDynamicSprite(std::string{ writingCursorIdentifier }, textureName, { 0, 0 }, { 5.f, 25.f }, sf::IntRect{}, sf::degrees(0), Alignment::Left | Alignment::Top);
 	getDynamicSprite(writingCursorIdentifier)->hide = true;
 }
 
@@ -27,7 +28,7 @@ InteractiveInterface::~InteractiveInterface() noexcept
 	m_writingTextIdentifier.clear();
 	m_writingFunction = nullptr;
 
-	if (s_hoveredItem.igui = this)
+	if (s_hoveredItem.igui == this)
 		s_hoveredItem = Item{};
 }
 
@@ -80,26 +81,29 @@ void InteractiveInterface::removeDynamicSprite(std::string_view identifier) noex
 		s_hoveredItem = Item{}; // Checks if the hovered sprite was not the removed sprite.
 }
  
-void InteractiveInterface::addInteractive(std::string_view identifier, ButtonFunction function, Button::When when) noexcept
+void InteractiveInterface::addInteractive(std::string_view identifier, ButtonFunction function) noexcept
 {
-	if (function == nullptr) [[unlikely]]
-		when = Button::When::none; // If no function is provided, the button will not be interactive.
-	else if (when == Button::When::none) [[unlikely]]
-		function = nullptr;
+	if (function == nullptr)
+		return;
 
-	const auto textIterator{ m_dynamicTexts.find(identifier) };
+	const auto textIterator	 { m_dynamicTexts.find(identifier)   };
 	const auto spriteIterator{ m_dynamicSprites.find(identifier) };
 
-	if (textIterator != m_dynamicTexts.end() && textIterator->second >= m_interactiveTextButtons.size())
-	{	// Checks if the text exists and is not already an interactable.
-		swapElement(textIterator->second, m_interactiveTextButtons.size(), m_texts, m_dynamicTexts, m_indexesForEachDynamicTexts);
-		m_interactiveTextButtons.push_back(Button{ ((spriteIterator == m_dynamicSprites.end()) ? std::move(function) : function), when });
-	}
+	// The check "textIterator->second >= m_interactiveTextButtons.size()" verifies if the text is not already an interactive one.
+	const bool newInteractiveText  { textIterator   != m_dynamicTexts.end()   && textIterator->second   >= m_interactiveTextButtons.size()	 };
+	const bool newInteractiveSprite{ spriteIterator != m_dynamicSprites.end() && spriteIterator->second >= m_interactiveSpriteButtons.size() };
 
-	if (spriteIterator != m_dynamicSprites.end() && spriteIterator->second >= m_interactiveSpriteButtons.size())
-	{	// Checks if the sprite exists and is not already an interactable.
+	if (newInteractiveText)
+	{	// Swapping the element with the element next to the other interactives to maintain good cache locality
+		swapElement(textIterator->second, m_interactiveTextButtons.size(), m_texts, m_dynamicTexts, m_indexesForEachDynamicTexts);
+		m_interactiveTextButtons.push_back((newInteractiveSprite) ? std::move(function) : function); // Do copy if we also need it for a sprite.
+	}	// push_back adds one to m_interactiveTextButtons.size()
+
+	// Same goes here
+	if (newInteractiveSprite)
+	{
 		swapElement(spriteIterator->second, m_interactiveSpriteButtons.size(), m_sprites, m_dynamicSprites, m_indexesForEachDynamicSprites);
-		m_interactiveSpriteButtons.push_back(Button{ std::move(function), when }); // Some compilers might trigger a false positive warning for use of a moved-from object. 
+		m_interactiveSpriteButtons.push_back(std::move(function)); // Some compilers might trigger a false positive warning for use of a moved-from object. 
 	}
 }
 
@@ -161,10 +165,6 @@ InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(BasicInterfa
 		if (!sprite.hide && sprite.getSprite().getGlobalBounds().contains(cursorPos))
 		{
 			s_hoveredItem = Item{ igui, igui->m_indexesForEachDynamicSprites.at(i)->first, Item::Type::Sprite, &igui->m_interactiveSpriteButtons[i] };
-
-			if (s_hoveredItem.m_button->when == InteractiveInterface::Button::When::hovered)
-				s_hoveredItem.m_button->function(igui);
-			
 			break; // A text might be on top of the sprite, so we need to check it too.
 		}
 	}
@@ -176,10 +176,6 @@ InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(BasicInterfa
 		if (!text.hide && text.getText().getGlobalBounds().contains(cursorPos))
 		{
 			s_hoveredItem = Item{ igui, igui->m_indexesForEachDynamicTexts.at(i)->first, Item::Type::Text, &igui->m_interactiveTextButtons[i]};
-
-			if (s_hoveredItem.m_button->when == InteractiveInterface::Button::When::hovered)
-				s_hoveredItem.m_button->function(igui);
-
 			break;
 		}
 	}
@@ -187,18 +183,14 @@ InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(BasicInterfa
 	return s_hoveredItem;
 }
 
-InteractiveInterface::Item InteractiveInterface::eventPressed(BasicInterface* activeGUI) noexcept
+void InteractiveInterface::eventPressed(BasicInterface* activeGUI) noexcept
 {
 	ENSURE_VALID_PTR(activeGUI, "The gui was nullptr when the function pressed was called in InteractiveInterface");
 
 	InteractiveInterface* const igui{ dynamic_cast<InteractiveInterface*>(activeGUI) };
 
-	if (igui != nullptr 
-	&&  igui == s_hoveredItem.igui // This checks also ensure there is a hovered item.
-	&&  s_hoveredItem.m_button->when == Button::When::pressed)
-		s_hoveredItem.m_button->function(igui);
-	 
-	return s_hoveredItem;
+	if (igui != nullptr && igui == s_hoveredItem.igui) 
+		(*s_hoveredItem.m_button)(igui);
 }
 
 void InteractiveInterface::textEntered(BasicInterface* activeGUI, char32_t character) noexcept
@@ -237,7 +229,7 @@ void InteractiveInterface::textEntered(BasicInterface* activeGUI, char32_t chara
 
 	SpriteWrapper* const cursor{ gui->getDynamicSprite(writingCursorIdentifier) };
 	sf::FloatRect rect{ writingText->getText().getGlobalBounds() };
-	cursor->setPosition(sf::Vector2f{ rect.position.x + rect.size.x, rect.position.y + rect.size.y / 2.f });
+	cursor->setPosition(sf::Vector2f{ rect.position.x + rect.size.x, rect.position.y});
 }
 
 } // gui namespace

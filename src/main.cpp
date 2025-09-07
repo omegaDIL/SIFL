@@ -51,7 +51,7 @@ int main()
 
 			if (event->is<sf::Event::MouseButtonPressed>())
 			{
-				IGUI::eventPressed(curInterface); // Is not necessary since no interactables have a pressed button.
+				IGUI::eventPressed(curInterface); // Is not necessary since no interactives have a pressed button.
 				auto* a = otherInterface.getMQB("myMQB");
 				for (auto elem : a->getChecked())
 				{

@@ -16,8 +16,7 @@
 #include <string>
 #include <string_view>
 #include <functional>
-#include <unordered_map>
-#include <cstdint>	
+#include <vector>
 
 namespace gui
 {
@@ -26,9 +25,9 @@ namespace gui
  * \brief  Manages an interface with changeable contents: texts and shapes.
  * 
  * Interactive elements are designed to respond to mouse hover events. When an element is hovered,
- * the `eventUpdateHovered` function returns a pointer to it. 
- * Buttons are a special type of interactive element with an attached function. This function can be
- * triggered when the button is hovered or pressed.
+ * the `eventUpdateHovered` function returns a pointer to it.
+ * Buttons are a special type of interactive element with an attached function. This function is
+ * triggered when the button is pressed.
  * For writing texts, you can access `exitWritingCharacter` which tells what character stops the 
  * writing (enter by default), or `emptinessWritingCharacters` which enters a string if the writing 
  * text is empty when the user exits it ("0" by default).
@@ -37,10 +36,15 @@ namespace gui
  *
  * \note This class stores UI componenents; it will use a considerable amount of memory.
  * \note Each mutable elements might consume a little more memory than their fixed counterparts.
+ *		 For Interactive elements, they are very memory efficient unless they have a button (see 
+ *		 `std::function`)
+ * \note Do not try to replicate the interactive feature: you WILL end up having very bad performances.
+ *		 The functions `eventUpdateHovered` and `addInteractives` are, on the other hand, more optimised
+ *		 for cache locality.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
  *			The progam will assert otherwise. 
  * 
- * \see `BasicInterface`.
+ * \see `MutableInterface`.
  */
 class InteractiveInterface : public MutableInterface
 {
@@ -50,31 +54,13 @@ public:
 	using WritableFunction = std::function<void(InteractiveInterface*, char32_t, std::string&)>;
 
 	/**
-	 * \brief Represents an interactive that has a function attached to it.
-	 */
-	struct Button
-	{
-		ButtonFunction function; // What function to execute
-
-		enum class When : std::uint8_t
-		{
-			hovered,
-			pressed,
-			none
-		} when; // When to execute the function
-
-		Button(ButtonFunction func = nullptr, When wh = When::none) noexcept
-			: function{ std::move(func) }, when{ wh } {}
-	};
-
-	/**
 	 * \brief Represents the interactive currently hovered.
 	 */
-	struct Item
+	class Item
 	{			
 	private:
 
-		Button* m_button; // The pointer to the interactive's button.
+		ButtonFunction* m_button; // The pointer to the interactive's button.
 
 	public:
 
@@ -88,7 +74,7 @@ public:
 			None
 		} type; // The type of the transformable; text or sprite.
 
-		Item(InteractiveInterface* iguiPtr, std::string id, Type tp, Button* button) noexcept
+		Item(InteractiveInterface* iguiPtr, std::string id, Type tp, ButtonFunction* button) noexcept
 			: igui{ iguiPtr }, identifier{ id }, type{ tp }, m_button{ button } {}
 
 		Item() noexcept 
@@ -119,12 +105,12 @@ public:
 	 *			  - If the window is larger, the scaling factor becomes greater than 1.0, making elements appear larger.
 	 *
 	 *			  For example, if `relativeScalingDefinition` is set to 1080:
-	 *			  - A window of size 1920x1080 (16/9) → factor = 1.0
-	 *			  - A window of size 540x960   (9/16) → factor = 0.5
-	 *			  - A window of size 3840x2160 (16/9) → factor = 2.0
-	 *			  - A window of size 7680x2160 (32/9) → factor = 2.0
+	 *			  - A window of size 1920x1080 (16/9) → factor = 1080/1080 = 1.0
+	 *			  - A window of size 540x960   (9/16) → factor = 1080/540  = 0.5
+	 *			  - A window of size 3840x2160 (16/9) → factor = 1080/2160 = 2.0
+	 *			  - A window of size 7680x2160 (32/9) → factor = 1080/2160 = 2.0
 	 *
-	 *			  If set to 0, no scaling is applied regardless of window size.
+	 *			  If set to 0, no scaling is applied regardless of the window size.
 	 *
 	 * \pre `window` must be a valid.
 	 * \warning The program will assert otherwise.
@@ -162,10 +148,13 @@ public:
 	/**
 	 * \brief Turns an existing transformable into an interactive element.
 	 * \complexity O(1)
+	 * 
+	 * Only interactive elements are checked by the eventUpdateHovered function. Those that are buttons
+	 * can then be executed.
 	 *
-	 * If both a sprite and a text share the same identifier, the interactive status
-	 * (and button behavior) is applied to both. They act as two independent buttons:
-	 * deleting one does not affect the other.
+	 * If both a sprite and a text share the same identifier, the interactive status (and button
+	 * behavior) is applied to both. But, they act as two independent buttons: deleting one does
+	 * not affect the other.
 	 *
 	 * If both transformables are already interactive, nothing happens. However, if
 	 * only one is interactive (e.g., because the other was added later), the status
@@ -176,16 +165,13 @@ public:
 	 *
 	 * \param[in] identifier The ID of the text to turn into a button.
 	 * \param[in] function   The function executed when the button is pressed.
-	 * \param[in] when		 When to execute the lambda above.
 	 *
 	 * \note Creating a button is not recommended for performance-critical code or for complex functions
 	 *		 requiring many arguments. Check for the return value of `eventUpdateHovered` instead.
-	 * \note If either the function is set to nullptr, or when to none, the interactive will not be
-	 *		 a button.
 	 * 
 	 * \warning May invalidate any pointers of any TransformableWrapper in this gui.
 	 */
-	void addInteractive(std::string_view identifier, ButtonFunction function = nullptr, Button::When when = Button::When::pressed) noexcept;
+	void addInteractive(std::string_view identifier, ButtonFunction function = nullptr) noexcept;
 
 	/**
 	 * \brief Sets the dynamic text that will be edited when the user types a character.
@@ -221,12 +207,10 @@ public:
 	/**
 	 * \brief Updates the hovered element when the mouse mouve, if the gui is interactive.	 
 	 * \complexity O(1), if the interactive element is the same as previously.
-	 * \complexity O(N), otherwise; where N is the number of interactable elements in your active interface.
+	 * \complexity O(N), otherwise; where N is the number of interactive elements in your active interface.
 	 * 
 	 * You may choose not to update the hovered element on every mouse move—for example,
 	 * only when the mouse button is not pressed as well.
-	 * If `when` is set to `hovered`, the element's associated function is executed
-	 * each time the hovered element changes.
 	 * Does not check elements that are hiden.
 	 *
 	 * \param[out] activeGUI: The current GUI. No effect if not interactive
@@ -246,10 +230,10 @@ public:
 	 *
 	 * \return The item that is currently hovered.
 	 *
-	 * \note You do not need to call this function if no buttons are executed when pressed.
+	 * \note You do not need to call this function if no buttons were added.
 	 * \warning Asserts if activeGUI is nullptr.
 	 */
-	static Item eventPressed(BasicInterface* activeGUI) noexcept;
+	static void eventPressed(BasicInterface* activeGUI) noexcept;
 
 	/**
 	 * \brief Enters a character into the writing text. Can remove last character if backspace is entered,
@@ -273,8 +257,8 @@ protected:
 
 private:
 
-	std::vector<Button> m_interactiveTextButtons; // Contains the buttons for texts
-	std::vector<Button> m_interactiveSpriteButtons; // Contains the buttons for texts
+	std::vector<ButtonFunction> m_interactiveTextButtons; // Contains the buttons for texts
+	std::vector<ButtonFunction> m_interactiveSpriteButtons; // Contains the buttons for texts
 
 	std::string m_writingTextIdentifier; // The identifier of the writing text. Empty otherwise.
 	WritableFunction m_writingFunction; // The writing function

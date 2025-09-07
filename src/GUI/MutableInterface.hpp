@@ -69,12 +69,12 @@ public:
 	 *			  - If the window is larger, the scaling factor becomes greater than 1.0, making elements appear larger.
 	 *
 	 *			  For example, if `relativeScalingDefinition` is set to 1080:
-	 *			  - A window of size 1920x1080 (16/9) → factor = 1.0
-	 *			  - A window of size 540x960   (9/16) → factor = 0.5
-	 *			  - A window of size 3840x2160 (16/9) → factor = 2.0
-	 *			  - A window of size 7680x2160 (32/9) → factor = 2.0
+	 *			  - A window of size 1920x1080 (16/9) → factor = 1080/1080 = 1.0
+	 *			  - A window of size 540x960   (9/16) → factor = 1080/540  = 0.5
+	 *			  - A window of size 3840x2160 (16/9) → factor = 1080/2160 = 2.0
+	 *			  - A window of size 7680x2160 (32/9) → factor = 1080/2160 = 2.0
 	 *
-	 *			  If set to 0, no scaling is applied regardless of window size.
+	 *			  If set to 0, no scaling is applied regardless of the window size.
 	 *
 	 * \pre `window` must be a valid.
 	 * \warning The program will assert otherwise.

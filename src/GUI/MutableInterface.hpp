@@ -203,7 +203,7 @@ public:
 	 *
 	 * \see `TextWrapper`.
 	 */
-	[[nodiscard]] TextWrapper* getDynamicText(const std::string_view identifier) noexcept;
+	[[nodiscard]] TextWrapper* getDynamicText(std::string_view identifier) noexcept;
 
 	/**
 	 * \brief Returns a sprite Wrapper ptr, or nullptr if it does not exist.

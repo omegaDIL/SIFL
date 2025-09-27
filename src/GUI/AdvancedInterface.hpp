@@ -1,4 +1,4 @@
-﻿/*******************************************************************
+﻿ /*******************************************************************
  * \file   AdvancedInterface.hpp, AdvancedInterface.cpp
  * \brief  Declare a gui with a slider, and multiple question boxes.
  *
@@ -11,160 +11,183 @@
 #ifndef ADVANCEDINTERFACE_HPP
 #define ADVANCEDINTERFACE_HPP
 
-#include "InteractiveInterface.hpp"
+#include "Interactiveinterface.hpp"
 #include <SFML/Graphics.hpp>
-#include <unordered_map>
-#include <unordered_set>
 #include <string>
 #include <functional>
-#include <unordered_set>
+#include <vector>
+#include <optional>
 
 namespace gui
 {
 
-class AdvancedInterface : public InteractiveInterface
-{
-public:
+using UserFunction = std::function<void(float)>;
+using GrowthSliderFunction = std::function<float(float x)>;
 
-	struct ItemType
-	{
-		inline static const uint8_t slider{ 3 };
-		inline static const uint8_t mqb{ 4 };
-	};
+/**
+ * \brief Adds a slider to the interactive gui. The user can move the slider up and down to change its value.
+ * \complexity O(1).
+ * 
+ * The slider consists of a background and cursor rectangles + a text displaying the current value.
+ * The interactive element is the background rectangle (that the user can click and drag the cursor on).
+ * 
+ * \param[out] gui The interactive gui to which the slider will be added.
+ * \param[in]  identifier The unique identifier for the slider.
+ * \param[in]  pos The position of the slider.
+ * \param[in]  length The length of the slider. Default is 300.
+ * 
+ * \note All elements are dynamic elements, so they need an identifier. The background rectangle And
+ *		 the text have the identifier you gave as argument, while the cursor rectangle has the identifier
+ *		 "_sb_" + identifier.
+ * \note Textures are added to SpriteWrapper with names "__sb" and "__sc".
+ * \note After creating the slider, you can use the function `moveSlider` to change its default value.
+ * 
+ * \pre The gui must be a valid ptr.
+ * \warning The program will assert otherwise.
+ * 
+ * \see moveSlider, hideSlider.
+ */
+void addSlider(InteractiveInterface* gui, std::string identifier, sf::Vector2f pos, unsigned int length = 300) noexcept;
 
-	using UserFunction = std::function<void(AdvancedInterface*, float)>;
-	using GrowthSliderFunction = std::function<float(float x)>;
+/**
+ * \brief Hides or shows the slider and its elements.
+ * \complexity O(1).
+ * 
+ * \param[out] gui The interactive gui containing the slider.
+ * \param[in]  identifier The unique identifier for the slider.
+ * \param[in]  hide If true, the slider is hidden. If false, it is shown. Default is true.
+ * 
+ * \pre The slider must exist in the gui.
+ * \post It will be hidden or shown.
+ * \throw std::invalid_argument Strong exception guarantee: nothing happens.
+ * 
+ * \pre The gui must be a valid ptr.
+ * \warning The program will assert otherwise.
+ */
+void hideSlider(InteractiveInterface* gui, const std::string& identifier, bool hide = true);
 
-
-
-	class Slider
-	{
-	public:
-
-		inline auto getCurrentValue() const noexcept { return m_curValue; }
-
-	private:
-
-		Slider(AdvancedInterface* agui, short internalIntervals = -1, UserFunction userFunction = nullptr, GrowthSliderFunction growthSliderFunction = nullptr) noexcept;
- 
-		void setCursor(float curPosY, SpriteWrapper& cursor, SpriteWrapper& background, TextWrapper* text) noexcept;
-
-		AdvancedInterface* m_agui;
-
-		float m_curValue;
-		short m_internalIntervals; // number of intervals, min and max excluded. If equal to -1, no intervals
-
-		UserFunction m_userFunction; // The function to call when the slider value is changed (e.g. to update the text displaying the current value).
-		GrowthSliderFunction m_growthSliderFunction; // The function to apply to the value of the slider when it is changed.
-
-	friend class AdvancedInterface;
-	};
-
-	class MultipleQuestionBoxes
-	{
-	public:
-
-		
-		[[nodiscard]] inline const std::unordered_set<unsigned short>& getChecked() const noexcept { return m_checked; };
-		MultipleQuestionBoxes() noexcept = default;
-
-	private:
-
-		MultipleQuestionBoxes(unsigned short numberOfBoxes, bool multipleChoices, bool atLeastOne, unsigned short defaultCheckedBox) noexcept;
-		MultipleQuestionBoxes(MultipleQuestionBoxes&&) noexcept = default;
-		MultipleQuestionBoxes(MultipleQuestionBoxes const&) noexcept = default;
-		MultipleQuestionBoxes& operator=(MultipleQuestionBoxes&&) noexcept = default;
-		MultipleQuestionBoxes& operator=(MultipleQuestionBoxes const&) noexcept = default;
-
-		void mqbPressed(unsigned short currentlyHovered) noexcept;
-
-		void reverseCurrentHovered(unsigned short currentlyHovered) noexcept;
-
-		unsigned short m_numberOfBoxes;
-		bool m_multipleChoices;
-		bool m_atLeastOne;
-
-		std::unordered_set<unsigned short> m_checked;
-
-	friend class AdvancedInterface;
-	};
-
-	//using MQB = MultipleQuestionBoxes;
-
-	/**
-	 * \brief Constructs the graphical interface.
-	 * \complexity O(1)
-	 *
-	 * \param[in,out] window A valid pointer to the SFML window where interface elements will be rendered.
-	 * \param[in] relativeScalingDefinition A scaling baseline to ensure consistent visual proportions across
-	 *			  various window sizes. Scales of `sf::Transformable` elements are adjusted based on the window size
-	 *			  relative to this reference value:
-	 *
-	 *			  - If the smallest dimension (width or height) of the window equals `relativeScalingDefinition`,
-	 *				no scaling is applied (scaling factor is 1.0).
-	 *			  - If the window is smaller, the scaling factor becomes less than 1.0, making elements appear smaller.
-	 *			  - If the window is larger, the scaling factor becomes greater than 1.0, making elements appear larger.
-	 *
-	 *			  For example, if `relativeScalingDefinition` is set to 1080:
-	 *			  - A window of size 1920x1080 (16/9) → factor = 1.0
-	 *			  - A window of size 540x960   (9/16) → factor = 0.5
-	 *			  - A window of size 3840x2160 (16/9) → factor = 2.0
-	 *			  - A window of size 7680x2160 (32/9) → factor = 2.0
-	 *
-	 *			  If set to 0, no scaling is applied regardless of window size.
-	 *
-	 * \pre `window` must be a valid.
-	 * \warning The program will assert otherwise.
-	 */
-	explicit AdvancedInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept;
-
-	AdvancedInterface() noexcept = delete;
-	AdvancedInterface(AdvancedInterface const&) noexcept = delete;
-	AdvancedInterface(AdvancedInterface&&) noexcept = default;
-	AdvancedInterface& operator=(AdvancedInterface const&) noexcept = delete;
-	AdvancedInterface& operator=(AdvancedInterface&&) noexcept = default;
-	virtual ~AdvancedInterface() noexcept = default;
+/**
+ * \brief Allows the user to move the slider up and down, changing its value.
+ * \complexity O(1).
+ * 
+ * \param[out] gui The interactive gui containing the slider.
+ * \param[in]  identifier The unique identifier for the slider.
+ * \param[in]  posY The new position of the cursor on the slider (the y coordinate).
+ * \param[in]  intervals The number of intervals to divide the slider into. Default is -1 (no intervals).
+ *						 The number of intervals is the number of steps between the min and max values.
+ *						 That means if you set it to 0, the slider will only have two values: min and max.
+ *						 Any negative value means no intervals.
+ * \param[in]  growth A function that takes a float between 0 and 1 (the relative position of the
+ *					  cursor on the slider) and returns a float (the value of the slider). Default
+ *					  is the mathematical function f(x) = x (linear growth).
+ * \param[in]  user A function that will be executed when the slider value is changed. It takes the
+ *					current value.
+ * 
+ * \note For user-friendliness, it is recommended to call this function as long as the mouse is pressed.
+ * 
+ * \pre The slider must exist in the gui.
+ * \post It will be changed.
+ * \throw std::invalid_argument Strong exception guarantee: nothing happens.	
+ *
+ * \pre The gui must be a valid ptr.
+ * \warning The program will assert otherwise.
+ */
+float moveSlider(InteractiveInterface* gui, const std::string& identifier, float yPos, int intervals = -1, const GrowthSliderFunction& growth = [](float x) {return x; }, const UserFunction& user = nullptr);
 
 
-	void addSlider(std::string identifier, sf::Vector2f pos, unsigned int size = 300, short intervals = -1, UserFunction userFunction = nullptr, GrowthSliderFunction growthSliderFunction = nullptr, bool showValueWithText = true) noexcept;
+/**
+ * \brief Adds a multiple question box to the interactive gui. The user can check or uncheck boxes.
+ * \complexity O(N), where N is the number of boxes.
+ * 
+ * \param[out] gui The interactive gui to which the multiple question box will be added.
+ * \param[in]  identifier The unique identifier for the multiple question box.
+ * \param[in]  posInit The position of the first box.
+ * \param[in]  posDelta The delta position between two boxes.
+ * \param[in]  numberOfBoxes The number of boxes in the multiple question box.
+ * \param[in]  defaultCheckedBox The index of the box that will be checked by default. Negative values
+ *								 means no box is checked by default. Default is -1.
+ * 
+ * \note Boxes are 0-indexed.
+ * \note All elements are dynamic elements, so they need an identifier. Each box has the identifier
+ *		"_mqb_identifier_i" where i is the index of the box (0 to numberOfBoxes - 1).
+ * \note Textures are added to SpriteWrapper with names "__ub" and "__cb".
+ * 
+ * \pre The gui must be a valid ptr.
+ * \pre numberOfBoxes must be greater than 0.
+ * \pre defaultCheckedBox must not be equal to or greater than numberOfBoxes.
+ * \warning The program will assert otherwise.
+ * 
+ * \see hideMQB, isMQB, checkBox.
+ */
+void addMQB(InteractiveInterface* gui, std::string identifier, sf::Vector2f posInit, sf::Vector2f posDelta, short numberOfBoxes, short defaultCheckedBox = -1) noexcept;
 
-	void removeSlider(const std::string& identifier) noexcept;
+/**
+ * \brief Hides or shows the multiple question box and its elements.
+ * \complexity O(N), where N is the number of boxes.
+ * 
+ * It hides all elements that have an identifier starting with "_mqb_identifier_i" until i grows
+ * larger than the number of boxes.	If one element were to be missing, it would stop there.
+ * 
+ * \param[out] gui The interactive gui containing the multiple question box.
+ * \param[in]  identifier The unique identifier for the multiple question box.
+ * \param[in]  hide If true, the slider is hidden. If false, it is shown. Default is true.
+ * 
+ * \pre The mqb must exist in the gui.
+ * \post It will be hidden or shown.
+ * \throw std::invalid_argument Strong exception guarantee: nothing happens.
+ * 
+ * \pre The gui must be a valid ptr.
+ * \warning The program will assert otherwise.
+ */
+void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide = true);
 
-	[[nodiscard]] const Slider* const getSlider(const std::string& identifier) const noexcept;
+using mqbInfo = std::pair<std::string, short>;
+/**
+ * \brief Returns the box identifier and the number of the mqb if identifier belongs to a mqb
+ * \complexity O(1) when this function returns std::nullopt.
+ * \complexity O(N) where N is the size of the identifier you gave.
+ * 
+ * \param[in] gui The interactive gui containing the multiple question box.
+ * \param[in] identifier The identifier of the sprite element you want to check.
+ * 
+ * \return The identifier and the box number, or nullopt if the element doesn't exist within the 
+ *		   gui/isn't a box
+ * 
+ * \pre The gui must be a valid ptr.
+ * \warning The program will assert otherwise.
+ */
+std::optional<mqbInfo> isMqb(InteractiveInterface* gui, std::string identifier) noexcept;
 
-	void addMQB(std::string identifier, sf::Vector2f posInit, sf::Vector2f posDelta, unsigned short numberOfBoxes, bool multipleChoices = true, bool atLeastOne = false, unsigned short defaultCheckedBox = 0) noexcept;
-
-	void removeMQB(const std::string& identifier) noexcept;
-
-	[[nodiscard]] MultipleQuestionBoxes* getMQB(const std::string& identifier) noexcept;
-
-
-	/**
-	 * \brief Tells the active GUI that the cursor is pressed.
-	 * \complexity O(1).
-	 *
-	 * \param[out] activeGUI: The GUI to update. No effect if not interactive
-	 *
-	 * \return The gui address + id + type of the element that is currently hovered.
-	 *
-	 * \warning Asserts if activeGUI is nullptr.
-	 */
-	static Item pressed(BasicInterface* activeGUI, sf::Vector2f cursorPos) noexcept;
-
-private:
-
-	std::unordered_map< std::string, Slider> m_sliders;
-	std::unordered_map< std::string, MultipleQuestionBoxes> m_mqbs;
-
-	static sf::Texture loadSolidRectange(sf::Vector2f scale, float outlineThickness) noexcept;
-	static sf::Texture loadCheckBoxTexture(sf::Vector2f scale, float outlineThickness) noexcept;
-
-	inline static const std::string sliderCursorPrefixeIdentifier{ "_sb_" };
-	inline static const std::string sliderTextPrefixeIdentifier{ "_sb_" };
-
-	inline static const std::string checkedMqbPrefixeIdentifier{ "_cb_" };
-	inline static const std::string uncheckedMqbPrefixeIdentifier{ "_ub_" };
-};
+/**
+ * \brief Change the state of the box at index 'check' in the multiple question box.
+ * \complexity O(N), where N is the number of boxes.
+ * 
+ * All boxes are retrieved through their identifiers: the same technique as in hideMQB.
+ * 
+ * This function is not particularly efficient, but it is not meant to be called multiple times
+ * per frame or even per second.
+ * 
+ * \param[out] gui The interactive gui containing the multiple question box.
+ * \param[in]  identifier The unique identifier for the multiple question box.
+ * \param[in]  check The index of the box to check or uncheck.
+ * \param[in]  multipleChoices If true, the user can check or uncheck multiple boxes. Default is true.
+ * \param[in]  atLeastOne If true, at least one box must always be checked. Default is false.
+ *
+ * \returns A vector containing the indexes of the currently checked boxes.
+ * 
+ * \note Boxes are 0-indexed.
+ *
+ * \pre The mqb must exist in the gui.
+ * \post It will be hidden or shown.
+ * \throw std::invalid_argument Strong exception guarantee: nothing happens.
+ * 
+ * \pre The gui must be a valid ptr.
+ * \pre The new check box index must be within range.
+ * \warning The program will assert otherwise.
+ * 
+ * \see isMqb
+ */
+std::vector<short> checkBox(InteractiveInterface* gui, mqbInfo mqb, bool multipleChoices = false, bool atLeastOne = true);
 
 } // gui namespace
 

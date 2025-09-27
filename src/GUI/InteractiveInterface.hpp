@@ -228,8 +228,6 @@ public:
 	 *
 	 * \param[out] activeGUI: The current GUI. No effect if not interactive
 	 *
-	 * \return The item that is currently hovered.
-	 *
 	 * \note You do not need to call this function if no buttons were added.
 	 * \warning Asserts if activeGUI is nullptr.
 	 */

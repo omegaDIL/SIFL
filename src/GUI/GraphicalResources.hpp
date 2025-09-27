@@ -354,7 +354,7 @@ public:
 		create(&m_wrappedText, pos, scale, rot, alignment);
 
 		if (!setFont(fontName))
-			throw std::invalid_argument{ "Preconditition violated; the font " + std::string{ fontName } + " was not found when the constructor of TextWrapper was called" };
+			throw std::invalid_argument{ "Precondition violated; the font " + std::string{ fontName } + " was not found when the constructor of TextWrapper was called" };
 
 		setColor(color);
 		setStyle(style);
@@ -393,7 +393,7 @@ public:
 	 *
 	 * \param[in] name The name of the font that'll be used.
 	 *
-	 * \return `true` if it was set, false `otherwise`.
+	 * \return `true` if it was set, `false` otherwise.
 	 *
 	 * \note This function is designed not to throw, to support scenarios where the user tries multiple
 	 *		 font until one is successfully found and set. This is useful when font loading may have failed
@@ -1022,7 +1022,7 @@ private:
  * 
  *		gui::SpriteWrapper::unloadTexture("hero run1080"); // using another thread is recommended.
  *		gui::SpriteWrapper::unloadTexture("hero attack1080");
- * }	// The same would go for smaller scaled textures to reduce memery usage
+ * }	// The same would go for smaller scaled textures to reduce memory usage
  * 
  * if (isRunning) // Running animation is played
  * {

@@ -20,8 +20,6 @@
 using BGUI = gui::BasicInterface;
 using MGUI = gui::MutableInterface;
 using IGUI = gui::InteractiveInterface; // Often enough for most apps
-using AGUI = gui::AdvancedInterface;
-
 
 #include <string>
 #include <sstream>
@@ -55,10 +53,8 @@ void populateGUI(IGUI* gui) noexcept;
 // interfaces to populate. Feel free.
 
 // TODO: id -> IDENTIFIER
-// TODO: find().second -> at() + faire des reserves pour les maps et les vectors afin d'eviter les reallocations de memoire.
 // TODO: _ + mqb + to_string -> _ + to_string + _ + mqb
 // TODO: mettre __ au lieu de _ lorsque l'utilisateur ne doit pas interagir avec l'élément (ex: __cursorEditing pour le curseur d'édition de texte)
-// TODO: ajouter aux lambdas un argument pour l'interface courante.
 // TODO: mettre des int a la place des unsigned int pour les MQB, car c le bordel de faire -1 et on aura jamais plus de 2 millards de boxes dans 1 mqb
 // TODO: rendre coherent le nommage des elements dynamiques -> __ + id quand ajoute par Interface && __nom__ quand ajoute par interface + sans id
 // TODO: permettre de decocher tous les mqb.

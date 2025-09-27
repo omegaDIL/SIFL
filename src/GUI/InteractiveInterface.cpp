@@ -83,9 +83,6 @@ void InteractiveInterface::removeDynamicSprite(std::string_view identifier) noex
  
 void InteractiveInterface::addInteractive(std::string_view identifier, ButtonFunction function) noexcept
 {
-	if (function == nullptr)
-		return;
-
 	const auto textIterator	 { m_dynamicTexts.find(identifier)   };
 	const auto spriteIterator{ m_dynamicSprites.find(identifier) };
 

@@ -25,6 +25,8 @@ void MutableInterface::addDynamicSprite(std::string identifier, sf::Texture text
 
 void MutableInterface::removeDynamicText(std::string_view identifier) noexcept
 {
+	assert(!m_lockState && "Precondition violated; the interface is locked when the function removeDynamicText of MutableInterface was called");
+
 	const auto mapIterator{ m_dynamicTexts.find(identifier) };
 
 	if (mapIterator == m_dynamicTexts.end())
@@ -39,6 +41,8 @@ void MutableInterface::removeDynamicText(std::string_view identifier) noexcept
 
 void MutableInterface::removeDynamicSprite(std::string_view identifier) noexcept
 {
+	assert(!m_lockState && "Precondition violated; the interface is locked when the function removeDynamicSprite of MutableInterface was called");
+
 	const auto mapIterator{ m_dynamicSprites.find(identifier) };
 
 	if (mapIterator == m_dynamicSprites.end())
@@ -69,6 +73,13 @@ SpriteWrapper* MutableInterface::getDynamicSprite(std::string_view identifier) n
 		return nullptr;
 
 	return &m_sprites[mapIterator->second];
+}
+
+void MutableInterface::lockInterface(bool shrinkToFit) noexcept
+{
+	BasicInterface::lockInterface(shrinkToFit);
+	m_indexesForEachDynamicTexts.clear(); // Used for removal in O(1), but useless when locked.
+	m_indexesForEachDynamicSprites.clear();
 }
 
 } // gui namespace

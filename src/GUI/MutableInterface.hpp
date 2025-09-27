@@ -25,6 +25,12 @@ namespace gui
 /**
  * \brief  Manages an interface with changeable contents: texts and shapes.
  *
+ * Once you have added all your elements, you can lock the interface to avoid futur modifications.
+ * No more elements can be added nor removed. The locking state also ensure stability for pointers, 
+ * hence you won't be able to use the move assignment operator. However, all pointers returned by
+ * getter functions will always remain valid. The lock state does not affect editing elements that
+ * are already added. Locking reduces memory usage a little bit.
+ *
  * \note This class stores UI components; it will use a considerable amount of memory.
  * \note Each mutable elements might consume a little more memory than their fixed counterparts.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
@@ -121,6 +127,10 @@ public:
 	 *		  or being the default font under the name __default.
 	 * \post  A font will be used.
 	 * \throw std::invalid_argument Strong exception guarantee: nothing happens.
+	 * 
+	 * \pre The interface must not be locked.
+	 * \post A new text is added to the interface.
+	 * \warning The program will assert otherwise.
 	 *
 	 * \see `addText`.
 	 */
@@ -158,6 +168,10 @@ public:
 	 * \pre `fileName` must refer to a valid texture file in the assets directory.
 	 * \post The texture is available for use via the alias `name`.
 	 * \throw invalid_argument Strong exception guarantee: nothing happens.
+	 * 
+	 * \pre The interface must not be locked.
+	 * \post A new sprite is added to the interface.
+	 * \warning The program will assert otherwise.
 	 *
 	 * \see `addSprite`.
 	 */
@@ -174,6 +188,10 @@ public:
 	 * \complexity O(1).
 	 *
 	 * \param[in] name: The identifier of the text.
+	 * 
+	 * \pre The interface must not be locked.
+	 * \post The text is removed from the interface.
+	 * \warning The program will assert otherwise.
 	 *
 	 * \see `removeDynamicSprite`.
 	 */
@@ -184,6 +202,10 @@ public:
 	 * \complexity O(1).
 	 *
 	 * \param[in] name: The identifier of the sprite.
+	 * 
+	 * \pre The interface must not be locked.
+	 * \post The sprite is removed from the interface.
+	 * \warning The program will assert otherwise.
 	 *
 	 * \see `removeDynamicText`.
 	 */
@@ -198,7 +220,7 @@ public:
 	 * \return The address of the text.
 	 * 
 	 * \warning The returned pointer is not guaranteed to be valid after ANY addition or removal of a
-	 *			dynamic text.
+	 *			dynamic text. Of course, if you enabled locking, it will remain valid.
 	 *
 	 * \see `TextWrapper`.
 	 */
@@ -213,11 +235,24 @@ public:
 	 * \return The address of the sprite.
 	 *
 	 * \warning The returned pointer is not guaranteed to be valid after ANY addition or removal of a
-	 *			dynamic sprite.
+	 *			dynamic sprite. Of course, if you enabled locking, it will remain valid.
 	 * 
 	 * \see `SpriteWrapper`.
 	 */
 	[[nodiscard]] SpriteWrapper* getDynamicSprite(std::string_view identifier) noexcept;
+
+	/**
+	 * \brief Prevents any addition of new elements to the interface.
+	 * \complexity O(1) if shrinkToFit is false
+	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
+	 * 
+	 * Allows for stability of pointers returned by getter functions. In addition to "shrinkToFit", 
+	 * it reduces memory usage a little bit more if they are a lot of dynamic elements in the interface.
+	 *
+	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
+	 *						  sprites to save memory. This may be costly if there are many elements.
+	 */
+	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
 
 protected:
 
@@ -243,24 +278,30 @@ protected:
 	 * \pre No index should be out of range.
 	 * \post Those indexes will be swapped accordingly
 	 * \warning Asserts if out of range.
+	 * 
+	 * \pre The interface must not be locked.
+	 * \post The elements are swapped.
+	 * \warning The program will assert otherwise.
 	 */
 	template<typename T> requires (std::same_as<T, TextWrapper> || std::same_as<T, SpriteWrapper>)
 	inline void swapElement(size_t index1, size_t index2, std::vector<T>& vector, MutableElementUmap& identifierMap, std::unordered_map<size_t, UmapMutablesIterator>& indexMap) noexcept
 	{
-		ENSURE_NOT_OUT_OF_RANGE(index1, vector.size(), "Precondition violated; the first  index to swap is out of range in the function swapElement of MutableInterface");
-		ENSURE_NOT_OUT_OF_RANGE(index2, vector.size(), "Precondition violated; the second index to swap is out of range in the function swapElement of MutableInterface");
+		ENSURE_NOT_OUT_OF_RANGE(index1, vector.size(), "Precondition violated; the first index to swap is out of range when the function swapElement of MutableInterface was called");
+		ENSURE_NOT_OUT_OF_RANGE(index2, vector.size(), "Precondition violated; the second index to swap is out of range when the function swapElement of MutableInterface was called");
+		assert(!m_lockState && "Precondition violated; the interface is locked when the function swapElement of MutableInterface was called");
 
 		if (index1 == index2) [[unlikely]]
 			return;
 
 		std::swap(vector[index1], vector[index2]);
 
+		// Update the maps.
 		const auto mapIteratorIndex1{ indexMap.find(index1) };
 		const auto mapIteratorIndex2{ indexMap.find(index2) };
 
 		if (mapIteratorIndex1 == indexMap.end()
 		&&  mapIteratorIndex2 == indexMap.end()) [[unlikely]]
-			return; // Not dynamic
+			return; // Not dynamic, therefore no need to update the maps.
 
 		if (mapIteratorIndex1 != indexMap.end()
 		&&  mapIteratorIndex2 != indexMap.end())
@@ -273,7 +314,7 @@ protected:
 
 		// When only one is dynamic.
 		const auto dynamicElementIterator{ (mapIteratorIndex1 != indexMap.end()) ? mapIteratorIndex1 : mapIteratorIndex2 };
-		dynamicElementIterator->second->second = +index2 +index1 -dynamicElementIterator->second->second; // Update the index of the dynamic element.
+		dynamicElementIterator->second->second = +index2 +index1 -dynamicElementIterator->second->second; // An index cancels out.
 		indexMap[dynamicElementIterator->second->second] = dynamicElementIterator->second;
 		indexMap.erase(dynamicElementIterator);
 	}

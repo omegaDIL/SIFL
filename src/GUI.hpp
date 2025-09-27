@@ -52,14 +52,6 @@ void populateGUI(IGUI* gui) noexcept;
 // You can change the gui type, add arguments, or add more
 // interfaces to populate. Feel free.
 
-// TODO: id -> IDENTIFIER
-// TODO: _ + mqb + to_string -> _ + to_string + _ + mqb
-// TODO: mettre __ au lieu de _ lorsque l'utilisateur ne doit pas interagir avec l'élément (ex: __cursorEditing pour le curseur d'édition de texte)
-// TODO: mettre des int a la place des unsigned int pour les MQB, car c le bordel de faire -1 et on aura jamais plus de 2 millards de boxes dans 1 mqb
-// TODO: rendre coherent le nommage des elements dynamiques -> __ + id quand ajoute par Interface && __nom__ quand ajoute par interface + sans id
-// TODO: permettre de decocher tous les mqb.
-// TODO: string_view
-
 // TODO: module C++20
 // TODO: changer hash
 #endif // GUI_HPP

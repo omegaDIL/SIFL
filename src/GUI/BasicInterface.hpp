@@ -18,9 +18,10 @@
 #include <string_view>
 #include <vector>
 #include <unordered_map>
-#include <cassert>
 
 #ifndef NDEBUG 
+#include <cassert>
+
 #define ENSURE_NOT_ZERO(value, message) \
 	assert((value) != (0) && (message))
 
@@ -28,7 +29,6 @@
 	ENSURE_VALID_PTR((window), (message)); \
 	ENSURE_NOT_ZERO((window->getSize().x), (message)); \
 	ENSURE_NOT_ZERO((window->getSize().y), (message))
-
 #else
 #define ENSURE_NOT_ZERO(value, message)
 #define ENSURE_SFML_WINDOW_VALIDITY(window, message)
@@ -40,6 +40,10 @@ namespace gui
 /**
  * \brief Manages items to create a basic GUI. You can display texts and sprites.
  * \details All elements are fixed and can't be edited nor removed.
+ * 
+ * Once you have added all your elements, you can lock the interface to avoid futur modifications.
+ * The locking state also ensure stability for pointers, hence you won't be able to use the move
+ * assignment operator. Locking can reduce memory usage a little bit if you shrink to fit.
  *
  * \note This class stores UI components; it will use a considerable amount of memory.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
@@ -105,11 +109,11 @@ public:
 	 */
 	explicit BasicInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept;
 
-	inline BasicInterface() noexcept : m_window{ nullptr }, m_texts{}, m_sprites{}, m_relativeScalingDefinition{ 1080 } {}
+	inline BasicInterface() noexcept : m_window{ nullptr }, m_texts{}, m_sprites{}, m_relativeScalingDefinition{ 1080 }, m_lockState{ false } {}
 	BasicInterface(const BasicInterface&) noexcept = delete;
-	BasicInterface(BasicInterface&& other) noexcept;
+	BasicInterface(BasicInterface&& other) noexcept; // Can still be used if the moved-from interface is locked (but lockState is inherited).
 	BasicInterface& operator=(const BasicInterface&) noexcept = delete;
-	BasicInterface& operator=(BasicInterface&& other) noexcept;
+	BasicInterface& operator=(BasicInterface&& other) noexcept; // Considered as deleted if the interface is locked -> assert.
 	virtual ~BasicInterface() noexcept; /// \complexity O(N) where N is the number of elements added
 
 
@@ -138,6 +142,10 @@ public:
 	 *		  or being the default font under the name __default. 
 	 * \post  A font will be used.
 	 * \throw std::invalid_argument Strong exception guarantee: nothing happens.
+	 * 
+	 * \pre The interface must not be locked.
+	 * \post A new text is added to the interface.
+	 * \warning The program will assert otherwise.
 	 *
 	 * \see `createFont`, `Ostreamable`.
 	 */
@@ -145,6 +153,7 @@ public:
 	inline void addText(const T& content, sf::Vector2f pos, unsigned int characterSize = 30u, sf::Color color = sf::Color::White, std::string_view fontName = s_defaultFontName, Alignment alignment = Alignment::Center, std::uint32_t style = 0, sf::Vector2f scale = sf::Vector2f{1, 1}, sf::Angle rot = sf::degrees(0))
 	{
 		ENSURE_SFML_WINDOW_VALIDITY(m_window, "The window is invalid in the function addText of BasicInterface");
+		assert((!m_lockState) && "Precondition violated; the interface is locked in the function addText of BasicInterface");
 
 		// Loads the default font.
 		static constexpr std::string_view defaultFontPath{ "defaultFont.ttf" };
@@ -171,10 +180,14 @@ public:
 	 * \param[in] rot: The rotation of the `sf::Sprite`.
 	 * \param[in] alignment: The alignment of the `sf::Sprite`.
 	 * \param[in] color: The color of the `sf::Sprite` that will be multiply by the texture color.
-	 *
+	 * 
 	 * \pre `fileName` must refer to a valid texture file in the assets directory.
 	 * \post The texture is available for use via the alias `name`.
 	 * \throw invalid_argument Strong exception guarantee: nothing happens.
+	 * 
+	 * \pre The interface must not be locked.
+	 * \post A new sprite is added to the interface.
+	 * \warning The program will assert otherwise.
 	 *
 	 * \see `createTexture`.
 	 */
@@ -193,6 +206,16 @@ public:
 	 * \see `sf::Drawable::draw()`.
 	 */
 	void draw() const noexcept;
+
+	/**
+	 * \brief Prevents any addition of new elements to the interface.
+	 * \complexity O(1) if shrinkToFit is false
+	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
+	 * 
+	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
+	 *						  sprites to save memory. This may be costly if there are many elements.
+	 */
+	virtual void lockInterface(bool shrinkToFit = true) noexcept;
 
 
 	/**
@@ -274,6 +297,8 @@ protected:
 	/// value. Otherwise the factor is adjusted to ensure same visual proportions across different window sizes. 
 	unsigned int m_relativeScalingDefinition;
 
+	/// If true, no more elements can be added to the interface.
+	bool m_lockState;
 
 	/// The name of the default font.
 	inline static constexpr std::string_view s_defaultFontName{ "__default" };

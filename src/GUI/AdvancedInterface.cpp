@@ -77,9 +77,9 @@ void hideSlider(InteractiveInterface* gui, const std::string& identifier, bool h
 {
 	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function hideSlider was called");
 
-	auto* backPtr  { gui->getDynamicSprite(identifier) };
-	auto* sliderPtr{ gui->getDynamicSprite(sliderIdPrefixe + identifier) };
-	auto* textPtr  { gui->getDynamicText(identifier) };
+	auto* const backPtr  { gui->getDynamicSprite(identifier) };
+	auto* const sliderPtr{ gui->getDynamicSprite(sliderIdPrefixe + identifier) };
+	auto* const textPtr  { gui->getDynamicText(identifier) };
 
 	if (backPtr == nullptr || sliderPtr == nullptr || textPtr == nullptr)
 		throw std::invalid_argument{ "The slider with the identifier " + identifier + " does not exist." };
@@ -93,9 +93,9 @@ float moveSlider(InteractiveInterface* gui, const std::string& identifier, float
 {
 	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function moveSlider was called");
 
-	auto* backgroundSlider{ gui->getDynamicSprite(identifier) };
-	auto* cursorSlider{ gui->getDynamicSprite(sliderIdPrefixe + identifier) };
-	auto* textSlider{ gui->getDynamicText(identifier) };
+	auto* const backgroundSlider{ gui->getDynamicSprite(identifier) };
+	auto* const cursorSlider{ gui->getDynamicSprite(sliderIdPrefixe + identifier) };
+	auto* const textSlider{ gui->getDynamicText(identifier) };
 
 	if (backgroundSlider == nullptr || cursorSlider == nullptr)
 		throw std::invalid_argument{ "The slider with the identifier " + identifier + " does not exist." };
@@ -142,10 +142,10 @@ void addMQB(InteractiveInterface* gui, std::string identifier, sf::Vector2f posI
 	}
 
 	sf::Vector2f curPos{ posInit.x - (boxSize.x / 2.f), posInit.y - (boxSize.y / 2.f) }; // The "boxSize / 2" counteracts the origin not being at the center of the sprite.
-	std::string identifierBox{ mqbIdPrefixe + std::move(identifier) + '_' };
+	const std::string identifierBox{ mqbIdPrefixe + std::move(identifier) + '_' };
 	for (unsigned int i{ 0 }; i < numberOfBoxes; ++i)
 	{
-		std::string identifierBoxTemp{ identifierBox + std::to_string(i) };
+		const std::string identifierBoxTemp{ identifierBox + std::to_string(i) };
 		gui->addDynamicSprite(identifierBoxTemp, uncheckedMqbTextureName, curPos, {1.f, 1.f}, sf::IntRect{}, sf::degrees(0), gui::Alignment::Top | gui::Alignment::Left);
 		gui->getDynamicSprite(identifierBoxTemp)->addTexture(checkedMqbTextureName);
 		gui->addInteractive(identifierBoxTemp);
@@ -161,7 +161,7 @@ void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide
 {
 	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function hideMQB was called");
 
-	std::string identifierBox{ mqbIdPrefixe + identifier + "_" };
+	const std::string identifierBox{ mqbIdPrefixe + identifier + "_" };
 
 	auto* mqb{ gui->getDynamicSprite(identifierBox + '0') };
 	if (mqb == nullptr)
@@ -179,11 +179,9 @@ void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide
 std::optional<mqbInfo> isMqb(InteractiveInterface* gui, std::string identifier) noexcept
 {
 	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function isMqb was called");
-
-	auto box{ gui->getDynamicSprite(identifier) };
 	
 	// Minimum size is 8: _mqb_a_1
-	if (box == nullptr || identifier.size() < 8 || !identifier.starts_with(mqbIdPrefixe)) 
+	if (gui->getDynamicSprite(identifier) == nullptr || identifier.size() < 8 || !identifier.starts_with(mqbIdPrefixe)) 
 		return std::nullopt;
 
 	std::string reverse{};
@@ -209,17 +207,17 @@ std::vector<short> checkBox(InteractiveInterface* gui, mqbInfo mqb, bool multipl
 	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function checkBox was called");
 	assert(!mqb.first.empty() && "The identifier of the mqb is empty in the function checkBox");
 
-	std::string& identifier{ mqb.first };
-	short check{ mqb.second };
+	std::string identifierBox{ mqbIdPrefixe + mqb.first + "_" };
+	auto* box{ gui->getDynamicSprite(identifierBox + '0') };
+
+	if (box == nullptr)
+		throw std::invalid_argument{ "The mqb with the identifier " + mqb.first + " does not exist." };
 
 	std::vector<SpriteWrapper*> boxes{};
 	std::vector<short> checkedBoxes{};
-
-	std::string identifierBox{ mqbIdPrefixe + identifier + "_" };
-	auto* box{ gui->getDynamicSprite(identifierBox + '0') };
-	if (box == nullptr)
-		throw std::invalid_argument{ "The mqb with the identifier " + identifier + " does not exist." };
+	const short check{ mqb.second };
 	unsigned int index{ 0 };
+
 	do
 	{
 		boxes.push_back(box);

@@ -92,7 +92,7 @@ void InteractiveInterface::addInteractive(std::string_view identifier, ButtonFun
 
 	if (newInteractiveText)
 	{	// Swapping the element with the element next to the other interactives to maintain good cache locality
-		swapElement(textIterator->second, m_interactiveTextButtons.size(), m_texts, m_dynamicTexts, m_indexesForEachDynamicTexts);
+		swapElement(textIterator->second, m_interactiveTextButtons.size(), m_texts, m_dynamicTexts, m_indexesForEachDynamicTexts); // Swapping asserts if locked
 		m_interactiveTextButtons.push_back((newInteractiveSprite) ? std::move(function) : function); // Do copy if we also need it for a sprite.
 	}	// push_back adds one to m_interactiveTextButtons.size()
 
@@ -155,6 +155,7 @@ InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(BasicInterfa
 	if (igui == nullptr)
 		return s_hoveredItem;
 
+	//FIX: when an interface is locked, line 165 crashed because m_indexesForEachDynamicSprites is empty (reduced memory usage).
 	const size_t m_endSpriteInteractives{ igui->m_interactiveSpriteButtons.size() };
 	for (size_t i{ 0 }; i < m_endSpriteInteractives; ++i)
 	{

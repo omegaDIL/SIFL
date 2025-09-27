@@ -5,16 +5,16 @@ namespace gui
 {
 
 BasicInterface::BasicInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition) noexcept
-	: m_window{ window }, m_texts{}, m_sprites{}, m_relativeScalingDefinition{ relativeScalingDefinition }
+	: m_window{ window }, m_texts{}, m_sprites{}, m_relativeScalingDefinition{ relativeScalingDefinition }, m_lockState{ false }
 {
-	ENSURE_SFML_WINDOW_VALIDITY(m_window, "Precondition violated; the window is invalid in the constructor of BasicInterface");
+	ENSURE_SFML_WINDOW_VALIDITY(m_window, "Precondition violated; the window is invalid when the constructor of BasicInterface was called");
 
 	// Add this interface to the collection.
 	s_allInterfaces.emplace(std::make_pair(window, this));
 } 
 
 BasicInterface::BasicInterface(BasicInterface&& other) noexcept
-	: m_window{ other.m_window }, m_texts{ std::move(other.m_texts) }, m_sprites{ std::move(other.m_sprites) }, m_relativeScalingDefinition{ other.m_relativeScalingDefinition }
+	: m_window{ other.m_window }, m_texts{ std::move(other.m_texts) }, m_sprites{ std::move(other.m_sprites) }, m_relativeScalingDefinition{ other.m_relativeScalingDefinition }, m_lockState{ other.m_lockState }
 {
 	const auto interfaceRange{ s_allInterfaces.equal_range(other.m_window) };
 	for (auto it{ interfaceRange.first }; it != interfaceRange.second; ++it)
@@ -34,6 +34,9 @@ BasicInterface::BasicInterface(BasicInterface&& other) noexcept
 
 BasicInterface& BasicInterface::operator=(BasicInterface&& other) noexcept
 {
+	assert((!other.m_lockState) && "Precondition violated; the moved-from interface is locked when the move assignment operator of BasicInterface was called");
+	assert((!m_lockState) && "Precondition violated; the current interface is locked when the move assignment operator of BasicInterface was called");
+
 	// If the two interfaces are associated with different windows,
 	// we need to update the global static collection s_allInterfaces accordingly.
 	if (other.m_window != m_window)
@@ -80,6 +83,7 @@ BasicInterface& BasicInterface::operator=(BasicInterface&& other) noexcept
 	std::swap(this->m_texts, other.m_texts);
 	std::swap(this->m_sprites, other.m_sprites);
 	std::swap(this->m_relativeScalingDefinition, other.m_relativeScalingDefinition);
+	// Both lock states are false;
 
 	return *this;
 }
@@ -103,7 +107,8 @@ BasicInterface::~BasicInterface() noexcept
 
 void BasicInterface::addSprite(std::string_view textureName, sf::Vector2f pos, sf::Vector2f scale, sf::IntRect rect, sf::Angle rot, Alignment alignment, sf::Color color)
 {
-	ENSURE_SFML_WINDOW_VALIDITY(m_window, "The window is invalid in the function addSprite of BasicInterface");
+	ENSURE_SFML_WINDOW_VALIDITY(m_window, "The window is invalid when the function addSprite of BasicInterface was called");
+	assert((!m_lockState) && "Precondition violated; the interface is locked when the function addSprite of BasicInterface was called");
 
 	float relativeScalingValue{ 1.f };
 	if (m_relativeScalingDefinition != 0)
@@ -132,7 +137,7 @@ void BasicInterface::addSprite(sf::Texture texture, sf::Vector2f pos, sf::Vector
 
 void BasicInterface::draw() const noexcept
 {
-	ENSURE_SFML_WINDOW_VALIDITY(m_window, "The window is invalid in the function draw of BasicInterface");
+	ENSURE_SFML_WINDOW_VALIDITY(m_window, "The window is invalid when the function draw of BasicInterface was called");
 
 	for (const auto& sprite : m_sprites)
 		if (!sprite.hide)
@@ -143,12 +148,23 @@ void BasicInterface::draw() const noexcept
 			m_window->draw(text.getText());
 }
 
+void BasicInterface::lockInterface(bool shrinkToFit) noexcept
+{
+	m_lockState = true;
+
+	if (shrinkToFit)
+	{
+		m_texts.shrink_to_fit();
+		m_sprites.shrink_to_fit();
+	}
+}
+
 void BasicInterface::proportionKeeper(sf::RenderWindow* resizedWindow, sf::Vector2f scaleFactor, float relativeMinAxisScale) noexcept
 {	
-	ENSURE_SFML_WINDOW_VALIDITY(resizedWindow, "Precondition violated; The window is invalid in the function proportionKeeper of BasicInterface");
-	ENSURE_NOT_ZERO(relativeMinAxisScale, "Precondition violated; relativeMinAxisScale is equal to 0 in proportionKeeper of BasicInterface");
-	ENSURE_NOT_ZERO(scaleFactor.x, "Precondition violated; scale factor is equal to 0 in the function proportionKeeper of BasicInterface");
-	ENSURE_NOT_ZERO(scaleFactor.y, "Precondition violated; scale factor is equal to 0 in the function proportionKeeper of BasicInterface");
+	ENSURE_SFML_WINDOW_VALIDITY(resizedWindow, "Precondition violated; The window is invalid when the function proportionKeeper of BasicInterface was called");
+	ENSURE_NOT_ZERO(relativeMinAxisScale, "Precondition violated; relativeMinAxisScale is equal to 0 when the function proportionKeeper of BasicInterface was called");
+	ENSURE_NOT_ZERO(scaleFactor.x, "Precondition violated; scale factor is equal to 0 when the function proportionKeeper of BasicInterface was called");
+	ENSURE_NOT_ZERO(scaleFactor.y, "Precondition violated; scale factor is equal to 0 when the function proportionKeeper of BasicInterface was called");
 
 	const sf::Vector2f minScaling2f{ relativeMinAxisScale, relativeMinAxisScale };
 

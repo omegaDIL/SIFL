@@ -12,13 +12,14 @@ int main()
 	BGUI* curInterface{ &mainInterface };
 
 
-	mainInterface.addDynamicSprite("azerty", "__plainGrey", { -100, -100 });
+	mainInterface.addDynamicSprite("azerty", "__plainGrey", { 600, 600 });
 
 	gui::addSlider(&mainInterface, "slider1", { 1460, 540 });
 
 	gui::addMQB(&mainInterface, "mqb1", { 500, 300 }, { 50, 0 }, 8, 0);
 
-	//gui::hideMQB(&mainInterface, "mqb1");
+	mainInterface.addInteractive("azerty");
+	mainInterface.lockInterface();
 
 	auto test{ gui::isMqb(&mainInterface, "_mqb_mqb1_5") };
 

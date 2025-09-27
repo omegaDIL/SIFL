@@ -31,6 +31,13 @@ namespace gui
  * For writing texts, you can access `exitWritingCharacter` which tells what character stops the 
  * writing (enter by default), or `emptinessWritingCharacters` which enters a string if the writing 
  * text is empty when the user exits it ("0" by default).
+ * 
+ * Once you have added all your elements, you can lock the interface to avoid futur modifications.
+ * No more elements can be added nor removed/turned into interactive elements. The locking state 
+ * also ensure stability for pointers, hence you won't be able to use the move assignment operator.
+ * However, all pointers returned by getter functions will always remain valid. The lock state does
+ * not affect editing elements that are already added. Locking reduces memory usage a little bit and
+ * speeds up interaction checks.
  *
  * A code example is provided at the end of the file.
  *
@@ -42,7 +49,6 @@ namespace gui
  *		 The functions `eventUpdateHovered` and `addInteractives` are, on the other hand, more optimized
  *		 for cache locality.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
- *			The program will assert otherwise. 
  * 
  * \see `MutableInterface`.
  */
@@ -130,6 +136,10 @@ public:
 	 * \complexity O(1).
 	 *
 	 * \param[in] name: The identifier of the text.
+	 * 
+	 * \pre The interface must not be locked.
+	 * \post The text is removed from the interface.
+	 * \warning The program will assert otherwise.
 	 *
 	 * \see `removeDynamicSprite`.
 	 */
@@ -141,6 +151,10 @@ public:
 	 *
 	 * \param[in] name: The identifier of the sprite.
 	 *
+	 * \pre The interface must not be locked.
+	 * \post The sprite is removed from the interface.
+	 * \warning The program will assert otherwise.
+	 * 
 	 * \see `removeDynamicText`.
 	 */
 	virtual void removeDynamicSprite(std::string_view identifier) noexcept override;
@@ -168,8 +182,11 @@ public:
 	 *
 	 * \note Creating a button is not recommended for performance-critical code or for complex functions
 	 *		 requiring many arguments. Check for the return value of `eventUpdateHovered` instead.
+	 * \note May invalidate any pointers of any TransformableWrapper in this gui.
 	 * 
-	 * \warning May invalidate any pointers of any TransformableWrapper in this gui.
+	 * \pre The interface must not be locked.
+	 * \post Elements will be turned into interactive ones.
+	 * \warning The program will assert otherwise.
 	 */
 	void addInteractive(std::string_view identifier, ButtonFunction function = nullptr) noexcept;
 

@@ -257,7 +257,7 @@ SpriteWrapper::SpriteWrapper(std::string_view textureName, sf::Vector2f pos, sf:
 	create(&m_wrappedSprite, pos, scale, rot, alignment);
 
 	if (!addTexture(textureName, rect))
-		throw std::invalid_argument{ "Preconditition violated; the texture " + std::string{ textureName } + " was not found when the constructor of SpriteWrapper was called" };
+		throw std::invalid_argument{ "Precondition violated; the texture " + std::string{ textureName } + " was not found when the constructor of SpriteWrapper was called" };
 	
 	switchToNextTexture(0);
 	setColor(color);
@@ -321,7 +321,7 @@ void SpriteWrapper::switchToNextTexture(long long indexOffset)
 	m_curTextureIndex = ((totalIndex % textureSize) + textureSize) % textureSize; // Correctly handle negative indices and wrap around.
 	
 	TextureInfo& textureInfo{ m_textures[m_curTextureIndex] };
-	ENSURE_VALID_PTR(textureInfo.texture, "A textureHolder within a TextureInfo was nullptr somehow when the switchToNextTexture funcion was called in SpriteWrapper");
+	ENSURE_VALID_PTR(textureInfo.texture, "A textureHolder within a TextureInfo was nullptr somehow when the switchToNextTexture function was called in SpriteWrapper");
 	std::unique_ptr<sf::Texture>& newTexture{ textureInfo.texture->actualTexture }; // From texture holder
 
 	if (newTexture == nullptr) [[unlikely]]

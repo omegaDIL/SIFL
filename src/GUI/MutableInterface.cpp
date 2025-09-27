@@ -9,7 +9,7 @@ void MutableInterface::addDynamicSprite(std::string identifier, std::string_view
 		return;
 
 	addSprite(textureName, pos, scale, rect, rot, alignment, color);
-	auto mapIterator{ m_dynamicSprites.insert(std::make_pair(std::move(identifier), m_sprites.size() - 1)).first };
+	auto mapIterator{ m_dynamicSprites.insert(std::make_pair(std::move(identifier), m_sprites.size() - 1)).first }; // Insert returns a pair, where the first element is an iterator to the inserted element.
 	m_indexesForEachDynamicSprites[m_sprites.size() - 1] = mapIterator;
 }
 
@@ -19,7 +19,7 @@ void MutableInterface::addDynamicSprite(std::string identifier, sf::Texture text
 		return;
 
   	addSprite(texture, pos, scale, rect, rot, alignment, color);
-	auto mapIterator{ m_dynamicSprites.insert(std::make_pair(std::move(identifier), m_sprites.size() - 1)).first };
+	auto mapIterator{ m_dynamicSprites.insert(std::make_pair(std::move(identifier), m_sprites.size() - 1)).first }; // Insert returns a pair, where the first element is an iterator to the inserted element.
 	m_indexesForEachDynamicSprites[m_sprites.size() - 1] = mapIterator;
 }
 
@@ -30,6 +30,7 @@ void MutableInterface::removeDynamicText(std::string_view identifier) noexcept
 	if (mapIterator == m_dynamicTexts.end())
 		return;
 
+	// Swapping the element with the last one to maintain O(1) complexity.
 	swapElement(mapIterator->second, m_texts.size()-1, m_texts, m_dynamicTexts, m_indexesForEachDynamicTexts); 
 	m_indexesForEachDynamicTexts.erase(m_texts.size() - 1);
 	m_dynamicTexts.erase(mapIterator); 
@@ -43,6 +44,7 @@ void MutableInterface::removeDynamicSprite(std::string_view identifier) noexcept
 	if (mapIterator == m_dynamicSprites.end())
 		return;
 
+	// Swapping the element with the last one to maintain O(1) complexity.
 	swapElement(m_sprites.size() - 1, mapIterator->second, m_sprites, m_dynamicSprites, m_indexesForEachDynamicSprites);
 	m_indexesForEachDynamicSprites.erase(m_sprites.size() - 1);
 	m_dynamicSprites.erase(mapIterator); 

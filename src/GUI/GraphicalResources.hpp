@@ -134,7 +134,7 @@ struct TransparentEqual
  *
  * \note While 2 bits provide 4 possible values, this enum only uses 3 per axis. As a result, one position
  *       per axis (Top and Left) uses the remaining binary pattern not shared with the others, and 
- *		 therefore are prefered if imcompatible alignment are set.
+ *		 therefore are preferred if incompatible alignments are set.
  *
  * \see `operator|`, `computeNewOrigin`
  */
@@ -786,7 +786,7 @@ public:
 
 	/**
 	 * \brief Tells whether or not a texture should be reserved to a specific instance.
-	 * `Yes` if you want the texture to be availabe for a single sprite, preventing
+	 * `Yes` if you want the texture to be available for a single sprite, preventing
 	 *  any other instances to use it.
 	 */
 	enum class Reserved : uint8_t { Yes, No };
@@ -797,7 +797,7 @@ public:
 	 * 
 	 * This function loads a texture from the specified file and stores it under the provided alias.
 	 * Textures are stored in a shared internal list to prevent reallocation and duplication.
-	 * If a textrue with the same name already exists, the function does nothing—allowing safe repeated 
+	 * If a texture with the same name already exists, the function does nothing—allowing safe repeated 
 	 * calls.
 	 *
 	 * \param[in] name The alias under which the texture will be stored.
@@ -824,7 +824,7 @@ public:
 	 *
 	 * This function loads a texture from the specified file and stores it under the provided alias.
 	 * Textures are stored in a shared internal list to prevent reallocation and duplication.
-	 * If a textrue with the same name already exists, the function does nothing—allowing safe repeated
+	 * If a texture with the same name already exists, the function does nothing—allowing safe repeated
 	 * calls.
 	 *
 	 * \param[in] name The alias under which the texture will be stored.

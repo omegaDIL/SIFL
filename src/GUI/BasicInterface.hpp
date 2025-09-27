@@ -41,9 +41,8 @@ namespace gui
  * \brief Manages items to create a basic GUI. You can display texts and sprites.
  * \details All elements are fixed and can't be edited nor removed.
  *
- * \note This class stores UI componenents; it will use a considerable amount of memory.
+ * \note This class stores UI components; it will use a considerable amount of memory.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
- *			The progam will assert otherwise.
  *
  * \see `sf::RenderWindow`, `TextWrapper`, `SpriteWrapper`.
  *
@@ -282,7 +281,7 @@ protected:
 private:
 
 	/**
-	 * \brief Modifies the window' interfaces drawables after resizement.
+	 * \brief Modifies the window' interfaces drawables after the resize.
 	 * \complexity O(N), where N is the number of graphical elements in all interfaces associated with
 	 *					 the resized window (if their 'relativeScalingDefinition's were not set to 0).
 	 * 
@@ -320,14 +319,14 @@ concept Drawable = std::derived_from<std::remove_cvref_t<T>, sf::Drawable>
  * \complexity O(N), where N is the number of drawables passed as arguments.
  *  
  * From the given drawables, the function creates a texture that visually represents what
- * they look like if drawn separatly, in order. The texture size covers the distance between
+ * they look like if drawn separately, in order. The texture size covers the distance between
  * the pixel at the leftmost/top edge of the leftmost/top drawable and the pixel at the
  * rightmost/bottom edge of the rightmost/bottom drawable, not beginning at (0;0). It accounts for
  * the drawables' transformables such as rotation, position...
  * 
  * \param[in] drawables: The drawables to create the texture from.
  *
- * \return Returns a texture created from the given drawables such as sprites, cricleShape, convexShape...
+ * \return Returns a texture created from the given drawables such as sprites, circleShape, convexShape...
  *
  * \note The drawables' origins are moved to 0;0, and their positions are adjusted; therefore the
  *       drawables passed as arguments are very likely going to be modified.

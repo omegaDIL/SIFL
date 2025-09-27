@@ -25,10 +25,9 @@ namespace gui
 /**
  * \brief  Manages an interface with changeable contents: texts and shapes.
  *
- * \note This class stores UI componenents; it will use a considerable amount of memory.
+ * \note This class stores UI components; it will use a considerable amount of memory.
  * \note Each mutable elements might consume a little more memory than their fixed counterparts.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
- *			The progam will assert otherwise. 
  * 
  * \see `BasicInterface`.
  *
@@ -37,14 +36,14 @@ namespace gui
  * sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3" };
  * MGUI myInterface{ &window, 1080 }; // Create the interface with the window and the relative scaling definition.
  *
- * myInterface.addDynamicText("welc", "Welcome to the GUI!", { 500, 200 }, 48, sf::Color{ 255, 255, 255 }, "__default", gui::Alignment::Center, sf::Text::Bold | sf::Text::Underlined);
+ * myInterface.addDynamicText("welcome", "Welcome to the GUI!", { 500, 200 }, 48, sf::Color{ 255, 255, 255 }, "__default", gui::Alignment::Center, sf::Text::Bold | sf::Text::Underlined);
  * myInterface.addDynamicText("tes", "test1", sf::Vector2f{ 500, 500 }, 32, sf::Color{ 255, 0, 255 }, "__default", gui::Alignment::Center, sf::Text::Italic | sf::Text::Underlined);
  *
  * sf::RectangleShape rect{ sf::Vector2f{ 200, 200 } };
  * myInterface.addDynamicSprite("icon", gui::createTextureFromDrawables(rect), {500, 500}, {1.f, 1.f}, sf::IntRect{}, sf::degrees(0), gui::Alignment::Center, sf::Color::White);
  *
  * // At some point, we access that text.
- * myInterface.getDynamicText("welc")->move({ 0, -100 });
+ * myInterface.getDynamicText("welcome")->move({ 0, -100 });
  *
  * // Here, we would want to remove a sprite.
  * myInterface.removeDynamicSprite("icon");
@@ -132,8 +131,8 @@ public:
 			return;
 
 		addText(content, pos, characterSize, color, fontName, alignment, style, scale, rot);
-		auto mapIterator{ m_dynamicTexts.insert(std::make_pair(std::move(identifier), m_texts.size() - 1)).first };
-		m_indexesForEachDynamicTexts[m_texts.size() - 1] = mapIterator; // Add the index to the vector of indexes for dynamic sprites.
+		auto mapIterator{ m_dynamicTexts.insert(std::make_pair(std::move(identifier), m_texts.size() - 1)).first }; // Insert returns a pair, where the first element is an iterator to the inserted element.
+		m_indexesForEachDynamicTexts[m_texts.size() - 1] = mapIterator;
 	}
 
 	/**
@@ -266,7 +265,7 @@ protected:
 		if (mapIteratorIndex1 != indexMap.end()
 		&&  mapIteratorIndex2 != indexMap.end())
 		{	// When both are dynamics
-			identifierMap[mapIteratorIndex2->second->first] = index1;
+			identifierMap[mapIteratorIndex2->second->first] = index1; // Swap their identifiers
 			identifierMap[mapIteratorIndex1->second->first] = index2;
 			std::swap(indexMap[index1], indexMap[index2]);
 			return;

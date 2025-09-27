@@ -34,15 +34,15 @@ namespace gui
  *
  * A code example is provided at the end of the file.
  *
- * \note This class stores UI componenents; it will use a considerable amount of memory.
+ * \note This class stores UI components; it will use a considerable amount of memory.
  * \note Each mutable elements might consume a little more memory than their fixed counterparts.
  *		 For Interactive elements, they are very memory efficient unless they have a button (see 
  *		 `std::function`)
  * \note Do not try to replicate the interactive feature: you WILL end up having very bad performances.
- *		 The functions `eventUpdateHovered` and `addInteractives` are, on the other hand, more optimised
+ *		 The functions `eventUpdateHovered` and `addInteractives` are, on the other hand, more optimized
  *		 for cache locality.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
- *			The progam will assert otherwise. 
+ *			The program will assert otherwise. 
  * 
  * \see `MutableInterface`.
  */
@@ -211,7 +211,7 @@ public:
 	 * 
 	 * You may choose not to update the hovered element on every mouse move—for example,
 	 * only when the mouse button is not pressed as well.
-	 * Does not check elements that are hiden.
+	 * Does not check elements that are hidden.
 	 *
 	 * \param[out] activeGUI: The current GUI. No effect if not interactive
 	 * \param[in]  cursorPos: The position of the cursor/touch event WITHIN the window's view.
@@ -316,7 +316,7 @@ private:
  *
  *	   // If you ignore this feature, you could delete the variable curItem entirely.
  *	   // However, this is less limited since you can use more arguments, watch for more events...
- *	   // Moreover, this is better for perfomance-critical functions because storing a function in a
+ *	   // Moreover, this is better for performance-critical functions because storing a function in a
  *	   // `std::function` impacts the fps.
  *	   if (curItem.igui == &otherInterface && curItem.identifier == "colorChanger")
  *	       otherInterface.getDynamicSprite("colorChanger")->rotate(sf::degrees(1));

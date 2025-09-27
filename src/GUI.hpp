@@ -44,7 +44,7 @@ void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstre
  * 
  * \param[out] gui: the graphical user inteface to initialize.
  * 
- * \warning Assert if gui is nulltpr
+ * \warning Assert if gui is nullptr
  */
 void populateGUI(IGUI* gui) noexcept; 
 

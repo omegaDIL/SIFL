@@ -24,14 +24,15 @@ namespace gui
 	
 /**
  * \brief  Manages an interface with changeable contents: texts and shapes.
- *
+ * 
  * Once you have added all your elements, you can lock the interface to avoid futur modifications.
- * No more elements can be added nor removed. The locking state also ensure stability for pointers, 
- * hence you won't be able to use the move assignment operator. However, all pointers returned by
- * getter functions will always remain valid. The lock state does not affect editing elements that
- * are already added. Locking reduces memory usage a little bit.
+ * Locking CAN reduce memory usage a little bit. The locking state also ensure stability for pointers,
+ * hence you won't be able to use the move functions. However, all pointers returned by getter functions
+ * will remain valid. The lock state does not affect editing elements that are already added.
+ * You may not be able to lock the interface if you often add and remove elements. You can try to
+ * hide them instead, but it is not always the best way. Sometimes removing elements can save memory.
  *
- * \note This class stores UI components; it will use a considerable amount of memory.
+ * \note This class stores UI components ; it will use a considerable amount of memory.
  * \note Each mutable elements might consume a little more memory than their fixed counterparts.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
  * 
@@ -90,10 +91,10 @@ public:
 
 	MutableInterface() noexcept = default;
 	MutableInterface(const MutableInterface&) noexcept = delete;
-	MutableInterface(MutableInterface&&) noexcept = default;
+	MutableInterface(MutableInterface&&) noexcept = default; // Asserts if the other interface is locked
 	MutableInterface& operator=(const MutableInterface&) noexcept = delete;
-	MutableInterface& operator=(MutableInterface&&) noexcept = default;
-	virtual ~MutableInterface() noexcept = default;
+	MutableInterface& operator=(MutableInterface&&) noexcept = default; // Asserts if any interface is locked
+	virtual ~MutableInterface() noexcept = default; /// \complexity O(N) where N is the number of reserved textures of all sprites
 
 
 	/**
@@ -245,12 +246,13 @@ public:
 	 * \brief Prevents any addition of new elements to the interface.
 	 * \complexity O(1) if shrinkToFit is false
 	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
-	 * 
-	 * Allows for stability of pointers returned by getter functions. In addition to "shrinkToFit", 
-	 * it reduces memory usage a little bit more if they are a lot of dynamic elements in the interface.
+	 *
+	 * Locking the interface can reduce memory usage if there are a lot of dynamic elements, and even
+	 * more if `shrinkToFit` is true. But be aware that `shrinkToFit` can be time consuming if you have
+	 * a lot of elements.
 	 *
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
-	 *						  sprites to save memory. This may be costly if there are many elements.
+	 *						  sprites.
 	 */
 	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
 

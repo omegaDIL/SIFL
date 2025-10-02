@@ -12,14 +12,18 @@ int main()
 	BGUI* curInterface{ &mainInterface };
 
 
-	mainInterface.addDynamicSprite("azerty", "__plainGrey", { 600, 600 });
+	mainInterface.addDynamicSprite("azerty", "__plainGrey", { 600, 600 }, {20, 20});
 
 	gui::addSlider(&mainInterface, "slider1", { 1460, 540 });
 
 	gui::addMQB(&mainInterface, "mqb1", { 500, 300 }, { 50, 0 }, 8, 0);
+	mainInterface.addInteractive("azerty", [](IGUI* a) {a->setWritingText("azerty"); });
 
-	mainInterface.addInteractive("azerty");
+	mainInterface.addDynamicText("azerty", "entry", { 500, 400 });
+	mainInterface.addInteractive("azerty", [](IGUI* a) {a->setWritingText("azerty"); });
 	mainInterface.lockInterface();
+
+	mainInterface.setWritingText("azerty");
 
 	auto test{ gui::isMqb(&mainInterface, "_mqb_mqb1_5") };
 
@@ -31,6 +35,15 @@ int main()
 			if (event->is<sf::Event::MouseMoved>() && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				curItem = IGUI::eventUpdateHovered(curInterface, window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position));
 
+			if (event->is<sf::Event::MouseButtonPressed>() && event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
+			{
+				IGUI::eventPressed(curInterface);
+
+				auto mqbTest{ gui::isMqb(&mainInterface, curItem.identifier) };
+				if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && mqbTest != std::nullopt)
+					gui::checkBox(&mainInterface, mqbTest.value(), false, false);
+			}
+
 			if (event->is<sf::Event::TextEntered>())
 				IGUI::textEntered(curInterface, event->getIf<sf::Event::TextEntered>()->unicode);
 
@@ -39,19 +52,12 @@ int main()
 
 			if (event->is<sf::Event::Closed>() || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
 				window.close();
-
-			if (event->is<sf::Event::MouseButtonPressed>() && event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
-			{
-				auto mqbTest{ gui::isMqb(&mainInterface, curItem.identifier) };
-				if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && mqbTest != std::nullopt)
-					gui::checkBox(&mainInterface, mqbTest.value(), false, false);
-			}
 		}
 
 		if (curItem.identifier == "slider1" && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 			gui::moveSlider(&mainInterface, "slider1", window.mapPixelToCoords(sf::Mouse::getPosition(window)).y);
 
-		window.clear(sf::Color{20, 20, 20});
+		window.clear(sf::Color{ 20, 20, 20 });
 		curInterface->draw();
 		window.display();
 	}

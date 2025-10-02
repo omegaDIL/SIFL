@@ -675,7 +675,7 @@ public:
 	 *
 	 * \note The function will load the next texture if it was not previously loaded. That being said,
 	 *		 if you want to avoid a sudden loss of fps (especially for large texture), consider load it
-	 *		 before
+	 *		 before. There is a branch miss prediction if not loaded before.
 	 * \note The previous texture is not unloaded.
 	 * 
 	 * \pre If loading, the file name should be a correct path to a texture within the assets folder.
@@ -972,7 +972,7 @@ private:
 	/// Contains all textures, whether they are used or not/loaded or not.
 	inline static std::list<TextureHolder> s_allTextures{};
 	/// Maps identifiers to textures for quick access.
-	inline static std::unordered_map < std::string, std::list<TextureHolder>::iterator, TransparentHash, TransparentEqual> s_accessToTextures{};
+	inline static std::unordered_map<std::string, std::list<TextureHolder>::iterator, TransparentHash, TransparentEqual> s_accessToTextures{};
 	/// Textures that can be used just once by a single instance.
 	inline static std::unordered_map<TextureHolder*, bool> s_allUniqueTextures{};
 

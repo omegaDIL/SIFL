@@ -89,7 +89,7 @@ void hideSlider(InteractiveInterface* gui, const std::string& identifier, bool h
 	textPtr->hide   = hide;
 }
 
-float moveSlider(InteractiveInterface* gui, const std::string& identifier, float yPos, int intervals, const GrowthSliderFunction& growth, const UserFunction& user)
+double moveSlider(InteractiveInterface* gui, const std::string& identifier, double yPos, int intervals, const GrowthSliderFunction& growth, const UserFunction& user)
 {
 	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function moveSlider was called");
 
@@ -100,8 +100,8 @@ float moveSlider(InteractiveInterface* gui, const std::string& identifier, float
 	if (backgroundSlider == nullptr || cursorSlider == nullptr)
 		throw std::invalid_argument{ "The slider with the identifier " + identifier + " does not exist." };
 
-	const float bias{ backgroundSlider->getSprite().getGlobalBounds().position.y };
-	const float length{ backgroundSlider->getSprite().getGlobalBounds().size.y };
+	const double bias{ backgroundSlider->getSprite().getGlobalBounds().position.y };
+	const double length{ backgroundSlider->getSprite().getGlobalBounds().size.y };
 	yPos = std::clamp(yPos, bias, bias + length) - bias;
 
 	if (intervals >= 0)
@@ -110,12 +110,12 @@ float moveSlider(InteractiveInterface* gui, const std::string& identifier, float
 		yPos = (length * round((yPos * intervals) / length)) / intervals; // Rounding to the nearest interval position.
 	}
 
-	const float value{ growth(1 - ((yPos) / length)) }; // Get the value of the slider.
+	const double value{ growth(1 - ((yPos) / length)) }; // Get the value of the slider.
 	
 	yPos += bias;
-	cursorSlider->setPosition(sf::Vector2f{ cursorSlider->getSprite().getPosition().x, yPos });
+	cursorSlider->setPosition(sf::Vector2f{ cursorSlider->getSprite().getPosition().x, static_cast<float>(yPos) });
 	textSlider->setContent(value);
-	textSlider->setPosition(sf::Vector2f{ textSlider->getText().getPosition().x, yPos }); // Aligning the text with the cursor.
+	textSlider->setPosition(sf::Vector2f{ textSlider->getText().getPosition().x, static_cast<float>(yPos) }); // Aligning the text with the cursor.
 
 	if (user != nullptr)
 		user(value); // Call the function associated with the slider.

@@ -14,7 +14,7 @@ void MutableInterface::addDynamicSprite(std::string identifier, std::string_view
 }
 
 void MutableInterface::addDynamicSprite(std::string identifier, sf::Texture texture, sf::Vector2f pos, sf::Vector2f scale, sf::IntRect rect, sf::Angle rot, Alignment alignment, sf::Color color) noexcept
-{
+{ 
 	if (m_dynamicSprites.find(identifier) != m_dynamicSprites.end())
 		return;
 

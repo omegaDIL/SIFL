@@ -30,18 +30,19 @@ namespace gui
  * triggered when the button is pressed.
  * For writing texts, you can access `exitWritingCharacter` which tells what character stops the 
  * writing (enter by default), or `emptinessWritingCharacters` which enters a string if the writing 
- * text is empty when the user exits it ("0" by default).
+ * text is empty when the user exits it (`"0"` by default).
  * 
  * Once you have added all your elements, you can lock the interface to avoid futur modifications.
- * No more elements can be added nor removed/turned into interactive elements. The locking state 
- * also ensure stability for pointers, hence you won't be able to use the move assignment operator.
- * However, all pointers returned by getter functions will always remain valid. The lock state does
- * not affect editing elements that are already added. Locking reduces memory usage a little bit and
- * speeds up interaction checks.
+ * Locking reduces time consumption of hover detection, and CAN reduce memory usage a little bit.
+ * The locking state also ensure stability for pointers, hence you won't be able to use the move
+ * functions. However, all pointers returned by getter functions will remain valid. The lock state
+ * does not affect editing elements that are already added. 
+ * You may not be able to lock the interface if you often add and remove elements. You can try to
+ * hide them instead, but it is not always the best way. Sometimes removing elements can save memory.
  *
  * A code example is provided at the end of the file.
  *
- * \note This class stores UI components; it will use a considerable amount of memory.
+ * \note This class stores UI components ; it will use a considerable amount of memory.
  * \note Each mutable elements might consume a little more memory than their fixed counterparts.
  *		 For Interactive elements, they are very memory efficient unless they have a button (see 
  *		 `std::function`)
@@ -62,37 +63,29 @@ public:
 	/**
 	 * \brief Represents the interactive currently hovered.
 	 */
-	class Item
+	struct Item
 	{			
-	private:
-
-		ButtonFunction* m_button; // The pointer to the interactive's button.
-
 	public:
 
 		InteractiveInterface* igui; // The gui that owns the interactive element.
 		std::string identifier; // The item that is hovered, either a text or a sprite.
-		
-		enum class Type : std::uint8_t
-		{
-			Text,
-			Sprite,
-			None
-		} type; // The type of the transformable; text or sprite.
+		// Watch out if the interface is not locked, this pointer might be invalidated at any time.
+		std::variant<std::monostate, TextWrapper*, SpriteWrapper*> ptr; // A pointer to the actual transformable.
 
-		Item(InteractiveInterface* iguiPtr, std::string id, Type tp, ButtonFunction* button) noexcept
-			: igui{ iguiPtr }, identifier{ id }, type{ tp }, m_button{ button } {}
+		Item(InteractiveInterface* iguiPtr, std::string id, SpriteWrapper* spritePtr) noexcept
+			: igui{ iguiPtr }, identifier{ id }, ptr{ spritePtr } {}
+
+		Item(InteractiveInterface* iguiPtr, std::string id, TextWrapper* textPtr) noexcept
+			: igui{ iguiPtr }, identifier{ id }, ptr{ textPtr } {}
 
 		Item() noexcept 
-			: igui{ nullptr }, identifier{ "" }, type{ Type::None }, m_button{ nullptr } {}
+			: igui{ nullptr }, identifier{ "" }, ptr{ std::monostate{} } {}
 
 		Item(const Item& item) noexcept = default;
 		Item(Item&& item) noexcept = default;
 		Item& operator=(const Item& item) noexcept = default;
 		Item& operator=(Item&& item) noexcept = default;
 		~Item() noexcept = default;
-
-	friend class InteractiveInterface;
 	};
 
 
@@ -162,9 +155,6 @@ public:
 	/**
 	 * \brief Turns an existing transformable into an interactive element.
 	 * \complexity O(1)
-	 * 
-	 * Only interactive elements are checked by the eventUpdateHovered function. Those that are buttons
-	 * can then be executed.
 	 *
 	 * If both a sprite and a text share the same identifier, the interactive status (and button
 	 * behavior) is applied to both. But, they act as two independent buttons: deleting one does
@@ -183,12 +173,14 @@ public:
 	 * \note Creating a button is not recommended for performance-critical code or for complex functions
 	 *		 requiring many arguments. Check for the return value of `eventUpdateHovered` instead.
 	 * \note May invalidate any pointers of any TransformableWrapper in this gui.
+	 * \note Interactives are drawn below non-interactive elements if they overlap. Use another layering
+	 *		 interface if needed.
 	 * 
 	 * \pre The interface must not be locked.
 	 * \post Elements will be turned into interactive ones.
 	 * \warning The program will assert otherwise.
 	 */
-	void addInteractive(std::string_view identifier, ButtonFunction function = nullptr) noexcept;
+	void addInteractive(std::string identifier, ButtonFunction function = nullptr) noexcept;
 
 	/**
 	 * \brief Sets the dynamic text that will be edited when the user types a character.
@@ -220,6 +212,24 @@ public:
 		return getDynamicText(m_writingTextIdentifier);
 	}
 
+	/**
+	 * \brief Prevents any addition of new elements to the interface.
+	 * \complexity O(1) if shrinkToFit is false
+	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
+	 *
+	 * Contrary to MutableInterface::lockInterface, memory can only be saved if shrinkToFit is true.
+	 * But be aware that `shrinkToFit` can be time consuming if you have a lot of elements. 
+	 * However, it does speed up interaction checks (even if shrinkToFit is false).
+	 * The stability of pointers is, of course, guaranteed as well.
+	 *
+	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
+	 *						  sprites.
+	 * 
+	 * \note Don't forget that it also applies to addInteractive() (but not to setWritingText() as the
+	 *		 element is already added).
+	 */
+	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
+
 
 	/**
 	 * \brief Updates the hovered element when the mouse mouve, if the gui is interactive.	 
@@ -229,13 +239,25 @@ public:
 	 * You may choose not to update the hovered element on every mouse move—for example,
 	 * only when the mouse button is not pressed as well.
 	 * Does not check elements that are hidden.
+	 * 
+	 * Texts are prioritized over sprites if they overlap. If two texts/sprites overlap, one will be
+	 * chosen (from the user perspective) in an undefined manner (but deterministic, therefore it will
+	 * always be the same one if the situation is the same).
 	 *
+	 * This function is cache-optimized.
+	 * 
 	 * \param[out] activeGUI: The current GUI. No effect if not interactive
 	 * \param[in]  cursorPos: The position of the cursor/touch event WITHIN the window's view.
 	 *
 	 * \return The item that is currently hovered.
 	 * 
 	 * \warning Asserts if activeGUI is nullptr.
+	 */
+	static Item eventUpdateHovered(InteractiveInterface* activeGUI, sf::Vector2f cursorPos) noexcept;
+
+	/**
+	 * \see Similar to `eventUpdateHovered`, but converts a BasicInterface to a interactive one.
+	 *		It is slightly less optimized due to the dynamic_cast, but more user-friendly.
 	 */
 	static Item eventUpdateHovered(BasicInterface* activeGUI, sf::Vector2f cursorPos) noexcept;
 
@@ -264,16 +286,18 @@ public:
 	static void textEntered(BasicInterface* activeGUI, char32_t character) noexcept;
 
 	inline static char32_t exitWritingCharacter{ 0x000D }; // Set by default on escape character
-	inline static std::string emptinessWritingCharacters{ "0" }; // Set by default on escape character
+	inline static std::string emptinessWritingCharacters{ "0" };
 
 protected:
 	 
 	inline static Item s_hoveredItem{}; // The current item that is hovered.
-
+ 
 private:
 
-	std::vector<ButtonFunction> m_interactiveTextButtons; // Contains the buttons for texts
-	std::vector<ButtonFunction> m_interactiveSpriteButtons; // Contains the buttons for texts
+	size_t m_nbOfButtonTexts; // The number of interactive texts.
+	size_t m_nbOfButtonSprites; // The number of interactive sprites.
+	using ButtonElement = std::pair<ButtonFunction, short>;
+	std::unordered_map<std::string, ButtonElement, TransparentHash, TransparentEqual> m_allButtons; // Contains all buttons.
 
 	std::string m_writingTextIdentifier; // The identifier of the writing text. Empty otherwise.
 	WritableFunction m_writingFunction; // The writing function

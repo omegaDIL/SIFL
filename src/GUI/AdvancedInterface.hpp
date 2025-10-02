@@ -21,8 +21,8 @@
 namespace gui
 {
 
-using UserFunction = std::function<void(float)>;
-using GrowthSliderFunction = std::function<float(float x)>;
+using UserFunction = std::function<void(double)>;
+using GrowthSliderFunction = std::function<double(double)>;
 
 /**
  * \brief Adds a slider to the interactive gui. The user can move the slider up and down to change its value.
@@ -92,7 +92,7 @@ void hideSlider(InteractiveInterface* gui, const std::string& identifier, bool h
  * \pre The gui must be a valid ptr.
  * \warning The program will assert otherwise.
  */
-float moveSlider(InteractiveInterface* gui, const std::string& identifier, float yPos, int intervals = -1, const GrowthSliderFunction& growth = [](float x) {return x; }, const UserFunction& user = nullptr);
+double moveSlider(InteractiveInterface* gui, const std::string& identifier, double yPos, int intervals = -1, const GrowthSliderFunction& growth = [](float x) {return x; }, const UserFunction& user = nullptr);
 
 
 /**

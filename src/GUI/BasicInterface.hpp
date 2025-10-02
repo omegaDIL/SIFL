@@ -42,10 +42,10 @@ namespace gui
  * \details All elements are fixed and can't be edited nor removed.
  * 
  * Once you have added all your elements, you can lock the interface to avoid futur modifications.
- * The locking state also ensure stability for pointers, hence you won't be able to use the move
- * assignment operator. Locking can reduce memory usage a little bit if you shrink to fit.
+ * Locking can reduce memory usage a little bit. The locking state also ensure stability for pointers,
+ * hence you won't be able to use the move functions. 
  *
- * \note This class stores UI components; it will use a considerable amount of memory.
+ * \note This class stores UI components ; it will use a considerable amount of memory.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
  *
  * \see `sf::RenderWindow`, `TextWrapper`, `SpriteWrapper`.
@@ -111,10 +111,10 @@ public:
 
 	inline BasicInterface() noexcept : m_window{ nullptr }, m_texts{}, m_sprites{}, m_relativeScalingDefinition{ 1080 }, m_lockState{ false } {}
 	BasicInterface(const BasicInterface&) noexcept = delete;
-	BasicInterface(BasicInterface&& other) noexcept; // Can still be used if the moved-from interface is locked (but lockState is inherited).
+	BasicInterface(BasicInterface&& other) noexcept; // Asserts if the other interface is locked
 	BasicInterface& operator=(const BasicInterface&) noexcept = delete;
-	BasicInterface& operator=(BasicInterface&& other) noexcept; // Considered as deleted if the interface is locked -> assert.
-	virtual ~BasicInterface() noexcept; /// \complexity O(N) where N is the number of elements added
+	BasicInterface& operator=(BasicInterface&& other) noexcept; // Asserts if any interface is locked
+	virtual ~BasicInterface() noexcept; /// \complexity O(N) where N is the number of reserved textures of all sprites
 
 
 	/**
@@ -203,6 +203,8 @@ public:
 	 * \brief Renders the interface. Texts are drawn above sprites.
 	 * \complexity O(N), where N is the number of graphical elements.
 	 * 
+	 * This function is cache-friendly.
+	 * 
 	 * \see `sf::Drawable::draw()`.
 	 */
 	void draw() const noexcept;
@@ -212,8 +214,11 @@ public:
 	 * \complexity O(1) if shrinkToFit is false
 	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
 	 * 
+	 * Locking the interface can reduce memory usage a little bit if `shrinkToFit` is true. But be aware
+	 * that it can be time consuming if you have a lot of elements.
+	 * 
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
-	 *						  sprites to save memory. This may be costly if there are many elements.
+	 *						  sprites.
 	 */
 	virtual void lockInterface(bool shrinkToFit = true) noexcept;
 

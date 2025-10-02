@@ -16,6 +16,8 @@ BasicInterface::BasicInterface(sf::RenderWindow* window, unsigned int relativeSc
 BasicInterface::BasicInterface(BasicInterface&& other) noexcept
 	: m_window{ other.m_window }, m_texts{ std::move(other.m_texts) }, m_sprites{ std::move(other.m_sprites) }, m_relativeScalingDefinition{ other.m_relativeScalingDefinition }, m_lockState{ other.m_lockState }
 {
+	assert((!other.m_lockState) && "Precondition violated; the moved-from interface is locked when the move constructor of BasicInterface was called");
+
 	const auto interfaceRange{ s_allInterfaces.equal_range(other.m_window) };
 	for (auto it{ interfaceRange.first }; it != interfaceRange.second; ++it)
 	{

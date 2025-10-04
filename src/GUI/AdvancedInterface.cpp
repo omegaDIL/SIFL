@@ -92,6 +92,7 @@ void hideSlider(InteractiveInterface* gui, const std::string& identifier, bool h
 double moveSlider(InteractiveInterface* gui, const std::string& identifier, double yPos, int intervals, const GrowthSliderFunction& growth, const UserFunction& user)
 {
 	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function moveSlider was called");
+	assert(growth != nullptr && "The growth function was nullptr when the function moveSlider was called");
 
 	auto* const backgroundSlider{ gui->getDynamicSprite(identifier) };
 	auto* const cursorSlider{ gui->getDynamicSprite(sliderIdPrefixe + identifier) };

@@ -377,8 +377,13 @@ void SpriteWrapper::createTexture(std::string name, std::string fileName, Reserv
 	s_allTextures.push_front(std::move(newTexture));
 	s_accessToTextures.insert(std::make_pair(std::move(name), s_allTextures.begin()));
 
+#ifndef NDEBUG
 	if (shared == Reserved::Yes)
 		s_allUniqueTextures[&*s_allTextures.begin()] = false;
+#else //NDEBUG
+	if (shared == Reserved::Yes)
+		s_allUniqueTextures.insert(&*s_allTextures.begin());
+#endif //NDEBUG
 }
 
 void SpriteWrapper::createTexture(std::string name, sf::Texture texture, Reserved shared) noexcept

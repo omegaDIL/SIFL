@@ -6,7 +6,6 @@
  * \date   July 2025.
  *
  * \note These files depend on the SFML library.
- * \note All assertions are disabled in release mode. If broken, undefined behavior will occur.
  *********************************************************************/
 
 #ifndef GRAPHICALRESOURCES_HPP
@@ -27,7 +26,6 @@
 #include <type_traits>
 
 #ifndef NDEBUG 
-
 #include <cassert>
 #include <algorithm>
 
@@ -38,6 +36,8 @@
 	assert(((index) >= 0 && static_cast<size_t>((index)) < static_cast<size_t>((size))) && (errorMessage))
 
 #else
+#include <unordered_set>
+
 #define ENSURE_VALID_PTR(ptr, errorMessage)
 #define ENSURE_NOT_OUT_OF_RANGE(index, size, errorMessage)
 #endif
@@ -715,7 +715,6 @@ public:
 	 * \complexity In debug mode, O(N) for claimed reserved textures where N is the number of reserved
 	 *			   textures claimed by this instance.
 	 * 
-	 * 
 	 * For each `sf::IntRect` provided, a pair of (`sf::Texture*`, `sf::IntRect`) is added to the internal
 	 * texture vector. This allows switching between different sub-regions (e.g., animation frames) or entirely
 	 * different textures using `switchToNextTexture`.
@@ -736,6 +735,7 @@ public:
 	 * \return `true` if the texture(s) were successfully added to the texture vector, `false` if the texture
 	 *         could not be found or used.
 	 *
+	 * \note In release mode, hte function does not check if a reserved texture was claimed.
 	 * \note Once added, the order and content of the texture vector cannot be modified.
 	 * \note This function is designed not to throw if the texture was not found, to support scenarios
 	 *		 where the user tries multiple textures names until one is successfully found and set. This is
@@ -754,8 +754,8 @@ public:
 		if (mapAccessIterator == s_accessToTextures.end()) [[unlikely]]
 			return false; // Texture not there.
 
-#ifndef NDEBUG
 		auto mapUniqueIterator{ s_allUniqueTextures.find(&*mapAccessIterator->second) };
+#ifndef NDEBUG
 		if (mapUniqueIterator != s_allUniqueTextures.end() // is reserved.
 		&&  mapUniqueIterator->second == true // has already been claimed by an instance...
 		&&  std::find(m_uniqueTextures.begin(), m_uniqueTextures.end(), name) == m_uniqueTextures.end()) [[unlikely]] // ...but not by this one.
@@ -765,11 +765,19 @@ public:
 		TextureHolder* texture{ &*mapAccessIterator->second };
 		(m_textures.push_back(TextureInfo{ texture, rects }), ...);
 
+#ifndef NDEBUG
 		if (mapUniqueIterator != s_allUniqueTextures.end() && mapUniqueIterator->second == false) // For reserved texture.
 		{
 			mapUniqueIterator->second = true;  // Mark it as true, meaning the reserve state was claimed.
 			m_uniqueTextures.push_back(std::string{ name });
 		}
+#else 
+		if (mapUniqueIterator != s_allUniqueTextures.end()) // For reserved texture.
+		{
+			m_uniqueTextures.push_back(std::string{ name });
+			s_allUniqueTextures.erase(mapUniqueIterator); // Frees memory, won't be checked in release mode.
+		}
+#endif // NDEBUG
 
 		return true;
 	}
@@ -973,8 +981,13 @@ private:
 	inline static std::list<TextureHolder> s_allTextures{};
 	/// Maps identifiers to textures for quick access.
 	inline static std::unordered_map<std::string, std::list<TextureHolder>::iterator, TransparentHash, TransparentEqual> s_accessToTextures{};
+#ifndef NDEBUG
 	/// Textures that can be used just once by a single instance.
 	inline static std::unordered_map<TextureHolder*, bool> s_allUniqueTextures{};
+#else // NDEBUG
+	/// Textures that can be used just once by a single instance.
+	inline static std::unordered_set<TextureHolder*> s_allUniqueTextures{};
+#endif // NDEBUG
 
 	/// A default texture that is used to initialize the `sf::Sprite` before setting its actual texture.
 	inline static const sf::Texture s_defaultTexture{}; 

@@ -148,15 +148,14 @@ InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(InteractiveI
 	ENSURE_VALID_PTR(igui, "The gui was nullptr when the function updateHovered was called in InteractiveInterface");
 
 	// Chances are that the hovered item is the same as previously between one frame and the other.
-	// Type is set to None if no item wa hovered, or if the gui was nullptr
 	if (s_hoveredItem.igui == igui && !std::holds_alternative<std::monostate>(s_hoveredItem.ptr))
 	{
 		bool holdText{ std::holds_alternative<TextWrapper*>(s_hoveredItem.ptr) }; // If false, it holds a SpriteWrapper*
 		if ((holdText &&  igui->m_lockState && std::get<TextWrapper*>(s_hoveredItem.ptr)->getText().getGlobalBounds().contains(cursorPos)) // Almost guaranteed to not have cache misses
-		||  (holdText && !igui->m_lockState && igui->getDynamicText(s_hoveredItem.identifier)->getText().getGlobalBounds().contains(cursorPos))
 		|| (!holdText &&  igui->m_lockState && std::get<SpriteWrapper*>(s_hoveredItem.ptr)->getSprite().getGlobalBounds().contains(cursorPos)) // Almost guaranteed to not have cache misses
+		||  (holdText && !igui->m_lockState && igui->getDynamicText(s_hoveredItem.identifier)->getText().getGlobalBounds().contains(cursorPos))
 		|| (!holdText && !igui->m_lockState && igui->getDynamicSprite(s_hoveredItem.identifier)->getSprite().getGlobalBounds().contains(cursorPos)))
-		return s_hoveredItem; // No need to check again if the hovered item is the same.
+		return s_hoveredItem;
 	}
 
 	s_hoveredItem = Item{};

@@ -15,6 +15,7 @@ int main()
 	mainInterface.addDynamicSprite("azerty", "__plainGrey", { 600, 600 }, {20, 20});
 
 	gui::addSlider(&mainInterface, "slider1", { 1460, 540 });
+	gui::addSlider(&mainInterface, "slider2", { 1460, 840 });
 
 	gui::addMQB(&mainInterface, "mqb1", { 500, 300 }, { 50, 0 }, 8, 0);
 	mainInterface.addInteractive("azerty", [](IGUI* a) {a->setWritingText("azerty"); });

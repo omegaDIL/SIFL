@@ -91,8 +91,12 @@ void hideSlider(InteractiveInterface* gui, const std::string& identifier, bool h
  *
  * \pre The gui must be a valid ptr.
  * \warning The program will assert otherwise.
+ * 
+ * \pre growth must not be a nullptr.
+ * \post The growth function will be applied.
+ * \warning The program will assert otherwise.
  */
-double moveSlider(InteractiveInterface* gui, const std::string& identifier, double yPos, int intervals = -1, const GrowthSliderFunction& growth = [](float x) {return x; }, const UserFunction& user = nullptr);
+double moveSlider(InteractiveInterface* gui, const std::string& identifier, double yPos, int intervals = -1, const GrowthSliderFunction& growth = [](double x) {return x; }, const UserFunction& user = nullptr);
 
 
 /**

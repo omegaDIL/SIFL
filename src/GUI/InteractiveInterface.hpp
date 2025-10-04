@@ -173,8 +173,7 @@ public:
 	 * \note Creating a button is not recommended for performance-critical code or for complex functions
 	 *		 requiring many arguments. Check for the return value of `eventUpdateHovered` instead.
 	 * \note May invalidate any pointers of any TransformableWrapper in this gui.
-	 * \note Interactives are drawn below non-interactive elements if they overlap. Use another layering
-	 *		 interface if needed.
+	 * \note Interactives are drawn below non-interactive elements if they overlap.
 	 * 
 	 * \pre The interface must not be locked.
 	 * \post Elements will be turned into interactive ones.

@@ -5,28 +5,9 @@
 namespace gui
 {
 
-InteractiveInterface::InteractiveInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition) noexcept
-	: MutableInterface{ window, relativeScalingDefinition }, m_nbOfButtonTexts{}, m_nbOfButtonSprites{}, m_allButtons{}, m_writingTextIdentifier{ "" }, m_writingFunction{ nullptr }
-{
-	static constexpr std::string_view textureName{ "__plainGrey" }; 
-	if (SpriteWrapper::getTexture(textureName) == nullptr) [[unlikely]]
-	{
-		sf::Image writingCursorImage{ sf::Vector2u{ 1u, 1u }, sf::Color{ 80, 80, 80 } };
-		sf::Texture writingCursorTexture{ std::move(writingCursorImage) };
-		writingCursorTexture.setRepeated(true);
-
-		SpriteWrapper::createTexture(std::string{ textureName }, std::move(writingCursorTexture), SpriteWrapper::Reserved::No);
-	}
-
-	addDynamicSprite(std::string{ writingCursorIdentifier }, textureName, { 0, 0 }, { 5.f, 25.f }, sf::IntRect{}, sf::degrees(0), Alignment::Left);
-	getDynamicSprite(writingCursorIdentifier)->hide = true;
-}
-
 InteractiveInterface::~InteractiveInterface() noexcept
 {
-	m_allButtons.clear(); 
-	m_writingTextIdentifier.clear();
-	m_writingFunction = nullptr;
+	m_allButtons.clear();
 
 	if (s_hoveredItem.igui == this)
 		s_hoveredItem = Item{};
@@ -41,9 +22,6 @@ void InteractiveInterface::removeDynamicText(std::string_view identifier) noexce
 
 	if (s_hoveredItem.igui == this && s_hoveredItem.identifier == identifier) [[unlikely]]
 		s_hoveredItem = Item{}; // Checks if the hovered text was not the removed text.
-
-	if (m_writingTextIdentifier == identifier) [[unlikely]]
-		setWritingText(""); // Checks if the writing text was not the removed text.
 
 	const size_t index{ mapIterator->second };
 
@@ -105,35 +83,6 @@ void InteractiveInterface::addInteractive(std::string identifier, ButtonFunction
 	
 	short elemsThatUseFunction{ static_cast<short>(doesSpriteExist) + static_cast<short>(doesTextExist) };
 	m_allButtons.insert_or_assign(std::move(identifier), std::make_pair(std::move(function), elemsThatUseFunction));
-}
-
-void InteractiveInterface::setWritingText(std::string_view identifier, WritableFunction function) noexcept
-{
-	auto* writingText{ getDynamicText(m_writingTextIdentifier) };
-	if (writingText != nullptr && writingText->getText().getGlobalBounds().size.x == 0)
-		writingText->setContent(emptinessWritingCharacters); // Ensure to avoid leaving the previous text empty and not clickable.
-	
-	SpriteWrapper* const cursor{ getDynamicSprite(writingCursorIdentifier) };
-
-	if (identifier == "")
-	{	// Disable writing
-		cursor->hide = true;
-		m_writingTextIdentifier = "";
-		m_writingFunction = nullptr;
-		return;
-	}
-
-	m_writingTextIdentifier = std::string{ identifier };
-	m_writingFunction = function;
-
-	writingText = getDynamicText(identifier);
-	ENSURE_VALID_PTR(writingText, "Precondition violated; The identifier was not found in the function setWritingText in InteractiveInterface");
-
-	const sf::FloatRect rect{ writingText->getText().getGlobalBounds() };
-	float YSizeOfCursor{ cursor->getSprite().getGlobalBounds().size.y };
-	cursor->scale(sf::Vector2f{ 1.f, rect.size.y / YSizeOfCursor });
-	cursor->setPosition(sf::Vector2f{ rect.position.x + rect.size.x, rect.position.y + rect.size.y*0.5f});
-	cursor->hide = false;
 }
 
 void InteractiveInterface::lockInterface(bool shrinkToFit) noexcept
@@ -208,45 +157,6 @@ void InteractiveInterface::eventPressed(BasicInterface* activeGUI) noexcept
 	ButtonFunction* const buttonFunction{ &iterator->second.first };
 	if (*buttonFunction != nullptr)
 		(*buttonFunction)(igui);
-}
-
-void InteractiveInterface::textEntered(BasicInterface* activeGUI, char32_t character) noexcept
-{
-	ENSURE_VALID_PTR(activeGUI, "The gui was nullptr when the function textEntered was called in InteractiveInterface");
-
-	InteractiveInterface* const gui{ dynamic_cast<InteractiveInterface*>(activeGUI) };
-
-	if (gui == nullptr || gui->m_writingTextIdentifier == "")
-		return;
-
-	if (character == gui->exitWritingCharacter)
-	{
-		gui->setWritingText("");
-		return;
-	}
-
-	auto* writingText{ gui->getDynamicText(gui->m_writingTextIdentifier) };
-	ENSURE_VALID_PTR(writingText, "The identifier for the writingText was not found in the function textEntered in InteractiveInterface");
-	std::string text{ writingText->getText().getString() };
-
-	static constexpr char32_t backspaceCharacter{ 0x0008 };
-	if (character == backspaceCharacter)
-	{
-		if(!text.empty())
-			text.pop_back();
-	}
-	else [[likely]]
-	{	
-		text.push_back(character);
-
-		if (gui->m_writingFunction != nullptr) // Call the writing function.
-			gui->m_writingFunction(gui, character, text);
-	}
-	writingText->setContent(text);
-
-	SpriteWrapper* const cursor{ gui->getDynamicSprite(writingCursorIdentifier) };
-	sf::FloatRect rect{ writingText->getText().getGlobalBounds() };
-	cursor->setPosition(sf::Vector2f{ rect.position.x + rect.size.x, rect.position.y + rect.size.y * 0.5f });
 }
 
 } // gui namespace

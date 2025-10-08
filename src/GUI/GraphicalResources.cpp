@@ -140,6 +140,18 @@ TextWrapper& TextWrapper::operator=(TextWrapper&& other) noexcept
 	return *this;
 }
 
+void TextWrapper::setContent(const std::ostringstream& content) noexcept
+{
+	m_wrappedText.setString(content.str());
+	m_wrappedText.setOrigin(computeNewOrigin(m_wrappedText.getLocalBounds(), m_alignment));
+}
+
+void TextWrapper::setContent(const sf::String& content) noexcept
+{
+	m_wrappedText.setString(content);
+	m_wrappedText.setOrigin(computeNewOrigin(m_wrappedText.getLocalBounds(), m_alignment));
+}
+
 bool TextWrapper::setFont(std::string_view name) noexcept
 {
 	sf::Font* font{ getFont(name) };

@@ -292,7 +292,7 @@ protected:
 		ENSURE_NOT_OUT_OF_RANGE(index2, vector.size(), "Precondition violated; the second index to swap is out of range when the function swapElement of MutableInterface was called");
 		assert(!m_lockState && "Precondition violated; the interface is locked when the function swapElement of MutableInterface was called");
 
-		if (index1 == index2) [[unlikely]]
+		if (index1 == index2)
 			return;
 
 		std::swap(vector[index1], vector[index2]);

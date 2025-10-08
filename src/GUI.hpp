@@ -15,11 +15,11 @@
 #include "GUI/BasicInterface.hpp"
 #include "GUI/MutableInterface.hpp"
 #include "GUI/InteractiveInterface.hpp"
-#include "GUI/AdvancedInterface.hpp"
+#include "GUI/CompoundElements.hpp"
 
 using BGUI = gui::BasicInterface;
 using MGUI = gui::MutableInterface;
-using IGUI = gui::InteractiveInterface; // Often enough for most apps
+using IGUI = gui::InteractiveInterface;
 
 #include <string>
 #include <sstream>

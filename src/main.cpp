@@ -11,24 +11,8 @@ int main()
 	IGUI mainInterface{ &window, 1080 };
 	BGUI* curInterface{ &mainInterface };
 
-
-	mainInterface.addDynamicSprite("azerty", "__plainGrey", { 600, 600 }, {20, 20});
-
-	gui::addSlider(&mainInterface, "slider1", { 1460, 540 });
-	gui::addSlider(&mainInterface, "slider2", { 1460, 840 });
-
-	gui::addMQB(&mainInterface, "mqb1", { 500, 300 }, { 50, 0 }, 8, 0);
-	mainInterface.addInteractive("azerty", [](IGUI* a) {a->setWritingText("azerty"); });
-
-	mainInterface.addDynamicText("azerty", "entry", { 500, 400 });
-	mainInterface.addInteractive("azerty", [](IGUI* a) {a->setWritingText("azerty"); });
-	mainInterface.lockInterface();
-
-	mainInterface.setWritingText("azerty");
-
-	auto test{ gui::isMqb(&mainInterface, "_mqb_mqb1_5") };
-
 	IGUI::Item curItem{};
+	gui::TextWrapper* text1{ nullptr };
 	while (window.isOpen())
 	{
 		while (const std::optional event = window.pollEvent())
@@ -39,24 +23,33 @@ int main()
 			if (event->is<sf::Event::MouseButtonPressed>() && event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
 			{
 				IGUI::eventPressed(curInterface);
-
-				auto mqbTest{ gui::isMqb(&mainInterface, curItem.identifier) };
-				if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && mqbTest != std::nullopt)
-					gui::checkBox(&mainInterface, mqbTest.value(), false, false);
+				if (auto info = gui::isMqb(curItem.identifier))
+				{
+					if (info->identifier == "boxes1")
+						gui::checkBox(&mainInterface, info.value(), true, false);
+					else // boxes2
+						gui::checkBox(&mainInterface, info.value(), false, false);
+				}
 			}
-
-			if (event->is<sf::Event::TextEntered>())
-				IGUI::textEntered(curInterface, event->getIf<sf::Event::TextEntered>()->unicode);
 
 			if (event->is<sf::Event::Resized>())
 				BGUI::windowResized(&window, windowSize);
 
-			if (event->is<sf::Event::Closed>() || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
+			if (text1 != nullptr && event->is<sf::Event::TextEntered>())
+				if (!gui::updateWritingText(text1, event->getIf<sf::Event::TextEntered>()->unicode, &func))
+					text1 = nullptr;
+
+			if (event->is<sf::Event::Closed>())
 				window.close();
 		}
 
-		if (curItem.identifier == "slider1" && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
-			gui::moveSlider(&mainInterface, "slider1", window.mapPixelToCoords(sf::Mouse::getPosition(window)).y);
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+		{
+			if (curItem.identifier == "slider1")
+				gui::moveSlider(&mainInterface, "slider1", window.mapPixelToCoords(sf::Mouse::getPosition(window)).y, 99);
+			else if (curItem.identifier == "slider2")
+				gui::moveSlider(&mainInterface, "slider2", window.mapPixelToCoords(sf::Mouse::getPosition(window)).y, -1);
+		}
 
 		window.clear(sf::Color{ 20, 20, 20 });
 		curInterface->draw();
@@ -65,3 +58,6 @@ int main()
 
 	return 0;
 }
+
+//TODO: replace code example of interactive
+//TODO: Make functions within GUI to help user

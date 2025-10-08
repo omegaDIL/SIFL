@@ -28,9 +28,6 @@ namespace gui
  * the `eventUpdateHovered` function returns a pointer to it.
  * Buttons are a special type of interactive element with an attached function. This function is
  * triggered when the button is pressed.
- * For writing texts, you can access `exitWritingCharacter` which tells what character stops the 
- * writing (enter by default), or `emptinessWritingCharacters` which enters a string if the writing 
- * text is empty when the user exits it (`"0"` by default).
  * 
  * Once you have added all your elements, you can lock the interface to avoid futur modifications.
  * Locking reduces time consumption of hover detection, and CAN reduce memory usage a little bit.
@@ -58,7 +55,6 @@ class InteractiveInterface : public MutableInterface
 public:  
 
 	using ButtonFunction = std::function<void(InteractiveInterface*)>;
-	using WritableFunction = std::function<void(InteractiveInterface*, char32_t, std::string&)>;
 
 	/**
 	 * \brief Represents the interactive currently hovered.
@@ -114,7 +110,9 @@ public:
 	 * \pre `window` must be a valid.
 	 * \warning The program will assert otherwise.
 	 */
-	explicit InteractiveInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept;
+	inline explicit InteractiveInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
+		: MutableInterface{ window, relativeScalingDefinition }, m_nbOfButtonTexts{}, m_nbOfButtonSprites{}, m_allButtons{}
+	{}
 
 	InteractiveInterface() noexcept = delete;
 	InteractiveInterface(const InteractiveInterface&) noexcept = delete;
@@ -182,36 +180,6 @@ public:
 	void addInteractive(std::string identifier, ButtonFunction function = nullptr) noexcept;
 
 	/**
-	 * \brief Sets the dynamic text that will be edited when the user types a character.
-	 * \complexity O(1).
-	 *
-	 * \param[in] identifier The identifier of the writable text to edit.
-	 * \param[in] function   Optional callback invoked after a character is entered
-	 *                       (not on deletion). The callback receives:
-	 *                       - A pointer to the current interface
-	 *                       - A reference to the full text
-	 *                       - The entered character as a char32_t
-	 *						 E.g. You can make a function that accepts numerical values only by using pop_back on the
-	 *						 text reference if it doesn't satisfy the condition.
-	 * 
-	 * \note Does not suit well for texts that are rotated. Consider resetting it to 0 degrees.
-	 *
-	 * \see `WritableFunction`.
-	 */
-	void setWritingText(std::string_view identifier, WritableFunction function = nullptr) noexcept;
-
-	/**
-	 * \brief Returns the text that is being written on.
-	 * \complexity O(1).
-	 *
-	 * \return a pointer to that text, or nullptr.
-	 */
-	[[nodiscard]] inline TextWrapper* getWritingText() noexcept
-	{
-		return getDynamicText(m_writingTextIdentifier);
-	}
-
-	/**
 	 * \brief Prevents any addition of new elements to the interface.
 	 * \complexity O(1) if shrinkToFit is false
 	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
@@ -271,22 +239,6 @@ public:
 	 */
 	static void eventPressed(BasicInterface* activeGUI) noexcept;
 
-	/**
-	 * \brief Enters a character into the writing text. Can remove last character if backspace is entered,
-	 *		  reset the writing text if the exit character is entered.
-	 * \complexity O(1).
-	 * 
-	 * \param[out] activeGUI: The current interface that might be interactive.
-	 * \param[in]  character: The unicode value of the character entered.
-	 * 
-	 * \note You do not need to call this function if no writing is performed.
-	 * \warning Asserts if activeGUI is nullptr.
-	 */
-	static void textEntered(BasicInterface* activeGUI, char32_t character) noexcept;
-
-	inline static char32_t exitWritingCharacter{ 0x000D }; // Set by default on escape character
-	inline static std::string emptinessWritingCharacters{ "0" };
-
 protected:
 	 
 	inline static Item s_hoveredItem{}; // The current item that is hovered.
@@ -297,11 +249,6 @@ private:
 	size_t m_nbOfButtonSprites; // The number of interactive sprites.
 	using ButtonElement = std::pair<ButtonFunction, short>;
 	std::unordered_map<std::string, ButtonElement, TransparentHash, TransparentEqual> m_allButtons; // Contains all buttons.
-
-	std::string m_writingTextIdentifier; // The identifier of the writing text. Empty otherwise.
-	WritableFunction m_writingFunction; // The writing function
-
-	inline static constexpr std::string_view writingCursorIdentifier{ "__wc" }; // The identifier of the writing cursor sprite
 };
 
 /**
@@ -311,7 +258,6 @@ private:
  * IGUI mainInterface{ &window, 1080 };
  * IGUI otherInterface{ &window, 1080 };
  * BGUI* curInterface{ &mainInterface };
- *
  *
  * mainInterface.addText("Hi!!\nWelcome to my GUI", sf::Vector2f{ 200, 150 }, 48, sf::Color{255, 255, 255}, "__default", gui::Alignment::Left);
  *
@@ -324,14 +270,12 @@ private:
  * mainInterface.addDynamicText("other", "switch", { 500, 800 });
  * mainInterface.addInteractive("other", [&otherInterface, &curInterface](IGUI*) mutable {curInterface = &otherInterface; });
  *
- *
  * sf::RectangleShape rect{ { 50, 50 } };
  * otherInterface.addDynamicSprite("colorChanger", gui::createTextureFromDrawables(rect), sf::Vector2f{500, 850});
  * otherInterface.addInteractive("colorChanger");
  *
  * otherInterface.addDynamicText("main", "switch", { 500, 500 });
  * otherInterface.addInteractive("main", [&mainInterface, &curInterface](IGUI*) mutable {curInterface = &mainInterface; });
- *
  *
  * IGUI::Item curItem{};
  * while (window.isOpen())
@@ -343,9 +287,6 @@ private:
  *
  *		   if (event->is<sf::Event::MouseButtonPressed>() && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
  *			   IGUI::eventPressed(curInterface); // If removed, would disable the pressed buttons
- *
- *		   if (event->is<sf::Event::TextEntered>())
- *			   IGUI::textEntered(curInterface, event->getIf<sf::Event::TextEntered>()->unicode);
  *
  *		   if (event->is<sf::Event::Resized>())
  *			   BGUI::windowResized(&window, windowSize);

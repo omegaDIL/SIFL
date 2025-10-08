@@ -324,6 +324,8 @@ private:
 	 *            For example, if the window was resized from (1000, 500) to (750, 1000),
 	 *            the scale factor is (0.75, 2), and the smallest axis ratio is 750 / 500 = 1.5.
 	 *            This helps to scale elements uniformly based on the smaller dimension.
+	 * 
+	 * \note Elements with scales 0 are not modified.
 	 *
 	 * \pre `resizedWindow` must be a valid window.
 	 * \pre `relativeMinAxisScale` must represent a valid proportion (not 0).

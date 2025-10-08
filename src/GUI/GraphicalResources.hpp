@@ -244,7 +244,7 @@ public:
 	 *
 	 * If the alignment is top/left, then the origin will be located at the top/left corner, which is
 	 * (0;0) in SFML. If the alignment is center/right, then the origin will be located at the
-	 * coordinate (size.x; size.y/2).
+	 * coordinate (size.x; size.y/2). And so on.
 	 *
 	 * \param[in] alignment The new alignment of the `sf::Transformable`.
 	 *
@@ -382,10 +382,18 @@ public:
 	{
 		std::ostringstream oss{}; // Convert the content to a string.
 		oss << content; // Assigning the content to the variable.
-
-		m_wrappedText.setString(oss.str());
-		m_wrappedText.setOrigin(computeNewOrigin(m_wrappedText.getLocalBounds(), m_alignment));
+		setContent(std::move(oss));
 	}
+
+	/**
+	 * \see setContent(const T& content).
+	 */
+	void setContent(const std::ostringstream& content) noexcept;
+
+	/**
+	 * \see setContent(const T& content).
+	 */
+	void setContent(const sf::String& content) noexcept;
 
 	/**
 	 * \brief Sets a new font for the text, only if the resource exists.
@@ -424,7 +432,7 @@ public:
 	 *
 	 * If the alignment is top/left, then the origin will be located at the top/left corner, which is
 	 * (0;0) in SFML. If the alignment is center/right, then the origin will be located at the
-	 * coordinate (size.x; size.y/2).
+	 * coordinate (size.x; size.y/2). And so on.
 	 *
 	 * \param[in] alignment The new alignment of the `sf::Transformable`.
 	 *
@@ -630,7 +638,7 @@ public:
 	 *
 	 * If the alignment is top/left, then the origin will be located at the top/left corner, which is
 	 * (0;0) in SFML. If the alignment is center/right, then the origin will be located at the
-	 * coordinate (size.x; size.y/2).
+	 * coordinate (size.x; size.y/2). And so on.
 	 *
 	 * \param[in] alignment The new alignment of the `sf::Transformable`.
 	 *

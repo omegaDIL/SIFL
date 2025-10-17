@@ -6,6 +6,7 @@
  * \date   July 2024.
  *
  * \note This file depends on the SFML library.
+ * \note A code example is provided at the end.
  *********************************************************************/
 
 #ifndef GUI_HPP
@@ -16,17 +17,16 @@
 #include "GUI/MutableInterface.hpp"
 #include "GUI/InteractiveInterface.hpp"
 #include "GUI/CompoundElements.hpp"
+#include <string>
+#include <sstream>
 
 using BGUI = gui::BasicInterface;
 using MGUI = gui::MutableInterface;
 using IGUI = gui::InteractiveInterface;
 
-#include <string>
-#include <sstream>
-
 /**
  * @brief Creates a new instance of a window to display an error message.
- * @complexity constant O(1).
+ * @complexity Depends on the user who stops the window.
  *
  * @param[in] errorTitle: The title of the window.
  * @param[in] errorMessage: The message to be displayed.
@@ -39,19 +39,48 @@ using IGUI = gui::InteractiveInterface;
  */
 void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstream& errorMessage) noexcept;
 
-/**
- * \brief Initializes the interface
- * 
- * \param[out] gui: the graphical user inteface to initialize.
- * 
- * \warning Assert if gui is nullptr
- */
-void populateGUI(IGUI* gui) noexcept; 
+struct currentGUI
+{
+	// "Default" constructors
+	inline currentGUI() noexcept : gInteractive{ nullptr }, gMutable{ nullptr }, gBasic{ nullptr }, item{}
+	{ IGUI::resetHovered(); }
+	inline currentGUI(std::nullptr_t) noexcept : currentGUI{} {}
 
-// TODO: complete the function `populateGUI` your own way.
-// You can change the gui type, add arguments, or add more
-// interfaces to populate. Feel free.
+	// Rule of five
+	currentGUI(const currentGUI&) noexcept = default;
+	currentGUI(currentGUI&&) noexcept = delete;
+	currentGUI& operator=(const currentGUI&) noexcept = default;
+	currentGUI& operator=(currentGUI&&) noexcept = delete;
+	~currentGUI() noexcept = default; 
+
+	// Assignment operator -> sets to nullptr derived classes
+	currentGUI& operator=(std::nullptr_t) noexcept;
+	currentGUI& operator=(BGUI* ptr) noexcept;
+	currentGUI& operator=(MGUI* ptr) noexcept;
+	currentGUI& operator=(IGUI* ptr) noexcept;
+
+	// Conversion functions -> returns nullptr if the conversion is not possible
+	operator BGUI*() noexcept { return gBasic;	     }
+	operator MGUI*() noexcept { return gMutable;	 }
+	operator IGUI*() noexcept { return gInteractive; }
+
+	// Can be used like an interface ptr
+	BGUI* operator->() noexcept { return gBasic; }
+
+
+	BGUI* gBasic;
+	MGUI* gMutable;
+	IGUI* gInteractive;
+	IGUI::Item item;
+};
+
+//TODO: Complete you own populateGUI function
+// The current impl is an example (see \code)
+void populateGUI(currentGUI& cur, std::string& writing, IGUI* main, IGUI* other) noexcept;
 
 // TODO: module C++20
 // TODO: changer hash
+// TODO: swap not working -> may invalidate other functions
+// TODO: add all examples
+// TODO: review mqb
 #endif // GUI_HPP

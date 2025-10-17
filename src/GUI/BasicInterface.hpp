@@ -18,6 +18,7 @@
 #include <string_view>
 #include <vector>
 #include <unordered_map>
+#include <algorithm>
 
 #ifndef NDEBUG 
 #include <cassert>
@@ -105,6 +106,7 @@ public:
 	 *			  If set to 0, no scaling is applied regardless of the window size.
 	 *
 	 * \pre `window` must be a valid.
+	 * \post An interface is constructed.
 	 * \warning The program will assert otherwise.
 	 */
 	explicit BasicInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept;
@@ -114,7 +116,7 @@ public:
 	BasicInterface(BasicInterface&& other) noexcept; // Asserts if the other interface is locked
 	BasicInterface& operator=(const BasicInterface&) noexcept = delete;
 	BasicInterface& operator=(BasicInterface&& other) noexcept; // Asserts if any interface is locked
-	virtual ~BasicInterface() noexcept; /// \complexity O(N) where N is the number of reserved textures of all sprites
+	virtual ~BasicInterface() noexcept; /// \complexity O(N + M) where N is the number of reserved textures of all sprites and M is number of interfaces with the same window
 
 
 	/**
@@ -249,6 +251,7 @@ public:
 	 *
 	 * \pre `resizedWindow` must be a valid window.
 	 * \pre `previousSize` must represent a valid size.
+	 * \post The interfaces/views will be resized.
 	 * \warning The program will assert otherwise.
 	 */
 	template<typename... Ts> requires (std::same_as<Ts, sf::View*> && ...)
@@ -261,19 +264,12 @@ public:
 		const sf::Vector2u maxSize{ sf::VideoMode::getDesktopMode().size };
 		sf::Vector2u newSize{ resizedWindow->getSize() };
 
-		if (newSize.x < 480) // Not larger than the current window
-			newSize.x = 480;
-		if (newSize.y < 480)
-			newSize.y = 480;
-
-		if (newSize.x > maxSize.x) // Not larger than the current window
-			newSize.x = maxSize.x;
-		if (newSize.y > maxSize.y)
-			newSize.y = maxSize.y;
+		newSize.x = std::clamp(newSize.x, 480u, maxSize.x); // Not larger than the current window
+		newSize.y = std::clamp(newSize.y, 480u, maxSize.y); // And bigger than 480
 		
 		// Updates current view and the others.
 		const sf::Vector2f scaleFactor{ newSize.x / static_cast<float>(previousSize.x), newSize.y / static_cast<float>(previousSize.y) };
-		sf::View view{ resizedWindow->getView() };
+		sf::View view{ resizedWindow->getView() }; 
 		view.setSize(sf::Vector2f{ view.getSize().x * scaleFactor.x, view.getSize().y * scaleFactor.y});
 		view.setCenter(sf::Vector2f{ view.getCenter().x * scaleFactor.x, view.getCenter().y * scaleFactor.y});
 		(views->setSize(sf::Vector2f{ views->getSize().x * scaleFactor.x, views->getSize().y * scaleFactor.y }), ...);
@@ -330,6 +326,7 @@ private:
 	 * \pre `resizedWindow` must be a valid window.
 	 * \pre `relativeMinAxisScale` must represent a valid proportion (not 0).
 	 * \pre `scaleFactor` must not be equal to 0.
+	 * \post The interfaces will be resized
 	 * \warning The program will assert otherwise.
 	 */
 	static void proportionKeeper(sf::RenderWindow* resizedWindow, sf::Vector2f scaleFactor, float relativeMinAxisScale) noexcept;

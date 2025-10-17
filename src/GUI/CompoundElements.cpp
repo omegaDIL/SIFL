@@ -6,6 +6,8 @@
 #include <cassert>
 #endif //NDEBUG
 
+#include <iostream>
+
 namespace gui
 {
 
@@ -234,11 +236,80 @@ static sf::Texture loadCheckBoxTexture(sf::Vector2f scale, float outlineThicknes
 	return texture;
 }
 
-void addMQB(InteractiveInterface* gui, const std::string& identifier, sf::Vector2f posInit, sf::Vector2f posDelta, short numberOfBoxes, short defaultCheckedBox) noexcept
+static void checkBox(InteractiveInterface* gui, const std::string& identifier, unsigned short check, bool multipleChoices, bool atLeastOne) noexcept
 {
+	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function checkBox was called");
+
+	SpriteWrapper* curBoxToCheck
+	std::vector<SpriteWrapper*> boxes{}; // The boxes of the mqb.
+	std::vector<unsigned short> checkedBoxes{}; // The indexes of the currently checked boxes.
+	bool wasAlreadyChecked{ false };
+
+	unsigned short index{ 1 }; // 1-indexed
+	auto* box{ gui->getDynamicSprite(identifier + '1') }; 
+	ENSURE_VALID_PTR(box != nullptr, "The identifier did not represent a mqb when the function getMQBStatus was called");
+
+	do
+	{
+		boxes.push_back(box);
+
+		if (box->getCurrentTextureIndex() == 1) // If the box is checked.
+		{
+			checkedBoxes.push_back(index);
+			wasAlreadyChecked = wasAlreadyChecked || (index == check); // True if the check parameter is already checked
+		}
+
+		box = gui->getDynamicSprite(identifier + std::to_string(++index)); // poor cache locality but not meant to be fast
+	} while (box != nullptr);
+
+	if (atLeastOne && wasAlreadyChecked && checkedBoxes.size() == 1) 
+		return; // Only one box checked which happens to be the parameter + at least one box must be checked -> nothing happens
+
+	if (!multipleChoices && !wasAlreadyChecked && checkedBoxes.size() == 1)
+		boxes[checkedBoxes[0]-1]->switchToNextTexture();
+
+	//assert(check > -1 && check <= boxes.size() && "The check parameter is out of range in the function checkBox ");
+	//assert(multipleChoices != false || checkedBoxes.size() <= 1 && "The mqb can't have multiple choices and yet more than one box is checked in the function checkBox");
+
+	//// Nothing changes when at least one box must be checked and the box to check is already checked.
+	//// And this is the only box checked. Otherwise, we could still uncheck it as another box would remain checked (therefore the atLeastOne condition would still be satisfied).
+	//if (atLeastOne == true && checkedBoxes.size() == 1 && checkedBoxes[0] == check)
+	//	return;
+	//
+	//bool wasChecked{ std::find(checkedBoxes.begin(), checkedBoxes.end(), check) != checkedBoxes.end() };
+
+	//// When multipleChoices is false, there can be only one or zero box checked at a time.
+	//// Therefore we uncheck the currently checked box (if any) before checking the new one.
+	//// In case there was no box checked, we don't perform this instruction (checkedBoxes.size() == 1)
+	//if (multipleChoices == false && checkedBoxes.size() == 1)
+	//	boxes[checkedBoxes[0]]->switchToNextTexture(); // 0 is first and only element.
+	//
+	//// When multipleChoices is false and all box can be unchecked,
+	//// having the box at index 'check' already checked means we want to uncheck it.
+	//// But since (multipleChoices == false && checkedBoxes.size() == 1), the last "if instruction" 
+	//// would have been performed, leaving no box checked. Therefore, we can return early now.
+	//if (multipleChoices == false && atLeastOne == false && wasChecked)
+	//	return;
+
+	// Reverses the box status
+	boxes[check-1]->switchToNextTexture();
+
+	auto a = getMQBStatus(gui, identifier);
+	std::cout << a.size() << '\n';
+	for (auto b : a)
+		std::cout << b;
+	std::cout << '\n' << '\n';
+
+	return;
+}
+
+void addMQB(InteractiveInterface* gui, const std::string& identifier, sf::Vector2f initPos, sf::Vector2f deltaPos, unsigned short numberOfBoxes, bool multipleChoices, bool atLeastOne, unsigned short defaultCheckedBox) noexcept
+{
+	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function addMQB was called");
 	assert(numberOfBoxes > 0 && "The number of boxes must be greater than 0 in the function addMQB");
 	assert(defaultCheckedBox <= numberOfBoxes && "The default checked box must be within range in the function addMQB");
-	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function addMQB was called");
+	assert((atLeastOne != true || defaultCheckedBox != 0) && "The mqb can't be completely unchecked and yet it has no default checked box in the function checkBox");
+	assert(numberOfBoxes != 1 || atLeastOne != true && "The mqb is useless as it has only one box which can't be unchecked due to the variable atLeastOne being true in the function checkBox");
 
 	static constexpr std::string_view uncheckedMqbTextureName{ "__ub" };
 	static constexpr std::string_view checkedMqbTextureName{ "__cb" };
@@ -251,136 +322,69 @@ void addMQB(InteractiveInterface* gui, const std::string& identifier, sf::Vector
 		SpriteWrapper::createTexture(std::string{ checkedMqbTextureName },   loadCheckBoxTexture(boxSize, outlineThickness), SpriteWrapper::Reserved::No);
 	}
 
-	sf::Vector2f curPos{ posInit.x - (boxSize.x / 2.f), posInit.y - (boxSize.y / 2.f) }; // The "boxSize / 2" counteracts the origin not being at the center of the sprite.
+	sf::Vector2f curPos{ initPos.x - (boxSize.x / 2.f), initPos.y - (boxSize.y / 2.f) }; // The "boxSize / 2" counteracts the origin not being at the center of the sprite.
 	const std::string identifierBox{ mqbIdPrefix + identifier + '_' };
-	for (unsigned int i{ 0 }; i < numberOfBoxes; ++i)
+	for (unsigned short i{ 1 }; i <= numberOfBoxes; ++i) // 1-indexed
 	{
 		const std::string identifierBoxTemp{ identifierBox + std::to_string(i) };
-		gui->addDynamicSprite(identifierBoxTemp, uncheckedMqbTextureName, curPos, {1.f, 1.f}, sf::IntRect{}, sf::degrees(0), gui::Alignment::Top | gui::Alignment::Left);
+		gui->addDynamicSprite(identifierBoxTemp, uncheckedMqbTextureName, curPos, { 1.f, 1.f }, sf::IntRect{}, sf::degrees(0), gui::Alignment::Top | gui::Alignment::Left);
 		gui->getDynamicSprite(identifierBoxTemp)->addTexture(checkedMqbTextureName);
-		gui->addInteractive(identifierBoxTemp);
+		gui->addInteractive(identifierBoxTemp, [identifierBox, i, multipleChoices, atLeastOne] (InteractiveInterface* gui) { checkBox(gui, identifierBox, i, multipleChoices, atLeastOne); });
 
 		if (i == defaultCheckedBox) 
 			gui->getDynamicSprite(identifierBoxTemp)->switchToNextTexture();
 
-		curPos += posDelta;
-	}
-}
-
-std::optional<MQBInfo> isMqb(const std::string& identifierBox) noexcept
-{
-	size_t suffixPos{ identifierBox.find_last_of('_') };
-
-	if (!identifierBox.starts_with(mqbIdPrefix) // Not a mqb
-	||  suffixPos >= identifierBox.size() - 1 // No suffix
-	||  std::isdigit(identifierBox[suffixPos + 1]) == 0) // Suffix is not a number
-		return std::nullopt;
-
-	std::string identifier{ identifierBox.substr(mqbIdPrefix.size(), suffixPos - mqbIdPrefix.size()) };
-	return std::make_optional<MQBInfo>(std::move(identifier), static_cast<short>(std::stoi(identifierBox.substr(suffixPos + 1))));
-}
-
-std::optional<std::vector<short>> checkBox(InteractiveInterface* gui, MQBInfo& info, bool multipleChoices, bool atLeastOne)
-{
-	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function checkBox was called");
-	
-	std::vector<SpriteWrapper*> boxes{}; // The boxes of the mqb.
-	std::vector<short> checkedBoxes{}; // The indexes of the currently checked boxes.
-
-	std::string identifier{ mqbIdPrefix + info.identifier + '_' };
-	short check{ info.check }; // The index of the box to check or uncheck.
-	unsigned int index{ 0 };
-
-	auto* box{ gui->getDynamicSprite(identifier + '0') };
-	while (box != nullptr)
-	{
-		boxes.push_back(box);
-		if (box->getCurrentTextureIndex() == 1) // If the box is checked.
-			checkedBoxes.push_back(static_cast<short>(index));
-		box = gui->getDynamicSprite(identifier + std::to_string(++index)); // poor cache locality but not meant to be fast
+		curPos += deltaPos;
 	} 
-
-	if (boxes.empty()) [[unlikely]]
-		throw std::invalid_argument{ "The mqb with the identifier " + identifier + " does not exist." };
-
-	assert(check > -1 && check < boxes.size() && "The check parameter is out of range in the function checkBox ");
-	assert(boxes.size() != 1 || atLeastOne != true && "The mqb is useless as it has only one box which can't be unchecked due to the variable atLeastOne being true in the function checkBox");
-	assert(atLeastOne != true || !checkedBoxes.empty() && "The mqb can't be completely unchecked and yet it has no default checked box in the function checkBox");
-	assert(multipleChoices != false || checkedBoxes.size() <= 1 && "The mqb can't have multiple choices and yet more than one box is checked in the function checkBox");
-
-	// Nothing changes when at least one box must be checked and the box to check is already checked.
-	// And this is the only box checked. Otherwise, we could still uncheck it as another box would remain checked (therefore the atLeastOne condition would still be satisfied).
-	if (atLeastOne == true && checkedBoxes.size() == 1 && checkedBoxes[0] == check)
-		return std::make_optional<std::vector<short>>(checkedBoxes); 
-
-	bool wasChecked{ std::find(checkedBoxes.begin(), checkedBoxes.end(), check) != checkedBoxes.end() };
-
-	// When multipleChoices is false, there can be only one or zero box checked at a time.
-	// Therefore we uncheck the currently checked box (if any) before checking the new one.
-	// In case there was no box checked, we don't perform this instruction (checkedBoxes.size() == 1)
-	if (multipleChoices == false && checkedBoxes.size() == 1) 
-	{	
-		boxes[checkedBoxes[0]]->switchToNextTexture(); // 0 is first and only element.
-		checkedBoxes.clear();
-	}		
-	
-	// When multipleChoices is false and all box can be unchecked,
-	// having the box at index 'check' already checked means we want to uncheck it.
-	// But since (multipleChoices == false && checkedBoxes.size() == 1), the last "if instruction" 
-	// would have been performed, leaving no box checked. Therefore, we can return early now.
-	if (multipleChoices == false && atLeastOne == false && wasChecked)
-		return std::make_optional<std::vector<short>>(checkedBoxes);
-
-	// Check or uncheck the box at index 'check'.
-	// It reverses the box, but only visually.
-	boxes[check]->switchToNextTexture(); 
-
-	// Unchecks the current box, no matter what.
-	// Then recheck it, only if it was not checked before.
-	// Therefore, if we needed to uncheck it, the last "if instruction" is not performed.
-	// But if we needed to check it, it is performed, and the first line did nothing (because there was nothing to uncheck.
-	// That way, it reverses the box appropriately.
-	checkedBoxes.erase(std::remove(checkedBoxes.begin(), checkedBoxes.end(), check), checkedBoxes.end());
-	if (!wasChecked)
-		checkedBoxes.push_back(check);
-
-	return std::make_optional<std::vector<short>>(checkedBoxes);
 }
 
-void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide)
+std::vector<unsigned short> getMQBStatus(InteractiveInterface* gui, const std::string& identifierBox) noexcept
+{
+	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function getMQBStatus was called");
+
+	//std::string identifierBox{ mqbIdPrefix + identifier + '_' };
+	std::vector<unsigned short> checkedBoxes{}; // The indexes of the currently checked boxes.
+
+	unsigned short index{ 1 };
+	auto* box{ gui->getDynamicSprite(identifierBox + '1') }; //1-indexed
+	ENSURE_VALID_PTR(box != nullptr, "The identifier did not represent a mqb when the function getMQBStatus was called");
+
+	do
+	{
+		if (box->getCurrentTextureIndex() == 1) // If the box is checked.
+			checkedBoxes.push_back(index);
+		box = gui->getDynamicSprite(identifierBox + std::to_string(++index)); // poor cache locality but not meant to be fast
+	} while (box != nullptr);
+
+	return checkedBoxes;
+}
+
+void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide) noexcept
 {
 	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function hideMQB was called");
 
 	const std::string identifierBox{ mqbIdPrefix + identifier + "_" };
-	unsigned int index{ 0 };
 
-	auto* mqb{ gui->getDynamicSprite(identifierBox + '0') };
+	unsigned short index{ 1 }; // 1-indexed
+	auto* mqb{ gui->getDynamicSprite(identifierBox + '1') };
 	while (mqb != nullptr)
 	{
 		mqb->hide = hide;
 		mqb = gui->getDynamicSprite(identifierBox + std::to_string(++index));
 	}
-
-	if (index == 0) [[unlikely]]
-		throw std::invalid_argument{ "The mqb with the identifier " + identifier + " does not exist." };
 }
 
-void removeMQB(InteractiveInterface* gui, const std::string& identifier) noexcept
+void removeMQB(InteractiveInterface* gui, const std::string& identifier, unsigned short numberOfBoxes) noexcept
 {
 	assert(gui != nullptr && "The gui was nullptr when the function removeMQB was called");
 
 	const std::string identifierBox{ mqbIdPrefix + identifier + "_" };
-	unsigned int index{ 0 };
-
 	SpriteWrapper* mqb{ nullptr };
-	do
-	{
-		gui->removeDynamicSprite(identifierBox + std::to_string(index));
-		mqb = gui->getDynamicSprite(identifierBox + std::to_string(++index));
-	} while (mqb != nullptr);
+	for (; numberOfBoxes > 0; --numberOfBoxes) // 1-indexed
+		gui->removeDynamicSprite(identifierBox + std::to_string(numberOfBoxes));
 }
 
-bool updateWritingText(TextWrapper* text, char32_t unicodeValue, WritingFunction* func)
+bool updateWritingText(TextWrapper* text, char32_t unicodeValue, const WritingFunction& func)
 {
 	assert(text != nullptr && "The text was nullptr when the function updateWritingText was called");
 
@@ -390,8 +394,8 @@ bool updateWritingText(TextWrapper* text, char32_t unicodeValue, WritingFunction
 	if (unicodeValue == 13)
 		unicodeValue =  10;
 
-	if (func != nullptr && (*func) != nullptr)
-		returnValue = (*func)(unicodeValue, content);
+	if (func != nullptr)
+		returnValue = func(unicodeValue, content, text);
 
 	if ((unicodeValue == 8) && !content.isEmpty()) // Backspace
 		content.erase(content.getSize() - 1);
@@ -402,7 +406,7 @@ bool updateWritingText(TextWrapper* text, char32_t unicodeValue, WritingFunction
 	return returnValue;
 }
 
-bool updateWritingText(MutableInterface* gui, std::string_view identifier, char32_t unicodeValue, WritingFunction* func)
+bool updateWritingText(MutableInterface* gui, std::string_view identifier, char32_t unicodeValue, const WritingFunction& func)
 {
 	ENSURE_VALID_PTR(gui, "The gui was nullptr when the function updateWritingText was called");
 

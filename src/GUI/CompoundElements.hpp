@@ -217,110 +217,67 @@ void removeSlider(InteractiveInterface* gui, const std::string& identifier) noex
  * \brief Adds a multiple question box to the interactive gui. The user can check or uncheck boxes.
  * \complexity O(N), where N is the number of boxes.
  * 
- * The mqb consists of a series of sprites, and each represents a box. All are interactives
+ * The mqb consists of a series of sprites, and each represents a box. 
  * 
  * Nothing is done if already added.
+ * 
+ * The mqb is automatically updated via the buttons in the interactive interface. Note that when it
+ * is updated, the complexity is O(N) and it is not cache efficient.
  *
  * \param[out] gui The interactive gui to which the multiple question box will be added.
  * \param[in]  identifier The unique identifier for the multiple question box.
  * \param[in]  posInit The position of the first box.
  * \param[in]  posDelta The delta position between two boxes.
  * \param[in]  numberOfBoxes The number of boxes in the multiple question box.
- * \param[in]  defaultCheckedBox The index of the box that will be checked by default. Negative values
- *								 means no box is checked by default. Default is -1.
+ * \param[in]  multipleChoices If true, the user can check or uncheck multiple boxes. Default is true.
+ * \param[in]  atLeastOne If true, at least one box must always be checked. Default is false.
+ * \param[in]  defaultCheckedBox The index of the box that will be checked by default. 0 
+ *								 means no box is checked by default.
  * 
- * \note Boxes are 0-indexed.
+ * \note Boxes are 1-indexed.
  * \note All elements are dynamic elements, so they need an identifier. Each box has the identifier
- *		`_mqb_identifier_i` where i is the index of the box (0 to numberOfBoxes - 1).
+ *		`_mqb_identifier_i` where i is the index of the box (1 to numberOfBoxes).
  * \note Textures are added to SpriteWrapper with names `__ub` and `__cb`.
  * 
  * \pre The gui must be a valid ptr.
  * \pre numberOfBoxes must be greater than 0.
  * \pre defaultCheckedBox must not be equal to or greater than numberOfBoxes.
+ * \pre atLeastOne can't be true if no default box is provided.
+ * \pre atLeastOne can't be true if only one box is added in the mqb
  * \post The multiple question box will be added to the gui.
  * \warning The program will assert otherwise.
  * 
- * \see checkBox, hideMQB, removeMQB.
+ * \see getMQBStatus, hideMQB, removeMQB.
  */
-void addMQB(InteractiveInterface* gui, const std::string& identifier, sf::Vector2f posInit, sf::Vector2f posDelta, short numberOfBoxes, short defaultCheckedBox = -1) noexcept;
-
-struct MQBInfo
-{
-	std::string identifier;
-	short check;
-};
+void addMQB(InteractiveInterface* gui, const std::string& identifier, sf::Vector2f initPos, sf::Vector2f deltaPos, unsigned short numberOfBoxes, bool multipleChoices = false, bool atLeastOne = true, unsigned short defaultCheckedBox = 0) noexcept;
 
 /**
- * \brief Returns the underlying identifier of the multiple question box.
- * \complexity O(N), where N is the length of identifierBox.
- *
- * \param[in] identifierBox The identifier of one of the boxes of the multiple question box.
- *
- * \return The identifier of the multiple question box, or an empty string if the identifier
- */
-std::optional<MQBInfo> isMqb(const std::string& identifierBox) noexcept;
-
-/**
- * \brief Change the state of the box at index 'check' in the multiple question box.
- * \complexity O(N), where N is the number of boxes.
+ * \brief get the mqb status, that is to say the indexes of all boxes checked.
+ * \complexity O(N), where N is the number of boxes
  * 
- * Does nothing if the identifier does not correspond to a multiple question box.
- *
  * All boxes are retrieved through their identifiers by iterating until i grows larger than the number
  * of boxes.
- *
- * This function is not particularly efficient, but it is not meant to be called every frame, or even
- * every second. It is meant to be called only when the user clicks on a box.
  * 
- * You must keep track of all the indexes of the boxes that are checked, as this function is NOT read
- * -only and will change the state of the box at index 'check' (or assert if invalid).
- *
- * \param[out] gui The interactive gui containing the multiple question box.
- * \param[in]  identifierBox The unique identifier for the multiple question box.
- * \param[in]  multipleChoices If true, the user can check or uncheck multiple boxes. Default is true.
- * \param[in]  atLeastOne If true, at least one box must always be checked. Default is false.
- *
- * \returns A vector containing the indexes of the currently checked boxes, or std::nullopt if the
- *			identifier does not correspond to a multiple question box.
- *
- * \note Boxes are 0-indexed.
- *
- * \pre The mqb must exist in the gui (at least one box).
- * \throw std::invalid_argument Strong exception guarantee: nothing happens.
- *
- * \pre The gui must be a valid ptr.
- * \warning The program will assert otherwise.
- *
+ * This function is not cache efficient.
+ * 
+ * \param[out] gui The interactive gui to which the multiple question box was added.
+ * \param[in]  identifier The unique identifier of the multiple question box.
+ * 
+ * \returns The indexes of all boxes checked
+ * 
+ * \note Boxes are 1-indexed.
+ * 
+ * \pre the gui must not be nullptr
+ * \pre the identifier must represent a mqb
+ * \post the status will be reported using the texture index
+ * \warning asserts otherwise.
+ * 
  * \see addMQB.
  */
-std::optional<std::vector<short>> checkBox(InteractiveInterface* gui, MQBInfo& info, bool multipleChoices = false, bool atLeastOne = true);
+std::vector<unsigned short> getMQBStatus(InteractiveInterface* gui, const std::string& identifier) noexcept;
 
 /**
  * \brief Hides or shows the multiple question box and its elements.
- * \complexity O(N), where N is the number of boxes.
- * 
- * All boxes are retrieved through their identifiers by iterating until i grows larger than the number
- * of boxes.
- *
- * This function is not particularly efficient, but it is not meant to be called multiple times
- * per frame or even per second.
- * 
- * \param[out] gui The interactive gui containing the multiple question box.
- * \param[in]  identifier The unique identifier for the multiple question box.
- * \param[in]  hide If true, the slider is hidden. If false, it is shown. Default is true.
- * 
- * \pre The mqb must exist in the gui (at least one box).
- * \throw std::invalid_argument Strong exception guarantee: nothing happens.
- * 
- * \pre The gui must be a valid ptr.
- * \warning The program will assert otherwise.
- * 
- * \see removeMQB, addMQB.
- */
-void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide = true);
-
-/**
- * \brief Removes the multiple question box and its elements from the gui.
  * \complexity O(N), where N is the number of boxes.
  * 
  * All boxes are retrieved through their identifiers by iterating until i grows larger than the number
@@ -333,6 +290,24 @@ void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide
  * 
  * \param[out] gui The interactive gui containing the multiple question box.
  * \param[in]  identifier The unique identifier for the multiple question box.
+ * \param[in]  hide If true, the slider is hidden. If false, it is shown. Default is true.
+ * 
+ * \pre The gui must be a valid ptr.
+ * \post Will be hidden/shown.
+ * \warning The program will assert otherwise.
+ * 
+ * \see removeMQB, addMQB.
+ */
+void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide = true) noexcept;
+
+/**
+ * \brief Removes the multiple question box and its elements from the gui.
+ * \complexity O(N), where N is the number of boxes.
+ * 
+ * Nothing happens if the identifier is not a multiple question box's identifier.
+ * 
+ * \param[out] gui The interactive gui containing the multiple question box.
+ * \param[in]  identifier The unique identifier for the multiple question box.
  * 
  * \pre The gui must be a valid ptr.
  * \post The multiple question box will be removed from the gui.
@@ -340,7 +315,7 @@ void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide
  * 
  * \see hideMQB, addMQB.
  */
-void removeMQB(InteractiveInterface* gui, const std::string& identifier) noexcept;
+void removeMQB(InteractiveInterface* gui, const std::string& identifier, unsigned short numberOfBoxes) noexcept;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// MQB functions.
@@ -350,7 +325,7 @@ void removeMQB(InteractiveInterface* gui, const std::string& identifier) noexcep
 /// Writing text functions.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-using WritingFunction = std::function<bool(char32_t&, sf::String&)>;
+using WritingFunction = std::function<bool(char32_t&, sf::String&, TextWrapper*)>;
 /**
  * \brief Updates a textWrapper while the user is writing text.
  * \complexity O(1).
@@ -358,11 +333,12 @@ using WritingFunction = std::function<bool(char32_t&, sf::String&)>;
  * Can be called even if the interface is locked.
  * 
  * You can add an optional function that will be called before the character is added. It takes a 
- * reference to the next character and the rest of the string, so that you can modify them. It is
+ * reference to the next character, the rest of the string, and the text that is being modified. It is
  * mainly used to filter the input (e.g. to allow only numbers). To do so, you can set unicodeValue
- * to any none-printable character besides: 0x8 (backspace), 0x9 (tab), 0xa (LF) and 0xd (CR). The
- * return value is the same as this optional function (or true if no function). It is often used to
- * signal that the writing ended (see code portion to see how, efficiently). 
+ * to any none-printable character besides: 0x8 (backspace), 0x9 (tab) or 0xa (LF). Note 0xd (CR) is
+ * automatically changed to LF before the function is called. The return value is the same as this
+ * optional function (or true if no function). It is often used to signal that the writing ended (see
+ * the code portion to see how). 
  * 
  * \param[out] text The textWrapper to update.
  * \param[in]  unicodeValue The unicode value of the character to add.
@@ -388,7 +364,7 @@ using WritingFunction = std::function<bool(char32_t&, sf::String&)>;
  * // You can use interactive and button elements to begin writing.
  * \endcode
  */
-bool updateWritingText(TextWrapper* text, char32_t unicodeValue, WritingFunction* func = nullptr);
+bool updateWritingText(TextWrapper* text, char32_t unicodeValue, const WritingFunction& func = nullptr);
 
 /**
  * \see Similar to updateWritingText(), but works by identifiers: more secure if the interface is
@@ -400,11 +376,14 @@ bool updateWritingText(TextWrapper* text, char32_t unicodeValue, WritingFunction
  * \pre The gui must be a valid ptr.
  * \warning The program will assert otherwise.
  */
-bool updateWritingText(MutableInterface* gui, std::string_view identifier, char32_t unicodeValue, WritingFunction* func = nullptr);
+bool updateWritingText(MutableInterface* gui, std::string_view identifier, char32_t unicodeValue, const WritingFunction& func = nullptr);
 
 /**
  * \brief This is an example of a simple WritingFunction.
  * \complexity O(1).
+ * 
+ * Returns true when the writing should end. Ensures the text is not left empty. Sets to italic
+ * when writing and regular when it ends.
  * 
  * \param[in] c The next character.
  * \param[in,out] str The current string.
@@ -412,12 +391,13 @@ bool updateWritingText(MutableInterface* gui, std::string_view identifier, char3
  * \return `false` if the character is any of those character: escape/CR/LF.
  *		   `true` otherwise.
  */
-inline bool basicWritingFunction(char32_t& c, sf::String& str) noexcept
+inline bool basicWritingFunction(char32_t& c, sf::String& str, TextWrapper* txt) noexcept
 {
 	if (c != 27 && c != '\n')
 		return true;
 
 	c = 0; // Effectively disabling the line break by using a none printable character.
+	txt->setStyle(sf::Text::Style::Regular); 
 
 	if (str.isEmpty())
 		str = "0"; // Don't leave it empty

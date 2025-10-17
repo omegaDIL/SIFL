@@ -18,6 +18,10 @@
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <cstdint>
+#ifndef NDEBUG
+#include <cassert>
+#endif //NDEBUG
 
 namespace gui
 {
@@ -83,6 +87,7 @@ public:
 	 *			  If set to 0, no scaling is applied regardless of the window size.
 	 *
 	 * \pre `window` must be a valid.
+	 * \post An interface is constructed.
 	 * \warning The program will assert otherwise.
 	 */
 	inline explicit MutableInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
@@ -278,12 +283,9 @@ protected:
 	 * \param[in,out] indexMap The map that enables accessing the container's elements using indexes.
 	 * 
 	 * \pre No index should be out of range.
-	 * \post Those indexes will be swapped accordingly
-	 * \warning Asserts if out of range.
-	 * 
 	 * \pre The interface must not be locked.
-	 * \post The elements are swapped.
-	 * \warning The program will assert otherwise.
+	 * \post Elements will be swapped
+	 * \warning Asserts otherwise.
 	 */
 	template<typename T> requires (std::same_as<T, TextWrapper> || std::same_as<T, SpriteWrapper>)
 	inline void swapElement(size_t index1, size_t index2, std::vector<T>& vector, MutableElementUmap& identifierMap, std::unordered_map<size_t, UmapMutablesIterator>& indexMap) noexcept
@@ -297,28 +299,28 @@ protected:
 
 		std::swap(vector[index1], vector[index2]);
 
-		// Update the maps.
+		// Now we need to update the maps.
+		// It depends on which was dynamic
+
 		const auto mapIteratorIndex1{ indexMap.find(index1) };
 		const auto mapIteratorIndex2{ indexMap.find(index2) };
-
-		if (mapIteratorIndex1 == indexMap.end()
-		&&  mapIteratorIndex2 == indexMap.end()) [[unlikely]]
-			return; // Not dynamic, therefore no need to update the maps.
 
 		if (mapIteratorIndex1 != indexMap.end()
 		&&  mapIteratorIndex2 != indexMap.end())
 		{	// When both are dynamics
-			identifierMap[mapIteratorIndex2->second->first] = index1; // Swap their identifiers
-			identifierMap[mapIteratorIndex1->second->first] = index2;
+			std::swap(identifierMap[mapIteratorIndex2->second->first], identifierMap[mapIteratorIndex1->second->first]);
 			std::swap(indexMap[index1], indexMap[index2]);
-			return;
+		}
+		else if (mapIteratorIndex1 != indexMap.end() || mapIteratorIndex2 != indexMap.end())
+		{   // When only one is dynamic.
+			const auto dynamicElementIterator{ (mapIteratorIndex1 != indexMap.end()) ? mapIteratorIndex1 : mapIteratorIndex2 }; // Chooses the dynamic element
+			dynamicElementIterator->second->second = +index2 +index1 -dynamicElementIterator->second->second; // The previous index of the dynamic element cancels out.
+			indexMap[dynamicElementIterator->second->second] = dynamicElementIterator->second;
+			indexMap.erase(dynamicElementIterator);
 		}
 
-		// When only one is dynamic.
-		const auto dynamicElementIterator{ (mapIteratorIndex1 != indexMap.end()) ? mapIteratorIndex1 : mapIteratorIndex2 };
-		dynamicElementIterator->second->second = +index2 +index1 -dynamicElementIterator->second->second; // An index cancels out.
-		indexMap[dynamicElementIterator->second->second] = dynamicElementIterator->second;
-		indexMap.erase(dynamicElementIterator);
+		// No need to update the maps if they were not dynamic
+		// They didn't have any values
 	}
 };
 

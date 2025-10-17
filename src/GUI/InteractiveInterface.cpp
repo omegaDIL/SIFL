@@ -1,17 +1,7 @@
 #include "InteractiveInterface.hpp"
-#include <cstdint>
-#include <iostream>
 
 namespace gui
 {
-
-InteractiveInterface::~InteractiveInterface() noexcept
-{
-	m_allButtons.clear();
-
-	if (s_hoveredItem.igui == this)
-		s_hoveredItem = Item{};
-}
 
 void InteractiveInterface::removeDynamicText(std::string_view identifier) noexcept
 {
@@ -19,9 +9,6 @@ void InteractiveInterface::removeDynamicText(std::string_view identifier) noexce
 
 	if (mapIterator == m_dynamicTexts.end())
 		return; // No text with that identifier.
-
-	if (s_hoveredItem.igui == this && s_hoveredItem.identifier == identifier) [[unlikely]]
-		s_hoveredItem = Item{}; // Checks if the hovered text was not the removed text.
 
 	const size_t index{ mapIterator->second };
 
@@ -45,9 +32,6 @@ void InteractiveInterface::removeDynamicSprite(std::string_view identifier) noex
 	if (mapIterator == m_dynamicSprites.end())
 		return; // No sprite with that identifier.
 
-	if (s_hoveredItem.igui == this && s_hoveredItem.identifier == identifier) [[unlikely]]
-		s_hoveredItem = Item{}; // Checks if the hovered sprite was not the removed sprite.
-
 	const size_t index{ mapIterator->second };
 
 	MutableInterface::removeDynamicSprite(identifier);
@@ -62,7 +46,7 @@ void InteractiveInterface::removeDynamicSprite(std::string_view identifier) noex
 	if (buttonIterator->second.second <= 0) // If a text has the same identifier and is interactive, it would be equal to 1.
 		m_allButtons.erase(buttonIterator);
 }
- 
+
 void InteractiveInterface::addInteractive(std::string identifier, ButtonFunction function) noexcept
 {
 	const auto textIterator	 { m_dynamicTexts.find(identifier)   };
@@ -94,17 +78,17 @@ void InteractiveInterface::lockInterface(bool shrinkToFit) noexcept
 
 InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(InteractiveInterface* igui, sf::Vector2f cursorPos) noexcept
 {
-	ENSURE_VALID_PTR(igui, "The gui was nullptr when the function updateHovered was called in InteractiveInterface");
+	ENSURE_VALID_PTR(igui, "The gui was nullptr when the function eventUpdateHovered was called in InteractiveInterface");
 
 	// Chances are that the hovered item is the same as previously between one frame and the other.
-	if (s_hoveredItem.igui == igui && !std::holds_alternative<std::monostate>(s_hoveredItem.ptr))
+	if (!std::holds_alternative<std::monostate>(s_hoveredItem.ptr))
 	{
 		bool holdText{ std::holds_alternative<TextWrapper*>(s_hoveredItem.ptr) }; // If false, it holds a SpriteWrapper*
 		if ((holdText &&  igui->m_lockState && std::get<TextWrapper*>(s_hoveredItem.ptr)->getText().getGlobalBounds().contains(cursorPos)) // Almost guaranteed to not have cache misses
 		|| (!holdText &&  igui->m_lockState && std::get<SpriteWrapper*>(s_hoveredItem.ptr)->getSprite().getGlobalBounds().contains(cursorPos)) // Almost guaranteed to not have cache misses
 		||  (holdText && !igui->m_lockState && igui->getDynamicText(s_hoveredItem.identifier)->getText().getGlobalBounds().contains(cursorPos))
-		|| (!holdText && !igui->m_lockState && igui->getDynamicSprite(s_hoveredItem.identifier)->getSprite().getGlobalBounds().contains(cursorPos)))
-		return s_hoveredItem;
+		|| (!holdText && !igui->m_lockState && igui->getDynamicSprite(s_hoveredItem.identifier)->getSprite().getGlobalBounds().contains(cursorPos))) [[likely]] // Most of the time, the same thing is hovered during the next frame.
+			goto endReturn; // Avoid multiple return statements 
 	}
 
 	s_hoveredItem = Item{};
@@ -114,8 +98,8 @@ InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(InteractiveI
 		TextWrapper& text{ igui->m_texts[i] };
 		if (!text.hide && text.getText().getGlobalBounds().contains(cursorPos)) [[unlikely]] // The vast majority of the time, no text is hovered.
 		{
-			s_hoveredItem = Item{ igui, igui->m_indexesForEachDynamicTexts.at(i)->first, &text };
-			return s_hoveredItem;
+			s_hoveredItem = Item{ igui->m_indexesForEachDynamicTexts.at(i)->first, &text };
+			goto endReturn; // Avoid multiple return statements
 		}
 	}
 
@@ -124,38 +108,25 @@ InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(InteractiveI
 		SpriteWrapper& sprite{ igui->m_sprites[i] };
 		if (!sprite.hide && sprite.getSprite().getGlobalBounds().contains(cursorPos)) [[unlikely]] // The vast majority of the time, no sprite is hovered.
 		{
-			s_hoveredItem = Item{ igui, igui->m_indexesForEachDynamicSprites.at(i)->first, &sprite };
+			s_hoveredItem = Item{ igui->m_indexesForEachDynamicSprites.at(i)->first, &sprite };
  			break;
 		}
 	}
 
+endReturn:
 	return s_hoveredItem;
 }
 
-InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(BasicInterface* activeGUI, sf::Vector2f cursorPos) noexcept
+void InteractiveInterface::eventPressed(InteractiveInterface* igui) noexcept
 {
-	ENSURE_VALID_PTR(activeGUI, "The gui was nullptr when the function updateHovered was called in InteractiveInterface");
-
-	auto* const igui{ dynamic_cast<InteractiveInterface*>(activeGUI) };
-	return (s_hoveredItem = ((igui == nullptr) ? Item{} : eventUpdateHovered(igui, cursorPos)));
-}
-
-void InteractiveInterface::eventPressed(BasicInterface* activeGUI) noexcept
-{
-	ENSURE_VALID_PTR(activeGUI, "The gui was nullptr when the function pressed was called in InteractiveInterface");
-
-	InteractiveInterface* const igui{ dynamic_cast<InteractiveInterface*>(activeGUI) };
-
-	if (igui == nullptr || igui != s_hoveredItem.igui)
-		return;
+	ENSURE_VALID_PTR(igui, "The gui was nullptr when the function eventPressed was called in InteractiveInterface");
 
 	auto iterator{ igui->m_allButtons.find(s_hoveredItem.identifier) };
-
 	if (iterator == igui->m_allButtons.end())
 		return;
 
 	ButtonFunction* const buttonFunction{ &iterator->second.first };
-	if (*buttonFunction != nullptr)
+	if ((*buttonFunction) != nullptr)
 		(*buttonFunction)(igui);
 }
 

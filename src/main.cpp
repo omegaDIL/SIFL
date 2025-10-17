@@ -6,58 +6,49 @@
 
 int main()
 {
-	sf::Vector2u windowSize{ 1920, 1080 };
+	sf::Vector2u windowSize{ 1000, 1000 };
 	sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3" };
-	IGUI mainInterface{ &window, 1080 };
-	BGUI* curInterface{ &mainInterface };
+	currentGUI curGui{};
+	std::string writingText{ "text1" };
 
-	IGUI::Item curItem{};
-	gui::TextWrapper* text1{ nullptr };
-	while (window.isOpen())
+	IGUI mainInterface{ &window, 1080 };
+	IGUI otherInterface{ &window, 1080 };
+	populateGUI(curGui, writingText, &mainInterface, &otherInterface);
+	curGui = &mainInterface;
+
+	while (window.isOpen()) [[likely]]
 	{
 		while (const std::optional event = window.pollEvent())
 		{
-			if (event->is<sf::Event::MouseMoved>() && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
-				curItem = IGUI::eventUpdateHovered(curInterface, window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position));
-
-			if (event->is<sf::Event::MouseButtonPressed>() && event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
-			{
-				IGUI::eventPressed(curInterface);
-				if (auto info = gui::isMqb(curItem.identifier))
-				{
-					if (info->identifier == "boxes1")
-						gui::checkBox(&mainInterface, info.value(), true, false);
-					else // boxes2
-						gui::checkBox(&mainInterface, info.value(), false, false);
-				}
-			}
-
-			if (event->is<sf::Event::Resized>())
-				BGUI::windowResized(&window, windowSize);
-
-			if (text1 != nullptr && event->is<sf::Event::TextEntered>())
-				if (!gui::updateWritingText(text1, event->getIf<sf::Event::TextEntered>()->unicode, &func))
-					text1 = nullptr;
-
-			if (event->is<sf::Event::Closed>())
+			if (event->is<sf::Event::Closed>() || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)) [[unlikely]]
 				window.close();
+
+			else if (event->is<sf::Event::Resized>()) [[unlikely]]
+				BGUI::windowResized(&window, windowSize);
+			
+			else if (event->is<sf::Event::MouseButtonPressed>() && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && curGui.gInteractive != nullptr)
+				IGUI::eventPressed(curGui);
+						
+			else if (event->is<sf::Event::MouseMoved>() && curGui.gInteractive != nullptr && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) [[likely]]
+				curGui.item = IGUI::eventUpdateHovered(curGui, window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position));
+		
+			else if (event->is<sf::Event::TextEntered>() && curGui.gMutable != nullptr && writingText != "")
+				if (!gui::updateWritingText(&mainInterface, writingText, event->getIf<sf::Event::TextEntered>()->unicode, gui::basicWritingFunction))
+					writingText = "";
 		}
 
-		if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
-		{
-			if (curItem.identifier == "slider1")
-				gui::moveSlider(&mainInterface, "slider1", window.mapPixelToCoords(sf::Mouse::getPosition(window)).y, 99);
-			else if (curItem.identifier == "slider2")
-				gui::moveSlider(&mainInterface, "slider2", window.mapPixelToCoords(sf::Mouse::getPosition(window)).y, -1);
-		}
+		//////////////////////////////////////Actual code////////////////////////////////////////////////
+		if (curGui.gInteractive == &otherInterface && curGui.item.identifier == "colorChanger")
+			otherInterface.getDynamicSprite("colorChanger")->rotate(sf::degrees(1));
+		
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && curGui.gInteractive == &otherInterface && curGui.item.identifier == "slider")
+			gui::moveSlider(&otherInterface, curGui.item.identifier, window.mapPixelToCoords(sf::Mouse::getPosition(window)).y, 99);
+		//////////////////////////////////////Actual code////////////////////////////////////////////////
 
-		window.clear(sf::Color{ 20, 20, 20 });
-		curInterface->draw();
+		window.clear();
+		curGui->draw();
 		window.display();
 	}
 
 	return 0;
 }
-
-//TODO: replace code example of interactive
-//TODO: Make functions within GUI to help user

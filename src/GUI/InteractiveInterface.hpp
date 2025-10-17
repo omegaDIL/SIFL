@@ -15,8 +15,10 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <string_view>
+#include <unordered_map>
+#include <variant>
 #include <functional>
-#include <vector>
+#include <cstdint>
 
 namespace gui
 {
@@ -63,19 +65,18 @@ public:
 	{			
 	public:
 
-		InteractiveInterface* igui; // The gui that owns the interactive element.
 		std::string identifier; // The item that is hovered, either a text or a sprite.
-		// Watch out if the interface is not locked, this pointer might be invalidated at any time.
 		std::variant<std::monostate, TextWrapper*, SpriteWrapper*> ptr; // A pointer to the actual transformable.
+		// Watch out if the interface is not locked, this pointer might be invalidated at any time.
 
-		Item(InteractiveInterface* iguiPtr, std::string id, SpriteWrapper* spritePtr) noexcept
-			: igui{ iguiPtr }, identifier{ id }, ptr{ spritePtr } {}
+		Item(std::string id, SpriteWrapper* spritePtr) noexcept
+			: identifier{ id }, ptr{ spritePtr } {}
 
-		Item(InteractiveInterface* iguiPtr, std::string id, TextWrapper* textPtr) noexcept
-			: igui{ iguiPtr }, identifier{ id }, ptr{ textPtr } {}
+		Item(std::string id, TextWrapper* textPtr) noexcept
+			: identifier{ id }, ptr{ textPtr } {}
 
 		Item() noexcept 
-			: igui{ nullptr }, identifier{ "" }, ptr{ std::monostate{} } {}
+			: identifier{ "" }, ptr{ std::monostate{} } {}
 
 		Item(const Item& item) noexcept = default;
 		Item(Item&& item) noexcept = default;
@@ -108,6 +109,7 @@ public:
 	 *			  If set to 0, no scaling is applied regardless of the window size.
 	 *
 	 * \pre `window` must be a valid.
+	 * \post An interface is constructed.
 	 * \warning The program will assert otherwise.
 	 */
 	inline explicit InteractiveInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
@@ -119,7 +121,7 @@ public:
 	InteractiveInterface(InteractiveInterface&&) noexcept = default;
 	InteractiveInterface& operator=(const InteractiveInterface&) noexcept = delete;
 	InteractiveInterface& operator=(InteractiveInterface&&) noexcept = default;
-	virtual ~InteractiveInterface() noexcept;
+	virtual ~InteractiveInterface() noexcept = default;
 
 
 	/**
@@ -192,8 +194,7 @@ public:
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
 	 *						  sprites.
 	 * 
-	 * \note Don't forget that it also applies to addInteractive() (but not to setWritingText() as the
-	 *		 element is already added).
+	 * \note Don't forget that it also applies to addInteractive() 
 	 */
 	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
 
@@ -218,26 +219,33 @@ public:
 	 *
 	 * \return The item that is currently hovered.
 	 * 
+	 * \pre activeGUI must not be nullptr
+	 * \post The hovered element will be updated according to the gui
 	 * \warning Asserts if activeGUI is nullptr.
 	 */
 	static Item eventUpdateHovered(InteractiveInterface* activeGUI, sf::Vector2f cursorPos) noexcept;
 
 	/**
-	 * \see Similar to `eventUpdateHovered`, but converts a BasicInterface to a interactive one.
-	 *		It is slightly less optimized due to the dynamic_cast, but more user-friendly.
-	 */
-	static Item eventUpdateHovered(BasicInterface* activeGUI, sf::Vector2f cursorPos) noexcept;
-
-	/**
-	 * \brief Tells the active GUI that the cursor is pressed.
+	 * \brief Activate the button if it is pressed
 	 * \complexity O(1).
 	 *
-	 * \param[out] activeGUI: The current GUI. No effect if not interactive
+	 * \param[out] activeGUI: The current GUI.
 	 *
-	 * \note You do not need to call this function if no buttons were added.
+	 * \note If there are no buttons, you don't have to call this function.
+	 * 
+	 * \pre activeGUI must not be nullptr
+	 * \post The hovered button will be executed (or nothing happens)
 	 * \warning Asserts if activeGUI is nullptr.
 	 */
-	static void eventPressed(BasicInterface* activeGUI) noexcept;
+	static void eventPressed(InteractiveInterface* activeGUI) noexcept;
+
+	/**
+	 * \brief Resets the hovered item. Useful if the current displayed interface changes
+	 * \complexity O(1).
+	 * 
+	 * \return An empty item.
+	 */
+	inline static Item resetHovered() noexcept{ return (s_hoveredItem = Item{}); }
 
 protected:
 	 
@@ -247,67 +255,10 @@ private:
 
 	size_t m_nbOfButtonTexts; // The number of interactive texts.
 	size_t m_nbOfButtonSprites; // The number of interactive sprites.
+
 	using ButtonElement = std::pair<ButtonFunction, short>;
 	std::unordered_map<std::string, ButtonElement, TransparentHash, TransparentEqual> m_allButtons; // Contains all buttons.
 };
-
-/**
- * \code
- * sf::Vector2u windowSize{ 1000, 1000 };
- * sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3" };
- * IGUI mainInterface{ &window, 1080 };
- * IGUI otherInterface{ &window, 1080 };
- * BGUI* curInterface{ &mainInterface };
- *
- * mainInterface.addText("Hi!!\nWelcome to my GUI", sf::Vector2f{ 200, 150 }, 48, sf::Color{255, 255, 255}, "__default", gui::Alignment::Left);
- *
- * mainInterface.addDynamicText("text1", "entry", { 500, 400 });
- * mainInterface.addInteractive("text1", [](IGUI* igui) {igui->setWritingText("text1"); });
- *
- * mainInterface.addDynamicText("text2", "entry", {500, 500});
- * mainInterface.addInteractive("text2", [](IGUI* igui) {igui->setWritingText("text2"); });
- *
- * mainInterface.addDynamicText("other", "switch", { 500, 800 });
- * mainInterface.addInteractive("other", [&otherInterface, &curInterface](IGUI*) mutable {curInterface = &otherInterface; });
- *
- * sf::RectangleShape rect{ { 50, 50 } };
- * otherInterface.addDynamicSprite("colorChanger", gui::createTextureFromDrawables(rect), sf::Vector2f{500, 850});
- * otherInterface.addInteractive("colorChanger");
- *
- * otherInterface.addDynamicText("main", "switch", { 500, 500 });
- * otherInterface.addInteractive("main", [&mainInterface, &curInterface](IGUI*) mutable {curInterface = &mainInterface; });
- *
- * IGUI::Item curItem{};
- * while (window.isOpen())
- * { 
- *     while (const std::optional event = window.pollEvent())
- *     { 
- *	       if (event->is<sf::Event::MouseMoved>() && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
- *		       curItem = IGUI::eventUpdateHovered(curInterface, window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position));
- *
- *		   if (event->is<sf::Event::MouseButtonPressed>() && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
- *			   IGUI::eventPressed(curInterface); // If removed, would disable the pressed buttons
- *
- *		   if (event->is<sf::Event::Resized>())
- *			   BGUI::windowResized(&window, windowSize);
- *
- *		   if (event->is<sf::Event::Closed>() || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
- *			   window.close();
- *	   }
- *
- *	   // If you ignore this feature, you could delete the variable curItem entirely.
- *	   // However, this is less limited since you can use more arguments, watch for more events...
- *	   // Moreover, this is better for performance-critical functions because storing a function in a
- *	   // `std::function` impacts the fps.
- *	   if (curItem.igui == &otherInterface && curItem.identifier == "colorChanger")
- *	       otherInterface.getDynamicSprite("colorChanger")->rotate(sf::degrees(1));
- *
- *	   window.clear();
- *	   curInterface->draw();
- *	   window.display();
- * }
- * \endcode
- */
 
 } // gui namespace
 

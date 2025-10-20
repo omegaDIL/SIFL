@@ -83,7 +83,7 @@ void moveProgressBar(MutableInterface* gui, const std::string& identifier, float
  * 
  * \see removeProgressBar, addProgessBar.
  */
-void hideProgressBar(MutableInterface* gui, const std::string& identifier, bool hide = true);
+constexpr void hideProgressBar(MutableInterface* gui, const std::string& identifier, bool hide = true);
 
 /**
  * \brief Removes the progress bar and its elements from the gui.
@@ -186,7 +186,7 @@ double moveSlider(InteractiveInterface* gui, const std::string& identifier, doub
  * 
  * \see removeSlider, addSlider.
  */
-void hideSlider(InteractiveInterface* gui, const std::string& identifier, bool hide = true);
+constexpr void hideSlider(InteractiveInterface* gui, const std::string& identifier, bool hide = true);
 
 /**
  * \brief Removes the slider and its elements from the gui.
@@ -274,7 +274,7 @@ void addMQB(InteractiveInterface* gui, const std::string& identifier, sf::Vector
  * 
  * \see addMQB.
  */
-std::vector<unsigned short> getMQBStatus(InteractiveInterface* gui, const std::string& identifier) noexcept;
+constexpr std::vector<unsigned short> getMQBStatus(InteractiveInterface* gui, const std::string& identifier) noexcept;
 
 /**
  * \brief Hides or shows the multiple question box and its elements.
@@ -298,7 +298,7 @@ std::vector<unsigned short> getMQBStatus(InteractiveInterface* gui, const std::s
  * 
  * \see removeMQB, addMQB.
  */
-void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide = true) noexcept;
+constexpr void hideMQB(InteractiveInterface* gui, const std::string& identifier, bool hide = true) noexcept;
 
 /**
  * \brief Removes the multiple question box and its elements from the gui.
@@ -364,7 +364,7 @@ using WritingFunction = std::function<bool(char32_t&, sf::String&, TextWrapper*)
  * // You can use interactive and button elements to begin writing.
  * \endcode
  */
-bool updateWritingText(TextWrapper* text, char32_t unicodeValue, const WritingFunction& func = nullptr);
+constexpr bool updateWritingText(TextWrapper* text, char32_t unicodeValue, const WritingFunction& func = nullptr);
 
 /**
  * \see Similar to updateWritingText(), but works by identifiers: more secure if the interface is
@@ -376,7 +376,7 @@ bool updateWritingText(TextWrapper* text, char32_t unicodeValue, const WritingFu
  * \pre The gui must be a valid ptr.
  * \warning The program will assert otherwise.
  */
-bool updateWritingText(MutableInterface* gui, std::string_view identifier, char32_t unicodeValue, const WritingFunction& func = nullptr);
+constexpr bool updateWritingText(MutableInterface* gui, std::string_view identifier, char32_t unicodeValue, const WritingFunction& func = nullptr);
 
 /**
  * \brief This is an example of a simple WritingFunction.
@@ -391,7 +391,7 @@ bool updateWritingText(MutableInterface* gui, std::string_view identifier, char3
  * \return `false` if the character is any of those character: escape/CR/LF.
  *		   `true` otherwise.
  */
-inline bool basicWritingFunction(char32_t& c, sf::String& str, TextWrapper* txt) noexcept
+constexpr inline bool basicWritingFunction(char32_t& c, sf::String& str, TextWrapper* txt) noexcept
 {
 	if (c != 27 && c != '\n')
 		return true;

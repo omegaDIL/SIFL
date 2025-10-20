@@ -20,10 +20,6 @@
 #include <string>
 #include <sstream>
 
-using BGUI = gui::BasicInterface;
-using MGUI = gui::MutableInterface;
-using IGUI = gui::InteractiveInterface;
-
 /**
  * @brief Creates a new instance of a window to display an error message.
  * @complexity Depends on the user who stops the window.
@@ -35,44 +31,64 @@ using IGUI = gui::InteractiveInterface;
  * @note Don't forget to put the character \n to avoid the text to not be seen entirely when you
  *       have a long line.
  *
- * @see `sf::RenderWindow`, `IGUI`.
+ * @see `sf::RenderWindow`, `InteractiveInterface`.
  */
 void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstream& errorMessage) noexcept;
 
+/**
+ * \brief This struct helps switching from a displayed interface to another one.
+ * 
+ * The overloaded operator= ensures that the instance is properly set.
+ * It sets derived pointers to nullptr and resets the hovered item (its own instance + the IGUI's one)
+ * 
+ * You can use it as if it were a basic interface pointer (see operator->), or directly access the 
+ * public pointer attributes.
+ * 
+ * There are conversion functions to pointers for all interfaces type in order to shorten your code.
+ * 
+ * It is recommended for you to store the return value of `eventUpdateHovered` using this struct:
+ * `curGui.item = IGUI::eventUpdateHovered(curGui, window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position));`
+ * Here curGUI is an instance of currentGUI.
+ */
 struct currentGUI
 {
 	// "Default" constructors
-	inline currentGUI() noexcept : gInteractive{ nullptr }, gMutable{ nullptr }, gBasic{ nullptr }, item{}
-	{ IGUI::resetHovered(); }
-	inline currentGUI(std::nullptr_t) noexcept : currentGUI{} {}
+	constexpr inline currentGUI() noexcept : gInteractive{ nullptr }, gMutable{ nullptr }, gBasic{ nullptr }, item{}
+	{ gui::InteractiveInterface::resetHovered(); }
+	constexpr inline currentGUI(std::nullptr_t) noexcept : currentGUI{} {}
 
 	// Rule of five
-	currentGUI(const currentGUI&) noexcept = default;
-	currentGUI(currentGUI&&) noexcept = delete;
-	currentGUI& operator=(const currentGUI&) noexcept = default;
-	currentGUI& operator=(currentGUI&&) noexcept = delete;
-	~currentGUI() noexcept = default; 
+	constexpr currentGUI(const currentGUI&) noexcept = default;
+	constexpr currentGUI(currentGUI&&) noexcept = delete;
+	constexpr currentGUI& operator=(const currentGUI&) noexcept = default;
+	constexpr currentGUI& operator=(currentGUI&&) noexcept = delete;
+	constexpr ~currentGUI() noexcept = default; 
 
-	// Assignment operator -> sets to nullptr derived classes
-	currentGUI& operator=(std::nullptr_t) noexcept;
-	currentGUI& operator=(BGUI* ptr) noexcept;
-	currentGUI& operator=(MGUI* ptr) noexcept;
-	currentGUI& operator=(IGUI* ptr) noexcept;
+	// Assignment operator -> sets to nullptr derived pointers
+	constexpr currentGUI& operator=(std::nullptr_t) noexcept;
+	constexpr currentGUI& operator=(gui::BasicInterface* ptr) noexcept;
+	constexpr currentGUI& operator=(gui::MutableInterface* ptr) noexcept;
+	constexpr currentGUI& operator=(gui::InteractiveInterface* ptr) noexcept;
 
 	// Conversion functions -> returns nullptr if the conversion is not possible
-	operator BGUI*() noexcept { return gBasic;	     }
-	operator MGUI*() noexcept { return gMutable;	 }
-	operator IGUI*() noexcept { return gInteractive; }
+	constexpr operator gui::BasicInterface*() noexcept { return gBasic;	     }
+	constexpr operator gui::MutableInterface*() noexcept { return gMutable;	 }
+	constexpr operator gui::InteractiveInterface*() noexcept { return gInteractive; }
 
-	// Can be used like an interface ptr
-	BGUI* operator->() noexcept { return gBasic; }
+	// Can be used like an basic interface ptr
+	constexpr gui::BasicInterface* operator->() noexcept { return gBasic; }
 
 
-	BGUI* gBasic;
-	MGUI* gMutable;
-	IGUI* gInteractive;
-	IGUI::Item item;
+	gui::BasicInterface* gBasic;
+	gui::MutableInterface* gMutable;
+	gui::InteractiveInterface* gInteractive;
+	gui::InteractiveInterface::Item item;
 };
+
+
+using BGUI = gui::BasicInterface; // don't hesitate to change this alias if you encounter ambiguity issues.
+using MGUI = gui::MutableInterface; // Nothing in this library use them, it is really just for you
+using IGUI = gui::InteractiveInterface; // except populateGUI
 
 //TODO: Complete you own populateGUI function
 // The current impl is an example (see \code)
@@ -83,4 +99,7 @@ void populateGUI(currentGUI& cur, std::string& writing, IGUI* main, IGUI* other)
 // TODO: swap not working -> may invalidate other functions
 // TODO: add all examples
 // TODO: review mqb
+// TODO: rework locking comment
+// TODO: Use umap + vec au lieu de ummap dans basic pour cache locality
+// TODO: mettre bgui au lieu de mgui dans error window
 #endif // GUI_HPP

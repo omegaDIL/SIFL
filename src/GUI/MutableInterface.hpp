@@ -29,12 +29,7 @@ namespace gui
 /**
  * \brief  Manages an interface with changeable contents: texts and shapes.
  * 
- * Once you have added all your elements, you can lock the interface to avoid futur modifications.
- * Locking CAN reduce memory usage a little bit. The locking state also ensure stability for pointers,
- * hence you won't be able to use the move functions. However, all pointers returned by getter functions
- * will remain valid. The lock state does not affect editing elements that are already added.
- * You may not be able to lock the interface if you often add and remove elements. You can try to
- * hide them instead, but it is not always the best way. Sometimes removing elements can save memory.
+ * Move functions are disabled if the interface is locked.
  *
  * \note This class stores UI components ; it will use a considerable amount of memory.
  * \note Each mutable elements might consume a little more memory than their fixed counterparts.
@@ -90,7 +85,7 @@ public:
 	 * \post An interface is constructed.
 	 * \warning The program will assert otherwise.
 	 */
-	inline explicit MutableInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
+	constexpr inline explicit MutableInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
 		: BasicInterface{ window, relativeScalingDefinition }, m_dynamicTexts{}, m_dynamicSprites{}, m_indexesForEachDynamicTexts{}, m_indexesForEachDynamicSprites{}
 	{}
 
@@ -123,7 +118,8 @@ public:
 	 * \note Identifiers must be unique between texts and sprites. But one text and one sprite can have
 	 *		 a similar identifier.
 	 * \note When this function is called for the first time, and until it is loaded successfully, it
-	 *		 will try to load the default font under the name `__default` from the path `assets/defaultFont.ttf`.
+	 *		 will try to load the default font under the name `__default` from the path `../assets/defaultFont.ttf`.
+	 *		 It uses `loadFontFromFile`, so the path ../assets might not be correct if you changed it.
 	 *
 	 * \pre A font file named `defaultFont.ttf` must exist in the `assets/` folder.
 	 * \post The default font is loaded and available for use.
@@ -230,7 +226,7 @@ public:
 	 *
 	 * \see `TextWrapper`.
 	 */
-	[[nodiscard]] TextWrapper* getDynamicText(std::string_view identifier) noexcept;
+	[[nodiscard]] constexpr TextWrapper* getDynamicText(std::string_view identifier) noexcept;
 
 	/**
 	 * \brief Returns a sprite Wrapper ptr, or nullptr if it does not exist.
@@ -245,7 +241,7 @@ public:
 	 * 
 	 * \see `SpriteWrapper`.
 	 */
-	[[nodiscard]] SpriteWrapper* getDynamicSprite(std::string_view identifier) noexcept;
+	[[nodiscard]] constexpr SpriteWrapper* getDynamicSprite(std::string_view identifier) noexcept;
 
 	/**
 	 * \brief Prevents any addition of new elements to the interface.
@@ -255,11 +251,22 @@ public:
 	 * Locking the interface can reduce memory usage if there are a lot of dynamic elements, and even
 	 * more if `shrinkToFit` is true. But be aware that `shrinkToFit` can be time consuming if you have
 	 * a lot of elements.
+	 * 
+	 * Once you have added all your elements, you can lock the interface to avoid futur modifications.
+	 * Locking CAN reduce memory usage a little bit. The locking state also ensure stability for pointers,
+	 * hence you won't be able to use the move functions. However, all pointers returned by getter functions
+	 * will remain valid. The lock state does not affect editing elements that are already added.
+	 * You may not be able to lock the interface if you often add and remove elements. You can try to
+	 * hide them instead, but it is not always the best way. Sometimes removing elements can save memory.
+	 * 
+	 * Once you have added all your elements, you can lock the interface to avoid futur modifications.
+	 * Locking the interface can reduce memory usage a little bit if `shrinkToFit` is true. But be aware
+	 * that it can be time consuming if you have a lot of elements.
 	 *
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
 	 *						  sprites.
 	 */
-	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
+	constexpr virtual void lockInterface(bool shrinkToFit = true) noexcept override;
 
 protected:
 

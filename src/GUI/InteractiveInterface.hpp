@@ -69,20 +69,20 @@ public:
 		std::variant<std::monostate, TextWrapper*, SpriteWrapper*> ptr; // A pointer to the actual transformable.
 		// Watch out if the interface is not locked, this pointer might be invalidated at any time.
 
-		Item(std::string id, SpriteWrapper* spritePtr) noexcept
+		constexpr Item(std::string id, SpriteWrapper* spritePtr) noexcept
 			: identifier{ id }, ptr{ spritePtr } {}
 
-		Item(std::string id, TextWrapper* textPtr) noexcept
+		constexpr Item(std::string id, TextWrapper* textPtr) noexcept
 			: identifier{ id }, ptr{ textPtr } {}
 
-		Item() noexcept 
+		constexpr Item() noexcept 
 			: identifier{ "" }, ptr{ std::monostate{} } {}
 
-		Item(const Item& item) noexcept = default;
-		Item(Item&& item) noexcept = default;
-		Item& operator=(const Item& item) noexcept = default;
-		Item& operator=(Item&& item) noexcept = default;
-		~Item() noexcept = default;
+		constexpr Item(const Item& item) noexcept = default;
+		constexpr Item(Item&& item) noexcept = default;
+		constexpr Item& operator=(const Item& item) noexcept = default;
+		constexpr Item& operator=(Item&& item) noexcept = default;
+		constexpr ~Item() noexcept = default;
 	};
 
 
@@ -112,7 +112,7 @@ public:
 	 * \post An interface is constructed.
 	 * \warning The program will assert otherwise.
 	 */
-	inline explicit InteractiveInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
+	constexpr inline explicit InteractiveInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
 		: MutableInterface{ window, relativeScalingDefinition }, m_nbOfButtonTexts{}, m_nbOfButtonSprites{}, m_allButtons{}
 	{}
 
@@ -186,7 +186,7 @@ public:
 	 * \complexity O(1) if shrinkToFit is false
 	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
 	 *
-	 * Contrary to MutableInterface::lockInterface, memory can only be saved if shrinkToFit is true.
+	 * Contrary to MutableInterface::lockInterface but similar to BasicInterface::lockInterface, memory can only be saved if shrinkToFit is true.
 	 * But be aware that `shrinkToFit` can be time consuming if you have a lot of elements. 
 	 * However, it does speed up interaction checks (even if shrinkToFit is false).
 	 * The stability of pointers is, of course, guaranteed as well.
@@ -196,7 +196,7 @@ public:
 	 * 
 	 * \note Don't forget that it also applies to addInteractive() 
 	 */
-	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
+	constexpr virtual void lockInterface(bool shrinkToFit = true) noexcept override;
 
 
 	/**
@@ -237,7 +237,7 @@ public:
 	 * \post The hovered button will be executed (or nothing happens)
 	 * \warning Asserts if activeGUI is nullptr.
 	 */
-	static void eventPressed(InteractiveInterface* activeGUI) noexcept;
+	constexpr static void eventPressed(InteractiveInterface* activeGUI) noexcept;
 
 	/**
 	 * \brief Resets the hovered item. Useful if the current displayed interface changes
@@ -245,8 +245,8 @@ public:
 	 * 
 	 * \return An empty item.
 	 */
-	inline static Item resetHovered() noexcept{ return (s_hoveredItem = Item{}); }
-
+	constexpr inline static Item resetHovered() noexcept{ return (s_hoveredItem = Item{}); }
+	
 protected:
 	 
 	inline static Item s_hoveredItem{}; // The current item that is hovered.

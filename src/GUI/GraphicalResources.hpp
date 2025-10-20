@@ -60,7 +60,7 @@ public:
 	 *
 	 * \param[in] message The error message.
 	 */
-	inline explicit LoadingGraphicalResourceFailure(const std::string& message) : std::runtime_error{ message }
+	constexpr inline explicit LoadingGraphicalResourceFailure(const std::string& message) : std::runtime_error{ message }
 	{}
 
 
@@ -68,7 +68,7 @@ public:
 	 * \brief Returns the error message.
 	 * \complexity O(1).
 	 */
-	inline virtual const char* what() const noexcept override
+	constexpr inline virtual const char* what() const noexcept override
 	{
 		return std::runtime_error::what();
 	}
@@ -82,11 +82,11 @@ struct TransparentHash
 {
 	using is_transparent = void; // marks as transparent
 
-	size_t operator()(std::string_view sv) const noexcept
+	constexpr size_t operator()(std::string_view sv) const noexcept
 	{
 		return std::hash<std::string_view>{}(sv);
 	}
-	size_t operator()(const std::string& s) const noexcept
+	constexpr size_t operator()(const std::string& s) const noexcept
 	{
 		return std::hash<std::string_view>{}(s);
 	}
@@ -99,19 +99,19 @@ struct TransparentEqual
 {
 	using is_transparent = void;
 
-	bool operator()(std::string_view lhs, std::string_view rhs) const noexcept
+	constexpr bool operator()(std::string_view lhs, std::string_view rhs) const noexcept
 	{
 		return lhs == rhs;
 	}
-	bool operator()(const std::string& lhs, const std::string& rhs) const noexcept
+	constexpr bool operator()(const std::string& lhs, const std::string& rhs) const noexcept
 	{
 		return lhs == rhs;
 	}
-	bool operator()(std::string_view lhs, const std::string& rhs) const noexcept
+	constexpr bool operator()(std::string_view lhs, const std::string& rhs) const noexcept
 	{
 		return lhs == rhs;
 	}
-	bool operator()(const std::string& lhs, std::string_view rhs) const noexcept
+	constexpr bool operator()(const std::string& lhs, std::string_view rhs) const noexcept
 	{
 		return lhs == rhs;
 	}
@@ -160,7 +160,7 @@ enum class Alignment : uint8_t
  *
  * \note If the alignment are not compatible, lhs is returned.
  */
-Alignment operator|(Alignment lhs, Alignment rhs) noexcept;
+constexpr Alignment operator|(Alignment lhs, Alignment rhs) noexcept;
 
 /**
  * \brief Calculates the origin's coordinate given an alignment and a `sf::Transformable` bound.
@@ -173,7 +173,7 @@ Alignment operator|(Alignment lhs, Alignment rhs) noexcept;
  * 
  * \see `Alignment`, `sf::Transformable::setOrigin`.
  */
-sf::Vector2f computeNewOrigin(sf::FloatRect bound, Alignment alignment) noexcept;
+constexpr sf::Vector2f computeNewOrigin(sf::FloatRect bound, Alignment alignment) noexcept;
 
 
 /**
@@ -271,7 +271,7 @@ public:
 
 protected:
 	
-	inline TransformableWrapper() noexcept : hide{ true }, m_alignment{ Alignment::Center }, m_transformable{ nullptr } {}
+	constexpr inline TransformableWrapper() noexcept : hide{ true }, m_alignment{ Alignment::Center }, m_transformable{ nullptr } {}
 	
 	/**
 	 * \brief Initializes the wrapper.
@@ -446,7 +446,7 @@ public:
 	 *
 	 * \return A reference to the wrapped `sf::Text` object.
 	 */
-	[[nodiscard]] inline const sf::Text& getText() const noexcept
+	[[nodiscard]] constexpr inline const sf::Text& getText() const noexcept
 	{
 		return m_wrappedText;
 	}
@@ -488,7 +488,7 @@ public:
 	 *
 	 * \see `loadFontFromFile`, `setFont`
 	 */
-	static void createFont(std::string name, sf::Font font) noexcept;
+	constexpr static void createFont(std::string name, sf::Font font) noexcept;
 	
 	/**
 	 * \brief Removes the font from the wrapper with the given name.
@@ -516,7 +516,7 @@ public:
 	 * 
 	 * \see `createFont`.
 	 */
-	[[nodiscard]] static sf::Font* getFont(std::string_view name) noexcept;
+	[[nodiscard]] constexpr static sf::Font* getFont(std::string_view name) noexcept;
 
 private:
 
@@ -539,7 +539,8 @@ private:
  * 
  * \param[out] errorMessage Will add the error message to this stream if the loading fails.
  * \param[in]  fileName The name of the file.
- * \param[in]  path The path to this file (assets file by default).
+ * \param[in]  path: The path to this file (../assets/ by default but you should change that
+ *					 default value if it does not fit you).
  * 
  * \return a sf::Font if the loading was successful, std::nullopt otherwise.
  * 
@@ -660,7 +661,7 @@ public:
 	 *
 	 * \return A reference to the wrapped `sf::Sprite` object.
 	 */
-	[[nodiscard]] inline const sf::Sprite& getSprite() const noexcept
+	[[nodiscard]] constexpr inline const sf::Sprite& getSprite() const noexcept
 	{
 		return m_wrappedSprite;
 	}
@@ -710,7 +711,7 @@ public:
 	 * 
 	 * \return The index within vector.
 	 */
-	[[nodiscard]] inline size_t getCurrentTextureIndex() const noexcept
+	[[nodiscard]] constexpr inline size_t getCurrentTextureIndex() const noexcept
 	{
 		return m_curTextureIndex;
 	}
@@ -756,7 +757,7 @@ public:
 	 * \see `createTexture`, `loadTexture`, `unloadTexture`, `switchToNextTexture`
 	 */
 	template<typename... Ts> requires (std::same_as<Ts, sf::IntRect> && ...)
-	inline bool addTexture(std::string_view name, Ts... rects)
+	constexpr inline bool addTexture(std::string_view name, Ts... rects)
 	{
 		auto mapAccessIterator{ s_accessToTextures.find(name) };
 		if (mapAccessIterator == s_accessToTextures.end()) [[unlikely]]
@@ -853,7 +854,7 @@ public:
 	 *
 	 * \see `loadTextureFromFile`, `addTexture`.
 	 */
-	static void createTexture(std::string name, sf::Texture texture, Reserved shared = Reserved::Yes) noexcept;
+	constexpr static void createTexture(std::string name, sf::Texture texture, Reserved shared = Reserved::Yes) noexcept;
 	
 	/**
 	 * \brief Removes a shared texture from the wrapper with the given name. 
@@ -884,7 +885,7 @@ public:
 	 *
 	 * \return The address of the texture.
 	 */
-	[[nodiscard]] static sf::Texture* getTexture(std::string_view name) noexcept;
+	[[nodiscard]] constexpr static sf::Texture* getTexture(std::string_view name) noexcept;
 
 	/**
 	 * \brief Loads a previously registered texture into the graphical memory (e.g., VRAM).
@@ -1063,7 +1064,8 @@ private:
  *
  * \param[out] errorMessage: Will add the error message to this stream if the loading fails
  * \param[in]  fileName: The name of the file.
- * \param[in]  path: The path to this file (assets file by default).
+ * \param[in]  path: The path to this file (../assets/ by default but you should change that
+ *					 default value if it does not fit you).
  *
  * \return a sf::Texture if the loading was successful, std::nullopt otherwise.
  * 

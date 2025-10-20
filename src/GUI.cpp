@@ -4,7 +4,7 @@ void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstre
 {
 	sf::Vector2u windowSize{ sf::Vector2u{ 720, 720 } };
 	sf::RenderWindow window{ sf::VideoMode{ windowSize }, errorTitle };
-	MGUI gui{ &window }; // Create the interface to use the GUI.
+	gui::MutableInterface gui{ &window }; // Create the interface to use the GUI.
 
 	gui.addDynamicText("message", errorMessage.str(), sf::Vector2f{ 360, 260 });
 	gui.addText("ok I understand - press any key", sf::Vector2f{ 360, 600 });
@@ -28,7 +28,7 @@ void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstre
 				window.close();
 
 			if (event->is<sf::Event::Resized>())
-				BGUI::windowResized(&window, windowSize);
+				gui::BasicInterface::windowResized(&window, windowSize);
 		}
 
 		window.clear();
@@ -43,40 +43,40 @@ currentGUI& currentGUI::operator=(std::nullptr_t) noexcept
 	gMutable = nullptr;
 	gInteractive = nullptr;
 
-	item = IGUI::resetHovered();
+	item = gui::InteractiveInterface::resetHovered();
 
 	return *this;
 }
 
-currentGUI& currentGUI::operator=(BGUI* ptr) noexcept
+currentGUI& currentGUI::operator=(gui::BasicInterface* ptr) noexcept
 {
 	gBasic = ptr;
 	gMutable = nullptr;
 	gInteractive = nullptr;
 
-	item = IGUI::resetHovered();
+	item = gui::InteractiveInterface::resetHovered();
 
 	return *this;
 }
 
-currentGUI& currentGUI::operator=(MGUI* ptr) noexcept
+currentGUI& currentGUI::operator=(gui::MutableInterface* ptr) noexcept
 {
 	gBasic = ptr;
 	gMutable = ptr;
 	gInteractive = nullptr;
 
-	item = IGUI::resetHovered();
+	item = gui::InteractiveInterface::resetHovered();
 
 	return *this;
 }
 
-currentGUI& currentGUI::operator=(IGUI* ptr) noexcept
+currentGUI& currentGUI::operator=(gui::InteractiveInterface* ptr) noexcept
 {
 	gBasic = ptr;
 	gMutable = ptr;
 	gInteractive = ptr;
 
-	item = IGUI::resetHovered();
+	item = gui::InteractiveInterface::resetHovered();
 
 	return *this;
 }

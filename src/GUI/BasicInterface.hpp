@@ -42,9 +42,7 @@ namespace gui
  * \brief Manages items to create a basic GUI. You can display texts and sprites.
  * \details All elements are fixed and can't be edited nor removed.
  * 
- * Once you have added all your elements, you can lock the interface to avoid futur modifications.
- * Locking can reduce memory usage a little bit. The locking state also ensure stability for pointers,
- * hence you won't be able to use the move functions. 
+ * Move functions are disabled if the interface is locked.
  *
  * \note This class stores UI components ; it will use a considerable amount of memory.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
@@ -109,13 +107,13 @@ public:
 	 * \post An interface is constructed.
 	 * \warning The program will assert otherwise.
 	 */
-	explicit BasicInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept;
+	constexpr explicit BasicInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept;
 
-	inline BasicInterface() noexcept : m_window{ nullptr }, m_texts{}, m_sprites{}, m_relativeScalingDefinition{ 1080 }, m_lockState{ false } {}
-	BasicInterface(const BasicInterface&) noexcept = delete;
-	BasicInterface(BasicInterface&& other) noexcept; // Asserts if the other interface is locked
-	BasicInterface& operator=(const BasicInterface&) noexcept = delete;
-	BasicInterface& operator=(BasicInterface&& other) noexcept; // Asserts if any interface is locked
+	constexpr inline BasicInterface() noexcept : m_window{ nullptr }, m_texts{}, m_sprites{}, m_relativeScalingDefinition{ 1080 }, m_lockState{ false } {}
+	constexpr BasicInterface(const BasicInterface&) noexcept = delete;
+	constexpr BasicInterface(BasicInterface&& other) noexcept; // Asserts if the other interface is locked
+	constexpr BasicInterface& operator=(const BasicInterface&) noexcept = delete;
+	constexpr BasicInterface& operator=(BasicInterface&& other) noexcept; // Asserts if any interface is locked
 	virtual ~BasicInterface() noexcept; /// \complexity O(N + M) where N is the number of reserved textures of all sprites and M is number of interfaces with the same window
 
 
@@ -134,7 +132,8 @@ public:
 	 * \param[in] rot The rotation of the `sf::Text`.
 	 *
 	 * \note When this function is called for the first time, and until it is loaded successfully, it
-	 *		 will try to load the default font under the name `__default` from the path `assets/defaultFont.ttf`.
+	 *		 will try to load the default font under the name `__default` from the path `../assets/defaultFont.ttf`.
+	 *		 It uses `loadFontFromFile`, so the path ../assets might not be correct if you changed it.
 	 * 
 	 * \pre A font file named `defaultFont.ttf` must exist in the `assets/` folder.
 	 * \post The default font is loaded and available for use.
@@ -216,13 +215,14 @@ public:
 	 * \complexity O(1) if shrinkToFit is false
 	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
 	 * 
+	 * Once you have added all your elements, you can lock the interface to avoid futur modifications.
 	 * Locking the interface can reduce memory usage a little bit if `shrinkToFit` is true. But be aware
 	 * that it can be time consuming if you have a lot of elements.
 	 * 
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
 	 *						  sprites.
 	 */
-	virtual void lockInterface(bool shrinkToFit = true) noexcept;
+	constexpr virtual void lockInterface(bool shrinkToFit = true) noexcept;
 
 
 	/**

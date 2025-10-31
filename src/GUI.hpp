@@ -95,7 +95,6 @@ using IGUI = gui::InteractiveInterface; // except populateGUI
 void populateGUI(currentGUI& cur, std::string& writing, IGUI* main, IGUI* other) noexcept;
 
 // TODO: module C++20
-// TODO: changer hash
 // TODO: swap not working -> may invalidate other functions
 // TODO: add all examples
 // TODO: review mqb

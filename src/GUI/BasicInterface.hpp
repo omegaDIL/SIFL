@@ -107,13 +107,13 @@ public:
 	 * \post An interface is constructed.
 	 * \warning The program will assert otherwise.
 	 */
-	constexpr explicit BasicInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept;
+	explicit BasicInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept;
 
 	constexpr inline BasicInterface() noexcept : m_window{ nullptr }, m_texts{}, m_sprites{}, m_relativeScalingDefinition{ 1080 }, m_lockState{ false } {}
-	constexpr BasicInterface(const BasicInterface&) noexcept = delete;
-	constexpr BasicInterface(BasicInterface&& other) noexcept; // Asserts if the other interface is locked
-	constexpr BasicInterface& operator=(const BasicInterface&) noexcept = delete;
-	constexpr BasicInterface& operator=(BasicInterface&& other) noexcept; // Asserts if any interface is locked
+	BasicInterface(const BasicInterface&) noexcept = delete;
+	BasicInterface(BasicInterface&& other) noexcept; // Asserts if the other interface is locked
+	BasicInterface& operator=(const BasicInterface&) noexcept = delete;
+	BasicInterface& operator=(BasicInterface&& other) noexcept; // Asserts if any interface is locked
 	virtual ~BasicInterface() noexcept; /// \complexity O(N + M) where N is the number of reserved textures of all sprites and M is number of interfaces with the same window
 
 
@@ -221,8 +221,10 @@ public:
 	 * 
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
 	 *						  sprites.
+	 * 
+	 * \note Is not constexpr because MutableInterface overrides it with a none constexpr member.
 	 */
-	constexpr virtual void lockInterface(bool shrinkToFit = true) noexcept;
+	virtual void lockInterface(bool shrinkToFit = true) noexcept;
 
 
 	/**

@@ -85,7 +85,7 @@ public:
 	 * \post An interface is constructed.
 	 * \warning The program will assert otherwise.
 	 */
-	constexpr inline explicit MutableInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
+	inline explicit MutableInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
 		: BasicInterface{ window, relativeScalingDefinition }, m_dynamicTexts{}, m_dynamicSprites{}, m_indexesForEachDynamicTexts{}, m_indexesForEachDynamicSprites{}
 	{}
 
@@ -226,7 +226,7 @@ public:
 	 *
 	 * \see `TextWrapper`.
 	 */
-	[[nodiscard]] constexpr TextWrapper* getDynamicText(std::string_view identifier) noexcept;
+	[[nodiscard]] TextWrapper* getDynamicText(std::string_view identifier) noexcept;
 
 	/**
 	 * \brief Returns a sprite Wrapper ptr, or nullptr if it does not exist.
@@ -241,7 +241,7 @@ public:
 	 * 
 	 * \see `SpriteWrapper`.
 	 */
-	[[nodiscard]] constexpr SpriteWrapper* getDynamicSprite(std::string_view identifier) noexcept;
+	[[nodiscard]] SpriteWrapper* getDynamicSprite(std::string_view identifier) noexcept;
 
 	/**
 	 * \brief Prevents any addition of new elements to the interface.
@@ -266,7 +266,7 @@ public:
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
 	 *						  sprites.
 	 */
-	constexpr virtual void lockInterface(bool shrinkToFit = true) noexcept override;
+	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
 
 protected:
 

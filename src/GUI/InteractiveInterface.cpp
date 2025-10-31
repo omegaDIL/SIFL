@@ -72,8 +72,8 @@ void InteractiveInterface::addInteractive(std::string identifier, ButtonFunction
 void InteractiveInterface::lockInterface(bool shrinkToFit) noexcept
 {
 	BasicInterface::lockInterface(shrinkToFit);
-	// MutableInterface::lockInterface would clear 'm_indexesForEachDynamicTexts' and 
-	// 'm_indexesForEachDynamicSprites', which we need for interactives.
+
+	// We don't clear 'm_indexesForEachDynamicTexts' and 'm_indexesForEachDynamicSprites' because we need them for interactives.
 }
 
 InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(InteractiveInterface* igui, sf::Vector2f cursorPos) noexcept

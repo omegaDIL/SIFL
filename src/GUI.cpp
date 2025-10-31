@@ -37,7 +37,7 @@ void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstre
 	}
 }
 
-currentGUI& currentGUI::operator=(std::nullptr_t) noexcept
+constexpr currentGUI& currentGUI::operator=(std::nullptr_t) noexcept
 {
 	gBasic = nullptr;
 	gMutable = nullptr;
@@ -48,7 +48,7 @@ currentGUI& currentGUI::operator=(std::nullptr_t) noexcept
 	return *this;
 }
 
-currentGUI& currentGUI::operator=(gui::BasicInterface* ptr) noexcept
+constexpr currentGUI& currentGUI::operator=(gui::BasicInterface* ptr) noexcept
 {
 	gBasic = ptr;
 	gMutable = nullptr;
@@ -59,7 +59,7 @@ currentGUI& currentGUI::operator=(gui::BasicInterface* ptr) noexcept
 	return *this;
 }
 
-currentGUI& currentGUI::operator=(gui::MutableInterface* ptr) noexcept
+constexpr currentGUI& currentGUI::operator=(gui::MutableInterface* ptr) noexcept
 {
 	gBasic = ptr;
 	gMutable = ptr;
@@ -70,7 +70,7 @@ currentGUI& currentGUI::operator=(gui::MutableInterface* ptr) noexcept
 	return *this;
 }
 
-currentGUI& currentGUI::operator=(gui::InteractiveInterface* ptr) noexcept
+constexpr currentGUI& currentGUI::operator=(gui::InteractiveInterface* ptr) noexcept
 {
 	gBasic = ptr;
 	gMutable = ptr;

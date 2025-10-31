@@ -60,7 +60,7 @@ public:
 	 *
 	 * \param[in] message The error message.
 	 */
-	constexpr inline explicit LoadingGraphicalResourceFailure(const std::string& message) : std::runtime_error{ message }
+	inline explicit LoadingGraphicalResourceFailure(const std::string& message) : std::runtime_error{ message }
 	{}
 
 
@@ -68,7 +68,7 @@ public:
 	 * \brief Returns the error message.
 	 * \complexity O(1).
 	 */
-	constexpr inline virtual const char* what() const noexcept override
+	inline virtual const char* what() const noexcept override
 	{
 		return std::runtime_error::what();
 	}
@@ -80,15 +80,43 @@ public:
  */
 struct TransparentHash
 {
+private:
+
+	constexpr uint64_t wyHash_mix(uint64_t a, uint64_t b) const noexcept
+	{
+		a ^= b;
+		a ^= (a >> 32);
+		a *= 0xd6e8feb86659fd93ull;
+		a ^= (a >> 32);
+		a *= 0xd6e8feb86659fd93ull;
+		a ^= (a >> 32);
+		return a;
+	}
+
+	constexpr size_t wyHash64(std::string_view s, uint64_t seed = 0) const noexcept
+	{
+		constexpr uint64_t _wyp0 = 0xa0761d6478bd642full;
+		constexpr uint64_t _wyp1 = 0xe7037ed1a0b428dbull;
+
+		uint64_t hash = seed ^ (s.size() * _wyp0);
+
+		for (unsigned char c : s)
+			hash = wyHash_mix(hash ^ c, _wyp1);
+
+		return static_cast<size_t>(wyHash_mix(hash, static_cast<uint64_t>(s.size())));
+	}
+
+public:
+
 	using is_transparent = void; // marks as transparent
 
 	constexpr size_t operator()(std::string_view sv) const noexcept
 	{
-		return std::hash<std::string_view>{}(sv);
+		return wyHash64(sv);
 	}
 	constexpr size_t operator()(const std::string& s) const noexcept
 	{
-		return std::hash<std::string_view>{}(s);
+		return wyHash64(s);
 	}
 };
 
@@ -199,10 +227,10 @@ class TransformableWrapper
 public:
 	
 	TransformableWrapper(const TransformableWrapper&) noexcept = default;
-	TransformableWrapper(TransformableWrapper&&) noexcept = default;
-	TransformableWrapper& operator=(const TransformableWrapper&) noexcept = default;
-	TransformableWrapper& operator=(TransformableWrapper&&) noexcept = default;
-	virtual ~TransformableWrapper() noexcept = default;
+	constexpr TransformableWrapper(TransformableWrapper&&) noexcept = default;
+	constexpr TransformableWrapper& operator=(const TransformableWrapper&) noexcept = default;
+	constexpr TransformableWrapper& operator=(TransformableWrapper&&) noexcept = default;
+	constexpr virtual ~TransformableWrapper() noexcept = default;
 
 
 	/**
@@ -488,7 +516,7 @@ public:
 	 *
 	 * \see `loadFontFromFile`, `setFont`
 	 */
-	constexpr static void createFont(std::string name, sf::Font font) noexcept;
+	static void createFont(std::string name, sf::Font font) noexcept;
 	
 	/**
 	 * \brief Removes the font from the wrapper with the given name.
@@ -516,7 +544,7 @@ public:
 	 * 
 	 * \see `createFont`.
 	 */
-	[[nodiscard]] constexpr static sf::Font* getFont(std::string_view name) noexcept;
+	[[nodiscard]] static sf::Font* getFont(std::string_view name) noexcept;
 
 private:
 
@@ -757,7 +785,7 @@ public:
 	 * \see `createTexture`, `loadTexture`, `unloadTexture`, `switchToNextTexture`
 	 */
 	template<typename... Ts> requires (std::same_as<Ts, sf::IntRect> && ...)
-	constexpr inline bool addTexture(std::string_view name, Ts... rects)
+	inline bool addTexture(std::string_view name, Ts... rects)
 	{
 		auto mapAccessIterator{ s_accessToTextures.find(name) };
 		if (mapAccessIterator == s_accessToTextures.end()) [[unlikely]]
@@ -854,7 +882,7 @@ public:
 	 *
 	 * \see `loadTextureFromFile`, `addTexture`.
 	 */
-	constexpr static void createTexture(std::string name, sf::Texture texture, Reserved shared = Reserved::Yes) noexcept;
+	 static void createTexture(std::string name, sf::Texture texture, Reserved shared = Reserved::Yes) noexcept;
 	
 	/**
 	 * \brief Removes a shared texture from the wrapper with the given name. 
@@ -885,7 +913,7 @@ public:
 	 *
 	 * \return The address of the texture.
 	 */
-	[[nodiscard]] constexpr static sf::Texture* getTexture(std::string_view name) noexcept;
+	[[nodiscard]] static sf::Texture* getTexture(std::string_view name) noexcept;
 
 	/**
 	 * \brief Loads a previously registered texture into the graphical memory (e.g., VRAM).

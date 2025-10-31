@@ -112,11 +112,11 @@ public:
 	 * \post An interface is constructed.
 	 * \warning The program will assert otherwise.
 	 */
-	constexpr inline explicit InteractiveInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
+	inline explicit InteractiveInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
 		: MutableInterface{ window, relativeScalingDefinition }, m_nbOfButtonTexts{}, m_nbOfButtonSprites{}, m_allButtons{}
 	{}
 
-	InteractiveInterface() noexcept = delete;
+	InteractiveInterface() noexcept = default;
 	InteractiveInterface(const InteractiveInterface&) noexcept = delete;
 	InteractiveInterface(InteractiveInterface&&) noexcept = default;
 	InteractiveInterface& operator=(const InteractiveInterface&) noexcept = delete;
@@ -196,7 +196,7 @@ public:
 	 * 
 	 * \note Don't forget that it also applies to addInteractive() 
 	 */
-	constexpr virtual void lockInterface(bool shrinkToFit = true) noexcept override;
+	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
 
 
 	/**
@@ -237,7 +237,7 @@ public:
 	 * \post The hovered button will be executed (or nothing happens)
 	 * \warning Asserts if activeGUI is nullptr.
 	 */
-	constexpr static void eventPressed(InteractiveInterface* activeGUI) noexcept;
+	static void eventPressed(InteractiveInterface* activeGUI) noexcept;
 
 	/**
 	 * \brief Resets the hovered item. Useful if the current displayed interface changes

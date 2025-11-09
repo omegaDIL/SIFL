@@ -8,18 +8,6 @@ namespace gui
 /// A `sf::Transformable` wrapper.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr Alignment operator|(Alignment lhs, Alignment rhs) noexcept
-{
-	auto newAlignment{ static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs) };
-	
-	// Checking if alignment are not compatible.
-	if (((newAlignment & 0b00000011) == 0b00000011)
-	|| ((newAlignment & 0b00001100) == 0b00001100))
-		newAlignment = static_cast<uint8_t>(lhs);
-
-	return static_cast<Alignment>(newAlignment);
-}
-
 constexpr sf::Vector2f computeNewOrigin(sf::FloatRect bound, Alignment alignment) noexcept
 {
 	sf::Vector2f originTopLeft{ 0, 0 };

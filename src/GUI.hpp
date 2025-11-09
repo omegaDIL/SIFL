@@ -94,8 +94,6 @@ using IGUI = gui::InteractiveInterface; // except populateGUI
 // The current impl is an example (see \code)
 void populateGUI(currentGUI& cur, std::string& writing, IGUI* main, IGUI* other) noexcept;
 
-// TODO: module C++20
-// TODO: swap not working -> may invalidate other functions
 // TODO: add all examples
 // TODO: review mqb
 // TODO: rework locking comment

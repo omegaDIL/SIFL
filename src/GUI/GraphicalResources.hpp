@@ -188,7 +188,17 @@ enum class Alignment : uint8_t
  *
  * \note If the alignment are not compatible, lhs is returned.
  */
-constexpr Alignment operator|(Alignment lhs, Alignment rhs) noexcept;
+constexpr inline Alignment operator|(Alignment lhs, Alignment rhs) noexcept
+{
+	int8_t newAlignment{ static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs) };
+
+	// Checking if alignment are not compatible.
+	if (((newAlignment & 0b00000011) == 0b00000011)
+		|| ((newAlignment & 0b00001100) == 0b00001100))
+		return lhs;
+
+	return static_cast<Alignment>(newAlignment);
+}
 
 /**
  * \brief Calculates the origin's coordinate given an alignment and a `sf::Transformable` bound.

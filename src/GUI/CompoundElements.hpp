@@ -6,6 +6,8 @@
  * \date   July 2025.
  *
  * \note These files depend on the SFML library.
+ * \note All these features were developed for user-friendliness and easy-to-use. They are not built
+ *		 for performance (especially mqbs).
  *********************************************************************/
 
 #ifndef COMPOUNDELEMENTS_HPP

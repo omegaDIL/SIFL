@@ -306,9 +306,6 @@ protected:
 
 		std::swap(vector[index1], vector[index2]);
 
-		// Now we need to update the maps.
-		// It depends on which was dynamic
-
 		const auto mapIteratorIndex1{ indexMap.find(index1) };
 		const auto mapIteratorIndex2{ indexMap.find(index2) };
 
@@ -325,9 +322,6 @@ protected:
 			indexMap[dynamicElementIterator->second->second] = dynamicElementIterator->second;
 			indexMap.erase(dynamicElementIterator);
 		}
-
-		// No need to update the maps if they were not dynamic
-		// They didn't have any values
 	}
 };
 

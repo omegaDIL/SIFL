@@ -16,6 +16,8 @@ int main()
 	populateGUI(curGui, writingText, &mainInterface, &otherInterface);
 	curGui = &mainInterface;
 
+	gui::removeMQB(&mainInterface, "mqb", 10); // Hides the mqb for demonstration purposes.
+
 	while (window.isOpen()) [[likely]]
 	{
 		while (const std::optional event = window.pollEvent())

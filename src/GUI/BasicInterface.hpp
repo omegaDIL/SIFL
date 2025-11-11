@@ -335,7 +335,7 @@ private:
 
 
 	/// Collection of all interfaces to perform resizing. Stored by window.
-	inline static std::unordered_multimap<sf::RenderWindow*, BasicInterface*> s_allInterfaces{};
+	inline static std::unordered_map<sf::RenderWindow*, std::vector<BasicInterface*>> s_allInterfaces{};
 };
 
 

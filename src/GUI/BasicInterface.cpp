@@ -10,7 +10,8 @@ BasicInterface::BasicInterface(sf::RenderWindow* window, unsigned int relativeSc
 	ENSURE_SFML_WINDOW_VALIDITY(m_window, "Precondition violated; the window is invalid when the constructor of BasicInterface was called");
 
 	// Add this interface to the collection.
-	s_allInterfaces.emplace(std::make_pair(window, this));
+	auto& interfaces{ s_allInterfaces[window] };
+	interfaces.push_back(this);
 } 
 
 BasicInterface::BasicInterface(BasicInterface&& other) noexcept
@@ -18,10 +19,10 @@ BasicInterface::BasicInterface(BasicInterface&& other) noexcept
 {
 	assert((!other.m_lockState) && "Precondition violated; the moved-from interface is locked when the move constructor of BasicInterface was called");
 
-	const auto interfaceRange{ s_allInterfaces.equal_range(other.m_window) };
-	for (auto it{ interfaceRange.first }; it != interfaceRange.second; ++it)
+	auto& interfaces{ s_allInterfaces.find(other.m_window)->second };
+	for (size_t i{0}; i interfaces.size(); ++i)
 	{
-		if (it->second == &other)
+		if (it == &other)
 		{
 			it->second = this; // Update the pointer to point to this instance instead of the moved-from one.
 			break;

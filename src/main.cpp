@@ -8,15 +8,17 @@ int main()
 {
 	sf::Vector2u windowSize{ 1000, 1000 };
 	sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3" };
+	sf::RenderWindow window1{ sf::VideoMode{ windowSize }, "Template sfml 3" };
 	currentGUI curGui{};
 	std::string writingText{ "text1" };
 
 	IGUI mainInterface{ &window, 1080 };
 	IGUI otherInterface{ &window, 1080 };
+	showErrorsUsingWindow("GUI Example", std::ostringstream{} << "This is a GUI example.\nYou can close this window by pressing Escape or clicking the cross button.", 24);
 	populateGUI(curGui, writingText, &mainInterface, &otherInterface);
 	curGui = &mainInterface;
 
-	gui::removeMQB(&mainInterface, "mqb", 10); // Hides the mqb for demonstration purposes.
+	IGUI test{ std::move(mainInterface) };
 
 	while (window.isOpen()) [[likely]]
 	{

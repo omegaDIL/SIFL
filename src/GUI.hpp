@@ -7,6 +7,9 @@
  *
  * \note This file depends on the SFML library.
  * \note A code example is provided at the end.
+ * \note This file is here to help you. It includes all the necessary headers and
+ *		 declares useful functions and types You can freely modify it to fit your needs.
+ *		 If needed, don't hesitate to add a namespace around everything.
  *********************************************************************/
 
 #ifndef GUI_HPP
@@ -21,19 +24,20 @@
 #include <sstream>
 
 /**
- * @brief Creates a new instance of a window to display an error message.
- * @complexity Depends on the user who stops the window.
+ * \brief Creates a new instance of a window to display an error message.
+ * \complexity None, depends on the user who unblocks the window.
  *
- * @param[in] errorTitle: The title of the window.
- * @param[in] errorMessage: The message to be displayed.
+ * \param[in] errorTitle: The title of the window.
+ * \param[in] errorMessage: The message to be displayed.
+ * \param[in] characterSize: The character size of the displayed text.
  *
- * @note This function is blocking and will terminate once the user closes the new window.
- * @note Don't forget to put the character \n to avoid the text to not be seen entirely when you
+ * \note This function is blocking and will terminate once the user closes the new window.
+ * \note Don't forget to put the character \n to avoid the text to not be seen entirely when you
  *       have a long line.
  *
- * @see `sf::RenderWindow`, `InteractiveInterface`.
+ * \see `sf::RenderWindow`, `InteractiveInterface`.
  */
-void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstream& errorMessage) noexcept;
+void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstream& errorMessage, unsigned int characterSize = 30) noexcept;
 
 /**
  * \brief This struct helps switching from a displayed interface to another one.
@@ -95,8 +99,5 @@ using IGUI = gui::InteractiveInterface; // except populateGUI
 void populateGUI(currentGUI& cur, std::string& writing, IGUI* main, IGUI* other) noexcept;
 
 // TODO: add all examples
-// TODO: review mqb
 // TODO: rework locking comment
-// TODO: Use umap + vec au lieu de ummap dans basic pour cache locality
-// TODO: mettre bgui au lieu de mgui dans error window
 #endif // GUI_HPP

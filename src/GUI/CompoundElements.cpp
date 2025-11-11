@@ -371,7 +371,6 @@ void removeMQB(InteractiveInterface* gui, const std::string& identifier, unsigne
 	assert(gui != nullptr && "The gui was nullptr when the function removeMQB was called");
 
 	const std::string identifierBox{ mqbIdPrefix + identifier + "_" };
-	gui->removeDynamicSprite("efef"); // poor cache locality but not meant to be fast
 
 	for (; numberOfBoxes > 0; --numberOfBoxes) // 1-indexed
 		gui->removeDynamicSprite(identifierBox + std::to_string(numberOfBoxes)); // poor cache locality but not meant to be fast

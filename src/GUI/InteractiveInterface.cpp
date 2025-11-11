@@ -17,11 +17,16 @@ void InteractiveInterface::removeDynamicText(std::string_view identifier) noexce
 	if (index >= m_nbOfButtonTexts) // Not an interactive text.
 		return;
 
-	swapElement(index, --m_nbOfButtonTexts, m_texts, m_dynamicTexts, m_indexesForEachDynamicTexts); // Guaranteeing the contiguity of interactive texts. 
+	// If an interactive is removed, and since there is a swap with the last element, 
+	// the remaining interactives are not continuous anymore. The element with which the
+	// interactive was swapped is now in the middle of the interactive part.
+
+	--m_nbOfButtonTexts;
+	if (index < m_texts.size()) // If this is false, it means we removed the last element and every elements are interactives, so no swap happened.
+		swapElement(index, m_nbOfButtonTexts, m_texts, m_dynamicTexts, m_indexesForEachDynamicTexts); // Guaranteeing the contiguity of interactive texts. 
 
 	auto buttonIterator{ m_allButtons.find(identifier) };
-	--buttonIterator->second.second; // Now one less button that can use the function.
-	if (buttonIterator->second.second <= 0) // If a sprite has the same identifier and is interactive, it would be equal to 1.
+	if ((--buttonIterator->second.second) <= 0) // If a sprite has the same identifier and is interactive, it would be equal to 1.
 		m_allButtons.erase(buttonIterator);
 }
 
@@ -39,11 +44,16 @@ void InteractiveInterface::removeDynamicSprite(std::string_view identifier) noex
 	if (index >= m_nbOfButtonSprites) // Not an interactive sprite.
 		return;
 
-	swapElement(index, --m_nbOfButtonSprites, m_sprites, m_dynamicSprites, m_indexesForEachDynamicSprites); // Guaranteeing the contiguity of interactive sprites. 
+	// If an interactive is removed, and since there is a swap with the last element, 
+	// the remaining interactives are not continuous anymore. The element with which the
+	// interactive was swapped is now in the middle of the interactive part.
+
+	--m_nbOfButtonSprites;
+	if (index < m_sprites.size()) // If this is false, it means we removed the last element and every elements are interactives, so no swap happened.
+		swapElement(index, m_nbOfButtonSprites, m_sprites, m_dynamicSprites, m_indexesForEachDynamicSprites); // Guaranteeing the contiguity of interactive sprites. 
 
 	auto buttonIterator{ m_allButtons.find(identifier) };
-	--buttonIterator->second.second; // Now one less button that can use the function.
-	if (buttonIterator->second.second <= 0) // If a text has the same identifier and is interactive, it would be equal to 1.
+	if ((--buttonIterator->second.second) <= 0) // If a text has the same identifier and is interactive, it would be equal to 1.
 		m_allButtons.erase(buttonIterator);
 }
 

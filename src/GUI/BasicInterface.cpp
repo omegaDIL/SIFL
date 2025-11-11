@@ -19,17 +19,10 @@ BasicInterface::BasicInterface(BasicInterface&& other) noexcept
 {
 	assert((!other.m_lockState) && "Precondition violated; the moved-from interface is locked when the move constructor of BasicInterface was called");
 
+	// Replacing the moved-from object by the new object in the collection anymore.
 	auto& interfaces{ s_allInterfaces.find(other.m_window)->second };
-	for (size_t i{0}; i interfaces.size(); ++i)
-	{
-		if (it == &other)
-		{
-			it->second = this; // Update the pointer to point to this instance instead of the moved-from one.
-			break;
-		}
-	}
-
-	// The moved-from object should not be in the collection anymore.
+	auto it = std::find_if(interfaces.begin(), interfaces.end(), [&other](BasicInterface* x) { return x == &other; });
+	*it = this;
 
 	// Leave the moved-from object in a valid state
 	other.m_window = nullptr;
@@ -47,15 +40,9 @@ BasicInterface& BasicInterface::operator=(BasicInterface&& other) noexcept
 		// 1. Reassign the mapping of `other` in s_allInterfaces:
 		//    - We're about to move `other` into `*this`, so the pointer to `other`
 		//      in s_allInterfaces should now point to `this`.
-		auto interfaceRange{ s_allInterfaces.equal_range(other.m_window) };
-		for (auto it{ interfaceRange.first }; it != interfaceRange.second; ++it)
-		{
-			if (it->second == &other)
-			{
-				it->second = this;
-				break;
-			}
-		}
+		auto& interfacesOther{ s_allInterfaces.find(other.m_window)->second };
+		auto itOther = std::find_if(interfacesOther.begin(), interfacesOther.end(), [&other](BasicInterface* x) { return x == &other; });
+		*itOther = this;
 
 		// As they have different windows, we do not need to worry about collision between those two loops
 
@@ -63,15 +50,9 @@ BasicInterface& BasicInterface::operator=(BasicInterface&& other) noexcept
 		//    - After the move, `other` will hold the old state of `*this`.
 		//      So the entry in s_allInterfaces that previously pointed to `this`
 		//      under m_window should now point to `other`.
-		interfaceRange = s_allInterfaces.equal_range(this->m_window);
-		for (auto it{ interfaceRange.first }; it != interfaceRange.second; ++it)
-		{
-			if (it->second == this)
-			{
-				it->second = &other;
-				break;
-			}
-		}
+		auto& interfacesThis{ s_allInterfaces.find(this->m_window)->second };
+		auto itThis = std::find_if(interfacesThis.begin(), interfacesThis.end(), [this](BasicInterface* x) { return x == this; });
+		*itThis = &other;
 	}
 
 	// Else: If both `this` and `other` share the same window, we don’t update s_allInterfaces.
@@ -86,6 +67,7 @@ BasicInterface& BasicInterface::operator=(BasicInterface&& other) noexcept
 	std::swap(this->m_texts, other.m_texts);
 	std::swap(this->m_sprites, other.m_sprites);
 	std::swap(this->m_relativeScalingDefinition, other.m_relativeScalingDefinition);
+	other.m_window = nullptr;
 	// Both lock states are false;
 
 	return *this;
@@ -93,15 +75,12 @@ BasicInterface& BasicInterface::operator=(BasicInterface&& other) noexcept
 
 BasicInterface::~BasicInterface() noexcept
 {
-	const auto interfaceRange{ s_allInterfaces.equal_range(m_window) }; // All interfaces associated with the resized window.
-	for (auto it{ interfaceRange.first }; it != interfaceRange.second; ++it)
-	{
-		if (it->second == this)
-		{
-			s_allInterfaces.erase(it); // Remove the interface from the collection.
-			break;
-		}
-	}
+	auto interfacesThis{ s_allInterfaces.find(this->m_window) };
+	auto itThis = std::find_if(interfacesThis->second.begin(), interfacesThis->second.end(), [this](BasicInterface* x) { return x == this; });
+	interfacesThis->second.erase(itThis); // Erasing this interface from the collection.
+
+	if (interfacesThis->second.empty()) // if there are no interfaces for that window, we can erase it. 
+		s_allInterfaces.erase(interfacesThis);
 
 	m_window = nullptr;
 	m_sprites.clear();
@@ -171,10 +150,10 @@ void BasicInterface::proportionKeeper(sf::RenderWindow* resizedWindow, sf::Vecto
 
 	const sf::Vector2f minScaling2f{ relativeMinAxisScale, relativeMinAxisScale };
 
-	const auto interfaceRange{ s_allInterfaces.equal_range(resizedWindow) }; // All interfaces associated with the resized window.
-	for (auto it{ interfaceRange.first }; it != interfaceRange.second; ++it)
+	auto& interfaces{ s_allInterfaces.find(resizedWindow)->second }; // All interfaces associated with the resized window.
+	for (auto it{ interfaces.begin() }; it != interfaces.end(); ++it)
 	{
-		auto* curInterface{ it->second };
+		auto* curInterface{ *it };
 
 		if (curInterface->m_relativeScalingDefinition == 0)
 			continue; // No scaling definition, so no need to scale.

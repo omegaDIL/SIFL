@@ -30,14 +30,6 @@ namespace gui
  * the `eventUpdateHovered` function returns a pointer to it.
  * Buttons are a special type of interactive element with an attached function. This function is
  * triggered when the button is pressed.
- * 
- * Once you have added all your elements, you can lock the interface to avoid futur modifications.
- * Locking reduces time consumption of hover detection, and CAN reduce memory usage a little bit.
- * The locking state also ensure stability for pointers, hence you won't be able to use the move
- * functions. However, all pointers returned by getter functions will remain valid. The lock state
- * does not affect editing elements that are already added. 
- * You may not be able to lock the interface if you often add and remove elements. You can try to
- * hide them instead, but it is not always the best way. Sometimes removing elements can save memory.
  *
  * A code example is provided at the end of the file.
  *
@@ -186,15 +178,19 @@ public:
 	 * \complexity O(1) if shrinkToFit is false
 	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
 	 *
-	 * Contrary to MutableInterface::lockInterface but similar to BasicInterface::lockInterface, memory can only be saved if shrinkToFit is true.
-	 * But be aware that `shrinkToFit` can be time consuming if you have a lot of elements. 
-	 * However, it does speed up interaction checks (even if shrinkToFit is false).
-	 * The stability of pointers is, of course, guaranteed as well.
-	 *
+	 * Once you have added all your elements, you can lock the interface to avoid futur modifications.
+	 * Contrary to MutableInterface and similar to BasicInterface, memory can only be reduced if
+	 * `shrinkToFit` is true. But be aware that `shrinkToFit` can be time consuming if you have a lot
+	 * of elements. In debug mode, a crash will be triggered if a modification is attempted after locking.
+	 * 
+	 * IT APPLIES TO addInteractive() AS WELL.
+	 * 
+	 * In addition, the stability of pointers is guaranteed in all locked mutable interfaces. Hence, it
+	 * does not affect editing elements that are already added, or straightly using getter functions
+	 * after locking.
+	 * 
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
 	 *						  sprites.
-	 * 
-	 * \note Don't forget that it also applies to addInteractive() 
 	 */
 	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
 

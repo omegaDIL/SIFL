@@ -217,7 +217,8 @@ public:
 	 * 
 	 * Once you have added all your elements, you can lock the interface to avoid futur modifications.
 	 * Locking the interface can reduce memory usage a little bit if `shrinkToFit` is true. But be aware
-	 * that it can be time consuming if you have a lot of elements.
+	 * that it can be time consuming if you have a lot of elements. In debug mode, a crash will be triggered
+	 * if a modification is attempted after locking.
 	 * 
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
 	 *						  sprites.

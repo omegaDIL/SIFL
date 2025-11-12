@@ -14,7 +14,6 @@ int main()
 
 	IGUI mainInterface{ &window, 1080 };
 	IGUI otherInterface{ &window, 1080 };
-	showErrorsUsingWindow("GUI Example", std::ostringstream{} << "This is a GUI example.\nYou can close this window by pressing Escape or clicking the cross button.", 24);
 	populateGUI(curGui, writingText, &mainInterface, &otherInterface);
 	curGui = &mainInterface;
 

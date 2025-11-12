@@ -98,6 +98,5 @@ using IGUI = gui::InteractiveInterface; // except populateGUI
 // The current impl is an example (see \code)
 void populateGUI(currentGUI& cur, std::string& writing, IGUI* main, IGUI* other) noexcept;
 
-// TODO: add all examples
-// TODO: rework locking comment
+// TODO: add all examples 
 #endif // GUI_HPP

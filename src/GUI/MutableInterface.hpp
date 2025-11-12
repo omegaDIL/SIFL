@@ -248,20 +248,15 @@ public:
 	 * \complexity O(1) if shrinkToFit is false
 	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
 	 *
-	 * Locking the interface can reduce memory usage if there are a lot of dynamic elements, and even
-	 * more if `shrinkToFit` is true. But be aware that `shrinkToFit` can be time consuming if you have
-	 * a lot of elements.
-	 * 
 	 * Once you have added all your elements, you can lock the interface to avoid futur modifications.
-	 * Locking CAN reduce memory usage a little bit. The locking state also ensure stability for pointers,
-	 * hence you won't be able to use the move functions. However, all pointers returned by getter functions
-	 * will remain valid. The lock state does not affect editing elements that are already added.
-	 * You may not be able to lock the interface if you often add and remove elements. You can try to
-	 * hide them instead, but it is not always the best way. Sometimes removing elements can save memory.
-	 * 
-	 * Once you have added all your elements, you can lock the interface to avoid futur modifications.
-	 * Locking the interface can reduce memory usage a little bit if `shrinkToFit` is true. But be aware
-	 * that it can be time consuming if you have a lot of elements.
+	 * Contrary to BasicInterface, even if `shrinkToFit` is false, locking still reduces memory usage
+	 * a little bit (only when there are a lot of dynamic elements). Obviously, if `shrinkToFit` is true,
+	 * memory usage is reduced even more. But be aware that `shrinkToFit` can be time consuming if you 
+	 * have a lot of elements. In debug mode, a crash will be triggered if a modification is attempted
+	 * after locking.
+	 * In addition, the stability of pointers is guaranteed in all locked mutable interfaces. Hence, it
+	 * does not affect editing elements that are already added, or straightly using getter functions
+	 * after locking.
 	 *
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
 	 *						  sprites.

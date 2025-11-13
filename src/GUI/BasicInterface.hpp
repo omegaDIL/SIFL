@@ -40,7 +40,8 @@ namespace gui
 
 /**
  * \brief Manages items to create a basic GUI. You can display texts and sprites.
- * \details All elements are fixed and can't be edited nor removed.
+ * 
+ * All elements are fixed and can't be edited nor removed.
  * 
  * Move functions are disabled if the interface is locked.
  *

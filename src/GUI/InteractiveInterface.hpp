@@ -30,6 +30,8 @@ namespace gui
  * the `eventUpdateHovered` function returns a pointer to it.
  * Buttons are a special type of interactive element with an attached function. This function is
  * triggered when the button is pressed.
+ * 
+ * Move functions are disabled if the interface is locked.
  *
  * A code example is provided at the end of the file.
  *
@@ -189,6 +191,9 @@ public:
 	 * does not affect editing elements that are already added, or straightly using getter functions
 	 * after locking.
 	 * 
+	 * It helps with eventUpdateHovered() optimizations as well, as it can directly use the pointer of
+	 * the previously hovered element to check if the mouse is still over it, avoiding a full recheck
+	 * 
 	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
 	 *						  sprites.
 	 */
@@ -197,11 +202,12 @@ public:
 
 	/**
 	 * \brief Updates the hovered element when the mouse mouve, if the gui is interactive.	 
-	 * \complexity O(1), if the interactive element is the same as previously.
+	 * \complexity O(1), if the interactive element stills contain the mouse the same as previously.
 	 * \complexity O(N), otherwise; where N is the number of interactive elements in your active interface.
 	 * 
 	 * You may choose not to update the hovered element on every mouse move—for example,
 	 * only when the mouse button is not pressed as well.
+	 * 
 	 * Does not check elements that are hidden.
 	 * 
 	 * Texts are prioritized over sprites if they overlap. If two texts/sprites overlap, one will be
@@ -212,14 +218,19 @@ public:
 	 * 
 	 * \param[out] activeGUI: The current GUI. No effect if not interactive
 	 * \param[in]  cursorPos: The position of the cursor/touch event WITHIN the window's view.
-	 *
+	 * \param[in]  forceRecheck: If true, forces a full recheck of all interactive elements. By default
+	 *							 in a locked interface, the last element is rechecked the next call. If true, It would
+	 *							 skip that recheck and directly do a full recheck. In an unlocked interface, it would
+	 *							 do nothing. Change it to true if you don't have a lot of interactive elements and want
+	 *							 to skip that recheck (which may be more costly than a full recheck in that case).
+	 *                            
 	 * \return The item that is currently hovered.
 	 * 
 	 * \pre activeGUI must not be nullptr
 	 * \post The hovered element will be updated according to the gui
 	 * \warning Asserts if activeGUI is nullptr.
 	 */
-	static Item eventUpdateHovered(InteractiveInterface* activeGUI, sf::Vector2f cursorPos) noexcept;
+	static Item eventUpdateHovered(InteractiveInterface* activeGUI, sf::Vector2f cursorPos, bool forceRecheck = false) noexcept;
 
 	/**
 	 * \brief Activate the button if it is pressed
@@ -255,6 +266,71 @@ private:
 	using ButtonElement = std::pair<ButtonFunction, short>;
 	std::unordered_map<std::string, ButtonElement, TransparentHash, TransparentEqual> m_allButtons; // Contains all buttons.
 };
+
+
+/**
+ * \code
+ * int main()
+ * {
+ *     sf::Vector2u windowSize{ 1000, 1000 };
+ *     sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3" };
+ *     
+ *     // Creates the two interfaces.
+ *     gui::InteractiveInterface mainInterface{ &window, 1080 };
+ *     gui::InteractiveInterface otherInterface{ &window, 1080 };
+ *     gui::InteractiveInterface* currentInterface{ &mainInterface };
+ *
+ *     mainInterface.addText("Welcome to the GUI!", sf::Vector2f{ 500, 200 }, 48, sf::Color{ 255, 255, 255 }, "__default", gui::Alignment::Center, sf::Text::Bold | sf::Text::Underlined);
+ *
+ *     mainInterface.addDynamicText("other", "switch", { 500, 800 });
+ *     mainInterface.addInteractive("other", [&otherInterface, &currentInterface](IGUI*) mutable { currentInterface = &otherInterface; gui::InteractiveInterface::resetHovered(); });
+ *     // DO NOT FORGET TO RESET HOVERED ITEM WHEN SWITCHING INTERFACES.
+ *
+ *     otherInterface.addDynamicText("main", "switch", { 500, 500 });
+ *     otherInterface.addInteractive("main", [&mainInterface, &currentInterface](IGUI*) mutable { currentInterface = &mainInterface; gui::InteractiveInterface::resetHovered(); });
+ *  
+ *     sf::RectangleShape rect{ { 50, 50 } };
+ *     otherInterface.addDynamicSprite("colorChanger", gui::createTextureFromDrawables(rect), sf::Vector2f{ 500, 850 });
+ *     otherInterface.addInteractive("colorChanger");
+ *
+ *     otherInterface.lockInterface();
+ *     mainInterface.lockInterface();
+ *
+ *     gui::InteractiveInterface::Item currentItem{};
+ *
+ *     while (window.isOpen()) [[likely]]
+ *     {
+ *         while (const std::optional event = window.pollEvent())
+ *         {
+ *             if (event->is<sf::Event::Closed>() || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)) [[unlikely]]
+ *                 window.close();
+ *                 
+ *             else if (event->is<sf::Event::Resized>()) [[unlikely]]
+ *                 gui::BasicInterface::windowResized(&window, windowSize); // Resizes the window and the interfaces.
+ *                 
+ *             else if (event->is<sf::Event::MouseButtonPressed>() && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+ *                 gui::InteractiveInterface::eventPressed(currentInterface); // Handles button pressing.
+ *
+ *             else if (event->is<sf::Event::MouseMoved>() && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) [[likely]]
+ *                 currentItem = gui::InteractiveInterface::eventUpdateHovered(currentInterface, window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position)); // Updates the hovered item. The argument is the mouse position (see SFML doc).
+ *          
+ *             // When the interface changes, you have to reset the hovered item by calling gui::InteractiveInterface::resetHovered() like it is done at lines 20 and 24.
+ *         }
+ *
+ *         if (currentInterface == &otherInterface && currentItem.identifier == "colorChanger")
+ *             otherInterface.getDynamicSprite("colorChanger")->rotate(sf::degrees(1));
+ *
+ *         // The common way is to first check if the current interface is the right one, then check the identifier.
+ *
+ *         window.clear();
+ *         currentInterface->draw();
+ *         window.display();
+ *     }
+ *
+ *     return 0;
+ * }
+ * \endcode
+ */
 
 } // gui namespace
 

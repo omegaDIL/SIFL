@@ -86,18 +86,16 @@ void InteractiveInterface::lockInterface(bool shrinkToFit) noexcept
 	// We don't clear 'm_indexesForEachDynamicTexts' and 'm_indexesForEachDynamicSprites' because we need them for interactives.
 }
 
-InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(InteractiveInterface* igui, sf::Vector2f cursorPos) noexcept
+InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(InteractiveInterface* igui, sf::Vector2f cursorPos, bool forceRecheck) noexcept
 {
 	ENSURE_VALID_PTR(igui, "The gui was nullptr when the function eventUpdateHovered was called in InteractiveInterface");
 
 	// Chances are that the hovered item is the same as previously between one frame and the other.
-	if (!std::holds_alternative<std::monostate>(s_hoveredItem.ptr))
+	if (!forceRecheck && igui->m_lockState && !std::holds_alternative<std::monostate>(s_hoveredItem.ptr))
 	{
 		bool holdText{ std::holds_alternative<TextWrapper*>(s_hoveredItem.ptr) }; // If false, it holds a SpriteWrapper*
-		if ((holdText &&  igui->m_lockState && std::get<TextWrapper*>(s_hoveredItem.ptr)->getText().getGlobalBounds().contains(cursorPos)) // Almost guaranteed to not have cache misses
-		|| (!holdText &&  igui->m_lockState && std::get<SpriteWrapper*>(s_hoveredItem.ptr)->getSprite().getGlobalBounds().contains(cursorPos)) // Almost guaranteed to not have cache misses
-		||  (holdText && !igui->m_lockState && igui->getDynamicText(s_hoveredItem.identifier)->getText().getGlobalBounds().contains(cursorPos))
-		|| (!holdText && !igui->m_lockState && igui->getDynamicSprite(s_hoveredItem.identifier)->getSprite().getGlobalBounds().contains(cursorPos))) [[likely]] // Most of the time, the same thing is hovered during the next frame.
+		if ((holdText && std::get<TextWrapper*>(s_hoveredItem.ptr)->getText().getGlobalBounds().contains(cursorPos)) // Almost guaranteed to not have cache misses
+		|| (!holdText && std::get<SpriteWrapper*>(s_hoveredItem.ptr)->getSprite().getGlobalBounds().contains(cursorPos))) [[likely]] // Most of the time, the same thing is hovered during the next frame.
 			goto endReturn; // Avoid multiple return statements 
 	}
 
@@ -119,7 +117,7 @@ InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(InteractiveI
 		if (!sprite.hide && sprite.getSprite().getGlobalBounds().contains(cursorPos)) [[unlikely]] // The vast majority of the time, no sprite is hovered.
 		{
 			s_hoveredItem = Item{ igui->m_indexesForEachDynamicSprites.at(i)->first, &sprite };
- 			break;
+			break;
 		}
 	}
 

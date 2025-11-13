@@ -52,27 +52,45 @@ void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstre
  * 
  * It is recommended for you to store the return value of `eventUpdateHovered` using this struct:
  * `curGui.item = IGUI::eventUpdateHovered(curGui, window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position));`
- * Here curGUI is an instance of currentGUI.
+ * Here curGUI is an instance of GUIPtr.
+ * 
+ * \code
+ * IGUI mainInterface{ &window, 1080 };
+ * IGUI otherInterface{ &window, 1080 };
+ * BGUI basicInterface{ &window, 1080 };
+ * //...
+ * GUIPtr curGui{};
+ * curGUI = &mainInterface; // Start with the main interface.
+ * curGUI = &basicInterface; // Switch to a different interface type AND CALLS RESETHOVERED()
+ * 
+ * // when the mouse moves:
+ * curGui.item = IGUI::eventUpdateHovered(curGui, window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position)); // Updates the hovered item
+ * 
+ * // the drawing part
+ * window.clear();
+ * curGui->draw(); // Pointer is of type BasicInterface*
+ * window.display();
+ * \endcode
  */
-struct currentGUI
+struct GUIPtr
 {
 	// "Default" constructors
-	constexpr inline currentGUI() noexcept : gInteractive{ nullptr }, gMutable{ nullptr }, gBasic{ nullptr }, item{}
+	constexpr inline GUIPtr() noexcept : gInteractive{ nullptr }, gMutable{ nullptr }, gBasic{ nullptr }, item{}
 	{ gui::InteractiveInterface::resetHovered(); }
-	constexpr inline currentGUI(std::nullptr_t) noexcept : currentGUI{} {}
+	constexpr inline GUIPtr(std::nullptr_t) noexcept : GUIPtr{} {}
 
 	// Rule of five
-	constexpr currentGUI(const currentGUI&) noexcept = default;
-	constexpr currentGUI(currentGUI&&) noexcept = delete;
-	constexpr currentGUI& operator=(const currentGUI&) noexcept = default;
-	constexpr currentGUI& operator=(currentGUI&&) noexcept = delete;
-	constexpr ~currentGUI() noexcept = default; 
+	constexpr GUIPtr(const GUIPtr&) noexcept = default;
+	constexpr GUIPtr(GUIPtr&&) noexcept = delete;
+	constexpr GUIPtr& operator=(const GUIPtr&) noexcept = default;
+	constexpr GUIPtr& operator=(GUIPtr&&) noexcept = delete;
+	constexpr ~GUIPtr() noexcept = default;
 
 	// Assignment operator -> sets to nullptr derived pointers
-	constexpr currentGUI& operator=(std::nullptr_t) noexcept;
-	constexpr currentGUI& operator=(gui::BasicInterface* ptr) noexcept;
-	constexpr currentGUI& operator=(gui::MutableInterface* ptr) noexcept;
-	constexpr currentGUI& operator=(gui::InteractiveInterface* ptr) noexcept;
+	constexpr GUIPtr& operator=(std::nullptr_t) noexcept;
+	constexpr GUIPtr& operator=(gui::BasicInterface* ptr) noexcept;
+	constexpr GUIPtr& operator=(gui::MutableInterface* ptr) noexcept;
+	constexpr GUIPtr& operator=(gui::InteractiveInterface* ptr) noexcept;
 
 	// Conversion functions -> returns nullptr if the conversion is not possible
 	constexpr operator gui::BasicInterface*() noexcept { return gBasic;	     }
@@ -94,9 +112,50 @@ using BGUI = gui::BasicInterface; // don't hesitate to change this alias if you 
 using MGUI = gui::MutableInterface; // Nothing in this library use them, it is really just for you
 using IGUI = gui::InteractiveInterface; // except populateGUI
 
-//TODO: Complete you own populateGUI function
-// The current impl is an example (see \code)
-void populateGUI(currentGUI& cur, std::string& writing, IGUI* main, IGUI* other) noexcept;
+//TODO: Complete you own populateGUI function. You may omit the noexcept if you want to throw exceptions.
+// The current impl is an example used in the code portion below.
+void populateGUI(GUIPtr& cur, std::string& writing, IGUI* main, IGUI* other) noexcept;
 
-// TODO: add all examples 
+/**
+ * Below is a code portion showing how to use the library.
+ * It may be easier to understand if you check the other example files first (begin with GraphicalResources.hpp, then BasicInterface...).
+ * 
+ * The best way to use the library is tocopy paste this example in your own project and modify it to fit your needs.
+ * You should modify: 
+ * - the populate function(s)/the gui types/their number
+ * - what is between the event loop and the drawing part
+ * - add other event handling if needed
+ * In that sense, this library is more a framework than a simple set of classes.
+ * 
+ * It is totally fine to have some interfaces of different types
+ * 
+ * \code PopulateGUI function example:
+   ENSURE_VALID_PTR(main, "main was nullptr when populateGUI was called");
+
+   main->addDynamicText("text1", "entry", { 500, 400 });
+   main->addInteractive("text1", [&writing](IGUI*) mutable { writing = "text1"; });
+   main->addDynamicText("text2", "entry", { 500, 500 });
+   main->addInteractive("text2", [&writing](IGUI* igui) mutable { writing = "text2"; });
+   main->addDynamicText("other", "switch", { 500, 800 });
+   main->addInteractive("other", [other, &cur](IGUI*) mutable { cur = other; });
+   main->addText("Hi!!\nWelcome to my GUI", sf::Vector2f{ 200, 150 }, 48, sf::Color{ 255, 255, 255 }, "__default", gui::Alignment::Left);
+   gui::addMQB(main, "mqb", { 50, 50 }, { 0, 50 }, 10, true, true, 1);
+
+   sf::RectangleShape rect{ { 50, 50 } };
+   other->addDynamicSprite("colorChanger", gui::createTextureFromDrawables(rect), sf::Vector2f{ 500, 850 });
+   other->addInteractive("colorChanger");
+   other->addDynamicText("main", "switch", { 500, 500 });
+   other->addInteractive("main", [main, &cur](IGUI*) mutable { cur = main; });
+   gui::addSlider(other, "slider", { 300, 500 });
+ * \endcode
+ * 
+ * \code main.cpp
+ * 
+ * \endcode
+ * 
+ * It is totally fine to have multiple interfaces displayed at the same time, but you have to manage your GUIPtr well.
+ * Some may appear as an overlay and never the main one. In this case, you dont ever need to set it as the current GUI.
+ * What is trickier is having multiple interfaces of type interactive and use the hover system on both.
+ */
+
 #endif // GUI_HPP

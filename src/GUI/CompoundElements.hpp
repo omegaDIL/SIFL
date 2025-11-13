@@ -126,7 +126,7 @@ using GrowthSliderFunction = std::function<double(double)>;
  * \param[out] gui The interactive gui to which the slider will be added.
  * \param[in]  identifier The unique identifier for the slider.
  * \param[in]  pos The position of the slider.
- * \param[in]  length The length of the slider. Default is 300.
+ * \param[in]  length The length of the slider.
  * 
  * \note All elements are dynamic elements, so they need an identifier. The background rectangle And
  *		 the text have the identifier you gave as argument, while the cursor rectangle has the identifier
@@ -170,7 +170,7 @@ void addSlider(InteractiveInterface* gui, std::string identifier, sf::Vector2f p
  * 
  * \see addSlider.
  */
-double moveSlider(InteractiveInterface* gui, const std::string& identifier, double yPos, int intervals = -1, const GrowthSliderFunction& growth = [](double x) {return x; }, const UserFunction& user = nullptr);
+double moveSlider(InteractiveInterface* gui, const std::string& identifier, double yPos, int intervals = 99, const GrowthSliderFunction& growth = [](double x) {return x; }, const UserFunction& user = nullptr);
 
 /**
  * \brief Hides or shows the slider and its elements.
@@ -231,8 +231,8 @@ void removeSlider(InteractiveInterface* gui, const std::string& identifier) noex
  * \param[in]  posInit The position of the first box.
  * \param[in]  posDelta The delta position between two boxes.
  * \param[in]  numberOfBoxes The number of boxes in the multiple question box.
- * \param[in]  multipleChoices If true, the user can check or uncheck multiple boxes. Default is true.
- * \param[in]  atLeastOne If true, at least one box must always be checked. Default is false.
+ * \param[in]  multipleChoices If true, the user can check or uncheck multiple boxes.
+ * \param[in]  atLeastOne If true, at least one box must always be checked.
  * \param[in]  defaultCheckedBox The index of the box that will be checked by default. 0 
  *								 means no box is checked by default.
  * 

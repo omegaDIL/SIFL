@@ -28,7 +28,7 @@ void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstre
 	}
 }
 
-constexpr currentGUI& currentGUI::operator=(std::nullptr_t) noexcept
+constexpr GUIPtr& GUIPtr::operator=(std::nullptr_t) noexcept
 {
 	gBasic = nullptr;
 	gMutable = nullptr;
@@ -39,7 +39,7 @@ constexpr currentGUI& currentGUI::operator=(std::nullptr_t) noexcept
 	return *this;
 }
 
-constexpr currentGUI& currentGUI::operator=(gui::BasicInterface* ptr) noexcept
+constexpr GUIPtr& GUIPtr::operator=(gui::BasicInterface* ptr) noexcept
 {
 	gBasic = ptr;
 	gMutable = nullptr;
@@ -50,7 +50,7 @@ constexpr currentGUI& currentGUI::operator=(gui::BasicInterface* ptr) noexcept
 	return *this;
 }
 
-constexpr currentGUI& currentGUI::operator=(gui::MutableInterface* ptr) noexcept
+constexpr GUIPtr& GUIPtr::operator=(gui::MutableInterface* ptr) noexcept
 {
 	gBasic = ptr;
 	gMutable = ptr;
@@ -61,7 +61,7 @@ constexpr currentGUI& currentGUI::operator=(gui::MutableInterface* ptr) noexcept
 	return *this;
 }
 
-constexpr currentGUI& currentGUI::operator=(gui::InteractiveInterface* ptr) noexcept
+constexpr GUIPtr& GUIPtr::operator=(gui::InteractiveInterface* ptr) noexcept
 {
 	gBasic = ptr;
 	gMutable = ptr;
@@ -72,12 +72,10 @@ constexpr currentGUI& currentGUI::operator=(gui::InteractiveInterface* ptr) noex
 	return *this;
 }
 
-void populateGUI(currentGUI& cur, std::string& writing, IGUI* main, IGUI* other) noexcept
+void populateGUI(GUIPtr& cur, std::string& writing, IGUI* main, IGUI* other) noexcept
 {
 	ENSURE_VALID_PTR(main, "main was nullptr when populateGUI was called");
-	sf::RectangleShape rect{ { 50, 50 } };
 
-	main->addSprite(gui::createTextureFromDrawables(rect), { 300, 56 });
 	main->addDynamicText("text1", "entry", { 500, 400 });
 	main->addInteractive("text1", [&writing](IGUI*) mutable { writing = "text1"; });
 	main->addDynamicText("text2", "entry", { 500, 500 });
@@ -87,6 +85,7 @@ void populateGUI(currentGUI& cur, std::string& writing, IGUI* main, IGUI* other)
 	main->addText("Hi!!\nWelcome to my GUI", sf::Vector2f{ 200, 150 }, 48, sf::Color{ 255, 255, 255 }, "__default", gui::Alignment::Left);
 	gui::addMQB(main, "mqb", { 50, 50 }, { 0, 50 }, 10, true, true, 1);
 
+	sf::RectangleShape rect{ { 50, 50 } };
 	other->addDynamicSprite("colorChanger", gui::createTextureFromDrawables(rect), sf::Vector2f{ 500, 850 });
 	other->addInteractive("colorChanger");
 	other->addDynamicText("main", "switch", { 500, 500 });

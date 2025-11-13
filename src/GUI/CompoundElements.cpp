@@ -6,8 +6,6 @@
 #include <cassert>
 #endif //NDEBUG
 
-#include <iostream>
-
 namespace gui
 {
 
@@ -412,7 +410,10 @@ bool updateWritingText(MutableInterface* gui, std::string_view identifier, char3
 bool basicWritingFunction(char32_t& c, sf::String& str, TextWrapper* txt) noexcept
 {
 	if (c != 27 && c != '\n')
+	{
+		txt->setStyle(sf::Text::Style::Italic);
 		return true;
+	}
 
 	c = 0; // Effectively disabling the line break by using a none printable character.
 	txt->setStyle(sf::Text::Style::Regular);

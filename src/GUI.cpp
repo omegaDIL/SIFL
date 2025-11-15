@@ -34,8 +34,6 @@ constexpr GUIPtr& GUIPtr::operator=(std::nullptr_t) noexcept
 	gMutable = nullptr;
 	gInteractive = nullptr;
 
-	item = gui::InteractiveInterface::resetHovered();
-
 	return *this;
 }
 
@@ -44,8 +42,6 @@ constexpr GUIPtr& GUIPtr::operator=(gui::BasicInterface* ptr) noexcept
 	gBasic = ptr;
 	gMutable = nullptr;
 	gInteractive = nullptr;
-
-	item = gui::InteractiveInterface::resetHovered();
 
 	return *this;
 }
@@ -56,8 +52,6 @@ constexpr GUIPtr& GUIPtr::operator=(gui::MutableInterface* ptr) noexcept
 	gMutable = ptr;
 	gInteractive = nullptr;
 
-	item = gui::InteractiveInterface::resetHovered();
-
 	return *this;
 }
 
@@ -67,12 +61,10 @@ constexpr GUIPtr& GUIPtr::operator=(gui::InteractiveInterface* ptr) noexcept
 	gMutable = ptr;
 	gInteractive = ptr;
 
-	item = gui::InteractiveInterface::resetHovered();
-
 	return *this;
 }
 
-void populateGUI(GUIPtr& cur, std::string& writing, IGUI* main, IGUI* other) noexcept
+void populateGUI(GUIPtr& cur, std::string& writing, IGUI* main, IGUI* other, MGUI* overlay) noexcept
 {
 	ENSURE_VALID_PTR(main, "main was nullptr when populateGUI was called");
 
@@ -91,4 +83,8 @@ void populateGUI(GUIPtr& cur, std::string& writing, IGUI* main, IGUI* other) noe
 	other->addDynamicText("main", "switch", { 500, 500 });
 	other->addInteractive("main", [main, &cur](IGUI*) mutable { cur = main; });
 	gui::addSlider(other, "slider", { 300, 500 });
+
+	sf::CircleShape overlayTex{ 20, 120 };
+	overlayTex.setFillColor(sf::Color{ 255, 255, 255, 80 });
+	overlay->addDynamicSprite("overlay", gui::createTextureFromDrawables(overlayTex), sf::Vector2f{ 0, 0 });
 }

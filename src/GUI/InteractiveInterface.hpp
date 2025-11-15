@@ -40,8 +40,7 @@ namespace gui
  *		 For Interactive elements, they are very memory efficient unless they have a button (see 
  *		 `std::function`)
  * \note Do not try to replicate the interactive feature: you WILL end up having very bad performances.
- *		 The functions `eventUpdateHovered` and `addInteractives` are, on the other hand, more optimized
- *		 for cache locality.
+ *		 The functions `eventUpdateHovered` and `addInteractives` are optimized for cache locality.
  * \warning Avoid deleting the `sf::RenderWindow` passed as an argument while this class is using it.
  * 
  * \see `MutableInterface`.
@@ -107,7 +106,7 @@ public:
 	 * \warning The program will assert otherwise.
 	 */
 	inline explicit InteractiveInterface(sf::RenderWindow* window, unsigned int relativeScalingDefinition = 1080) noexcept
-		: MutableInterface{ window, relativeScalingDefinition }, m_nbOfButtonTexts{}, m_nbOfButtonSprites{}, m_allButtons{}
+		: MutableInterface{ window, relativeScalingDefinition }, m_hoveredItem{}, m_nbOfButtonTexts{}, m_nbOfButtonSprites{}, m_allButtons{}
 	{}
 
 	InteractiveInterface() noexcept = default;
@@ -176,31 +175,6 @@ public:
 	void addInteractive(std::string identifier, ButtonFunction function = nullptr) noexcept;
 
 	/**
-	 * \brief Prevents any addition of new elements to the interface.
-	 * \complexity O(1) if shrinkToFit is false
-	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
-	 *
-	 * Once you have added all your elements, you can lock the interface to avoid futur modifications.
-	 * Contrary to MutableInterface and similar to BasicInterface, memory can only be reduced if
-	 * `shrinkToFit` is true. But be aware that `shrinkToFit` can be time consuming if you have a lot
-	 * of elements. In debug mode, a crash will be triggered if a modification is attempted after locking.
-	 * 
-	 * IT APPLIES TO addInteractive() AS WELL.
-	 * 
-	 * In addition, the stability of pointers is guaranteed in all locked mutable interfaces. Hence, it
-	 * does not affect editing elements that are already added, or straightly using getter functions
-	 * after locking.
-	 * 
-	 * It helps with eventUpdateHovered() optimizations as well, as it can directly use the pointer of
-	 * the previously hovered element to check if the mouse is still over it, avoiding a full recheck
-	 * 
-	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
-	 *						  sprites.
-	 */
-	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
-
-
-	/**
 	 * \brief Updates the hovered element when the mouse mouve, if the gui is interactive.	 
 	 * \complexity O(1), if the interactive element stills contain the mouse the same as previously.
 	 * \complexity O(N), otherwise; where N is the number of interactive elements in your active interface.
@@ -216,50 +190,50 @@ public:
 	 *
 	 * This function is cache-optimized.
 	 * 
-	 * \param[out] activeGUI: The current GUI. No effect if not interactive
-	 * \param[in]  cursorPos: The position of the cursor/touch event WITHIN the window's view.
-	 * \param[in]  forceRecheck: If true, forces a full recheck of all interactive elements. By default
-	 *							 in a locked interface, the last element is rechecked the next call. If true, It would
-	 *							 skip that recheck and directly do a full recheck. In an unlocked interface, it would
-	 *							 do nothing. Change it to true if you don't have a lot of interactive elements and want
-	 *							 to skip that recheck (which may be more costly than a full recheck in that case).
+	 * \param[out] cursorPos: The current position of the cursor.
 	 *                            
 	 * \return The item that is currently hovered.
 	 * 
-	 * \pre activeGUI must not be nullptr
-	 * \post The hovered element will be updated according to the gui
-	 * \warning Asserts if activeGUI is nullptr.
+	 * \note If there are no interactives, you don't have to call this function.
 	 */
-	static Item eventUpdateHovered(InteractiveInterface* activeGUI, sf::Vector2f cursorPos, bool forceRecheck = false) noexcept;
+	Item eventUpdateHovered(sf::Vector2f cursorPos) noexcept;
 
 	/**
-	 * \brief Activate the button if it is pressed
+	 * \brief Activate the button if it is hovered.
 	 * \complexity O(1).
-	 *
-	 * \param[out] activeGUI: The current GUI.
 	 *
 	 * \note If there are no buttons, you don't have to call this function.
-	 * 
-	 * \pre activeGUI must not be nullptr
-	 * \post The hovered button will be executed (or nothing happens)
-	 * \warning Asserts if activeGUI is nullptr.
 	 */
-	static void eventPressed(InteractiveInterface* activeGUI) noexcept;
-
-	/**
-	 * \brief Resets the hovered item. Useful if the current displayed interface changes
-	 * \complexity O(1).
-	 * 
-	 * \return An empty item.
-	 */
-	constexpr inline static Item resetHovered() noexcept{ return (s_hoveredItem = Item{}); }
+	void eventPressed() noexcept;
 	
-protected:
-	 
-	inline static Item s_hoveredItem{}; // The current item that is hovered.
- 
-private:
+	/**
+	 * \brief Prevents any addition of new elements to the interface.
+	 * \complexity O(1) if shrinkToFit is false
+	 * \complexity O(N + M) otherwise. N is the number of texts and M the number of sprites.
+	 *
+	 * Once you have added all your elements, you can lock the interface to avoid futur modifications.
+	 * Contrary to MutableInterface and similar to BasicInterface, memory can only be reduced if
+	 * `shrinkToFit` is true. But be aware that `shrinkToFit` can be time consuming if you have a lot
+	 * of elements. In debug mode, a crash will be triggered if a modification is attempted after locking.
+	 *
+	 * IT APPLIES TO addInteractive() AS WELL.
+	 *
+	 * In addition, the stability of pointers is guaranteed in all locked mutable interfaces. Hence, it
+	 * does not affect editing elements that are already added, or straightly using getter functions
+	 * after locking.
+	 *
+	 * It helps with eventUpdateHovered() optimizations as well, as it can directly use the pointer of
+	 * the previously hovered element to check if the mouse is still over it, avoiding a full recheck.
+	 *
+	 * \param[in] shrinkToFit If true, the function will call `shrink_to_fit` on both the texts and
+	 *						  sprites.
+	 */
+	virtual void lockInterface(bool shrinkToFit = true) noexcept override;
 
+private:
+	 
+	Item m_hoveredItem{}; // The current item that is hovered.
+ 
 	size_t m_nbOfButtonTexts; // The number of interactive texts.
 	size_t m_nbOfButtonSprites; // The number of interactive sprites.
 
@@ -270,65 +244,63 @@ private:
 
 /**
  * \code
- * int main()
- * {
- *     sf::Vector2u windowSize{ 1000, 1000 };
- *     sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3" };
- *     
- *     // Creates the two interfaces.
- *     gui::InteractiveInterface mainInterface{ &window, 1080 };
- *     gui::InteractiveInterface otherInterface{ &window, 1080 };
- *     gui::InteractiveInterface* currentInterface{ &mainInterface };
- *
- *     mainInterface.addText("Welcome to the GUI!", sf::Vector2f{ 500, 200 }, 48, sf::Color{ 255, 255, 255 }, "__default", gui::Alignment::Center, sf::Text::Bold | sf::Text::Underlined);
- *
- *     mainInterface.addDynamicText("other", "switch", { 500, 800 });
- *     mainInterface.addInteractive("other", [&otherInterface, &currentInterface](IGUI*) mutable { currentInterface = &otherInterface; gui::InteractiveInterface::resetHovered(); });
- *     // DO NOT FORGET TO RESET HOVERED ITEM WHEN SWITCHING INTERFACES.
- *
- *     otherInterface.addDynamicText("main", "switch", { 500, 500 });
- *     otherInterface.addInteractive("main", [&mainInterface, &currentInterface](IGUI*) mutable { currentInterface = &mainInterface; gui::InteractiveInterface::resetHovered(); });
- *  
- *     sf::RectangleShape rect{ { 50, 50 } };
- *     otherInterface.addDynamicSprite("colorChanger", gui::createTextureFromDrawables(rect), sf::Vector2f{ 500, 850 });
- *     otherInterface.addInteractive("colorChanger");
- *
- *     otherInterface.lockInterface();
- *     mainInterface.lockInterface();
- *
- *     gui::InteractiveInterface::Item currentItem{};
- *
- *     while (window.isOpen()) [[likely]]
- *     {
- *         while (const std::optional event = window.pollEvent())
- *         {
- *             if (event->is<sf::Event::Closed>() || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)) [[unlikely]]
- *                 window.close();
- *                 
- *             else if (event->is<sf::Event::Resized>()) [[unlikely]]
- *                 gui::BasicInterface::windowResized(&window, windowSize); // Resizes the window and the interfaces.
- *                 
- *             else if (event->is<sf::Event::MouseButtonPressed>() && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
- *                 gui::InteractiveInterface::eventPressed(currentInterface); // Handles button pressing.
- *
- *             else if (event->is<sf::Event::MouseMoved>() && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) [[likely]]
- *                 currentItem = gui::InteractiveInterface::eventUpdateHovered(currentInterface, window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position)); // Updates the hovered item. The argument is the mouse position (see SFML doc).
- *          
- *             // When the interface changes, you have to reset the hovered item by calling gui::InteractiveInterface::resetHovered() like it is done at lines 20 and 24.
- *         }
- *
- *         if (currentInterface == &otherInterface && currentItem.identifier == "colorChanger")
- *             otherInterface.getDynamicSprite("colorChanger")->rotate(sf::degrees(1));
- *
- *         // The common way is to first check if the current interface is the right one, then check the identifier.
- *
- *         window.clear();
- *         currentInterface->draw();
- *         window.display();
- *     }
- *
- *     return 0;
- * }
+ int main()
+ {
+	sf::Vector2u windowSize{ 1000, 1000 };
+	sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3" };
+
+	// Creates the two interfaces.
+	gui::InteractiveInterface mainInterface{ &window, 1080 };
+	gui::InteractiveInterface otherInterface{ &window, 1080 };
+
+	// This is used to get information about the currently hovered item.
+	gui::InteractiveInterface::Item currentItem{};
+	gui::InteractiveInterface* currentInterface{ &mainInterface };
+
+	// Populates both interfaces.
+	mainInterface.addText("Welcome to the GUI!", sf::Vector2f{ 500, 200 }, 48, sf::Color{ 255, 255, 255 }, "__default", gui::Alignment::Center, sf::Text::Bold | sf::Text::Underlined);
+	mainInterface.addDynamicText("other", "switch", { 500, 800 });
+	mainInterface.addInteractive("other", [&otherInterface, &currentInterface](IGUI*) mutable { currentInterface = &otherInterface; });
+
+	otherInterface.addDynamicText("main", "switch", { 500, 500 });
+	otherInterface.addInteractive("main", [&mainInterface, &currentInterface](IGUI*) mutable { currentInterface = &mainInterface; });
+	sf::RectangleShape rect{ { 50, 50 } };
+	otherInterface.addDynamicSprite("colorChanger", gui::createTextureFromDrawables(rect), sf::Vector2f{ 500, 850 });
+	otherInterface.addInteractive("colorChanger");
+
+	// Locks both interfaces.
+	otherInterface.lockInterface();
+	mainInterface.lockInterface();
+
+	while (window.isOpen()) [[likely]]
+	{
+		while (const std::optional event = window.pollEvent())
+		{
+			if (event->is<sf::Event::Closed>() || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)) [[unlikely]]
+				window.close();
+
+			else if (event->is<sf::Event::Resized>()) [[unlikely]]
+				gui::BasicInterface::windowResized(&window, windowSize); // Resizes the window and the interfaces.
+
+			else if (event->is<sf::Event::MouseButtonPressed>() && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+				currentInterface->eventPressed(); // Handles button pressing.
+
+			else if (event->is<sf::Event::MouseMoved>() && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) [[likely]]
+				currentItem = currentInterface->eventUpdateHovered(window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position)); // Updates the hovered item. The argument is the mouse position (see SFML doc).
+
+			// When the interface changes, you have to reset the hovered item by calling gui::InteractiveInterface::resetHovered() like it is done at lines 20 and 24.
+		}
+
+		if (currentInterface == &otherInterface && currentItem.identifier == "colorChanger") // First check if we are in the right interface, then check the identifier.
+			otherInterface.getDynamicSprite("colorChanger")->rotate(sf::degrees(1));
+
+		window.clear();
+		currentInterface->draw();
+		window.display();
+	}
+
+	return 0;
+ }
  * \endcode
  */
 

@@ -2,6 +2,9 @@
  * \file   CompoundElements.hpp, CompoundElements.cpp
  * \brief  Declare a gui with a slider, and multiple question boxes.
  *
+ * All features work with non locked interfaces.
+ * MQB and slider work only with interactive guis, but others work with mutable guis as well.
+ * 
  * \author OmegaDIL.
  * \date   July 2025.
  *
@@ -160,6 +163,7 @@ void addSlider(InteractiveInterface* gui, std::string identifier, sf::Vector2f p
  *					current value.
  * 
  * \note For user-friendliness, it is recommended to call this function as long as the mouse is pressed.
+ *		 Call it outside the loop event.
  *
  * \pre The gui must be a valid ptr. 
  * \pre growth must not be a nullptr.
@@ -327,6 +331,29 @@ void removeMQB(InteractiveInterface* gui, const std::string& identifier, unsigne
 /// Writing text functions.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Below is a code example of how to use the writing text functions.
+ * It should be entirely in your event loop and, of course, at initialization time.
+ * It works with non-locked mutable interfaces.
+ * 
+ * \code initialization 
+ // This variable contains the identifier of the text being written.
+ std::string writingText{ "text1" };
+
+ // Though it works with any mutable interface, we can use an interactive one for this example as it combines well with writing text.
+ main->addDynamicText("text1", "entry", { 500, 400 });
+ main->addInteractive("text1", [&writingText](IGUI*) mutable { writingText = "text1"; });
+ * \endcode
+ * 
+ * \code event loop
+ // is a mutable interface + user is writing text + the writingText is not empty meaning there is a text being written to
+ if (curGUI.gMutable != nullptr && event->is<sf::Event::TextEntered>() && writingText != "")
+     if (!gui::updateWritingText(&myInterface, writingText, event->getIf<sf::Event::TextEntered>()->unicode, gui::basicWritingFunction))
+	     writingText = "";
+ // Uses basicWritingFunction and it returns false when the writing ends, therefore we set writingText to "" to signal no text is being written to anymore
+ * \endcode
+ */
+
 using WritingFunction = std::function<bool(char32_t&, sf::String&, TextWrapper*)>;
 /**
  * \brief Updates a textWrapper while the user is writing text.
@@ -355,16 +382,6 @@ using WritingFunction = std::function<bool(char32_t&, sf::String&, TextWrapper*)
  * 
  * \pre The text must exist.
  * \warning The program will assert otherwise.
- * 
- * \code (In the event loop)
- * if (text1 != nullptr && event->is<sf::Event::TextEntered>())
- *     if (!gui::updateWritingText(text1, event->getIf<sf::Event::TextEntered>()->unicode, gui::basicWritingFunction))
- *	       text1 = nullptr; 
- * 
- * // `gui::basicWritingFunction` is the function that filer the input.
- * // When false is returned, the writing ends.
- * // You can use interactive and button elements to begin writing.
- * \endcode
  */
 bool updateWritingText(TextWrapper* text, char32_t unicodeValue, const WritingFunction& func = nullptr);
 

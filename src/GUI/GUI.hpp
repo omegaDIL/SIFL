@@ -15,11 +15,11 @@
 #ifndef GUI_HPP
 #define GUI_HPP
 
-#include "GUI/GraphicalResources.hpp"
-#include "GUI/BasicInterface.hpp"
-#include "GUI/MutableInterface.hpp"
-#include "GUI/InteractiveInterface.hpp"
-#include "GUI/CompoundElements.hpp"
+#include "GraphicalResources.hpp"
+#include "BasicInterface.hpp"
+#include "MutableInterface.hpp"
+#include "InteractiveInterface.hpp"
+#include "CompoundElements.hpp"
 #include <string>
 #include <sstream>
 
@@ -214,8 +214,5 @@ void populateGUI(GUIPtr& cur, std::string& writing, IGUI* main, IGUI* other, MGU
  }
  * \endcode
  */
-
-//TODO: review
-//TODO: erase GUI folder
 
 #endif // GUI_HPP

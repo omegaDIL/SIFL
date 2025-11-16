@@ -142,9 +142,9 @@ public:
 		if (m_dynamicTexts.find(identifier) != m_dynamicTexts.end())
 			return;
 
-		addText(content, pos, characterSize, color, fontName, alignment, style, scale, rot);
+		addText(content, pos, characterSize, color, fontName, alignment, style, scale, rot); // Actual addition of the text.
 		auto mapIterator{ m_dynamicTexts.insert(std::make_pair(std::move(identifier), m_texts.size() - 1)).first }; // Insert returns a pair, where the first element is an iterator to the inserted element.
-		m_indexesForEachDynamicTexts[m_texts.size() - 1] = mapIterator;
+		m_indexesForEachDynamicTexts[m_texts.size() - 1] = mapIterator; // Mapping the index to the iterator for O(1) removal.
 	}
 
 	/**

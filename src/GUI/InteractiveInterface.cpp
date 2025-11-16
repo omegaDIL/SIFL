@@ -89,11 +89,14 @@ void InteractiveInterface::lockInterface(bool shrinkToFit) noexcept
 InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(sf::Vector2f cursorPos) noexcept
 {
 	// Chances are that the hovered item is the same as previously between one frame and the other.
+	// Therefore, we first check if the previously hovered item is still hovered.
+	// However, if the interface is not locked, we can't guarantee that the pointer is still valid,
+	// and we can't use the identifier to retrieve the item, as it would completely ruin cache efficiency.
 	if (m_lockState && !std::holds_alternative<std::monostate>(m_hoveredItem.ptr))
 	{
 		bool holdText{ std::holds_alternative<TextWrapper*>(m_hoveredItem.ptr) }; // If false, it holds a SpriteWrapper*
 		if ((holdText && std::get<TextWrapper*>(m_hoveredItem.ptr)->getText().getGlobalBounds().contains(cursorPos)) // Almost guaranteed to not have cache misses
-		|| (!holdText && std::get<SpriteWrapper*>(m_hoveredItem. ptr)->getSprite().getGlobalBounds().contains(cursorPos))) [[likely]] // Most of the time, the same thing is hovered during the next frame.
+		|| (!holdText && std::get<SpriteWrapper*>(m_hoveredItem.ptr)->getSprite().getGlobalBounds().contains(cursorPos))) [[likely]] // Most of the time, the same thing is hovered during the next frame.
 			goto endReturn; // Avoid multiple return statements 
 	}
 
@@ -103,7 +106,7 @@ InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(sf::Vector2f
 	{
 		TextWrapper& text{ m_texts[i] };
 		if (!text.hide && text.getText().getGlobalBounds().contains(cursorPos)) [[unlikely]] // The vast majority of the time, no text is hovered.
-		{
+		{	// getText() does not dereference a pointer, so no cache miss here.
 			m_hoveredItem = Item{ m_indexesForEachDynamicTexts.at(i)->first, &text };
 			goto endReturn; // Avoid multiple return statements
 		}
@@ -111,9 +114,9 @@ InteractiveInterface::Item InteractiveInterface::eventUpdateHovered(sf::Vector2f
 
 	for (size_t i{ 0 }; i < m_nbOfButtonSprites; ++i)
 	{
-		SpriteWrapper& sprite{ m_sprites[i] };
+		SpriteWrapper& sprite{ m_sprites[i] }; 
 		if (!sprite.hide && sprite.getSprite().getGlobalBounds().contains(cursorPos)) [[unlikely]] // The vast majority of the time, no sprite is hovered.
-		{
+		{	// getSprite() does not dereference a pointer, so no cache miss here.
 			m_hoveredItem = Item{ m_indexesForEachDynamicSprites.at(i)->first, &sprite };
 			break;
 		}

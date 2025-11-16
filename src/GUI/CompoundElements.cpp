@@ -45,7 +45,7 @@ void addProgressBar(MutableInterface* gui, std::string identifier, sf::Vector2f 
 	constexpr unsigned int size{ 20 };
 	constexpr sf::Vector2f size2f{ size * size , size };
 
-	if (SpriteWrapper::getTexture(progressBarBackgroundTextureName) == nullptr)
+	if (SpriteWrapper::getTexture(progressBarBackgroundTextureName) == nullptr) // If first call, create the texture (only once).
 	{
 		constexpr float outlineThickness{ size / 10.f };
 		SpriteWrapper::createTexture(std::string{ progressBarBackgroundTextureName }, loadSolidRectangle(size2f, outlineThickness, sf::Color::Transparent, sf::Color{ 7, 135, 7 }), SpriteWrapper::Reserved::No);
@@ -76,6 +76,8 @@ void moveProgressBar(MutableInterface* gui, const std::string& identifier, float
 
 	const sf::Sprite& backSprite{ backPtr->getSprite() };
 	const sf::Sprite& fillSprite{ fillPtr->getSprite() };
+
+	// Calculating the new length of the fill sprite.
 
 	// 2 is the thickness of the outline, so 4 for both sides.
 	// 4 * scale because the outline scales with the sprite.
@@ -133,7 +135,7 @@ void addSlider(InteractiveInterface* gui, std::string identifier, sf::Vector2f p
 	constexpr unsigned int size{ 20 };
 	constexpr float outlineThickness{ size / 10.f };
 
-	if (SpriteWrapper::getTexture(sliderBackgroundTextureName) == nullptr)
+	if (SpriteWrapper::getTexture(sliderBackgroundTextureName) == nullptr) // If first call, create the texture (only once).
 	{
 		SpriteWrapper::createTexture(std::string{ sliderBackgroundTextureName }, loadSolidRectangle(sf::Vector2f{ size, size * size }, -outlineThickness), SpriteWrapper::Reserved::No);
 		SpriteWrapper::createTexture(std::string{ sliderCursorTextureName },     loadSolidRectangle(sf::Vector2f{ size * std::numbers::phi, size }, -outlineThickness), SpriteWrapper::Reserved::No);
@@ -160,6 +162,8 @@ double moveSlider(InteractiveInterface* gui, const std::string& identifier, doub
 
 	if (backgroundSlider == nullptr || cursorSlider == nullptr) [[unlikely]]
 		throw std::invalid_argument{ "The slider with the identifier " + identifier + " does not exist." };
+
+	// Calculating the new position of the cursor.
 
 	const double bias{ backgroundSlider->getSprite().getGlobalBounds().position.y };
 	const double length{ backgroundSlider->getSprite().getGlobalBounds().size.y };
@@ -305,12 +309,13 @@ void addMQB(InteractiveInterface* gui, const std::string& identifier, sf::Vector
 	static constexpr sf::Vector2f boxSize{ 20, 20 };
 	static constexpr float outlineThickness{ 2.f };
 
-	if (SpriteWrapper::getTexture(uncheckedMqbTextureName) == nullptr) 
+	if (SpriteWrapper::getTexture(uncheckedMqbTextureName) == nullptr) // If first call, create the texture (only once).
 	{	// For the first time only, create the textures.
 		SpriteWrapper::createTexture(std::string{ uncheckedMqbTextureName }, loadSolidRectangle(boxSize,  outlineThickness), SpriteWrapper::Reserved::No);
 		SpriteWrapper::createTexture(std::string{ checkedMqbTextureName },   loadCheckBoxTexture(boxSize, outlineThickness), SpriteWrapper::Reserved::No);
 	}
 
+	// Adding all boxes.
 	sf::Vector2f curPos{ initPos.x - (boxSize.x / 2.f), initPos.y - (boxSize.y / 2.f) }; // The "boxSize / 2" counteracts the origin not being at the center of the sprite.
 	const std::string identifierBox{ mqbIdPrefix + identifier + '_' };
 	for (unsigned short i{ 1 }; i <= numberOfBoxes; ++i) // 1-indexed
@@ -318,7 +323,7 @@ void addMQB(InteractiveInterface* gui, const std::string& identifier, sf::Vector
 		const std::string identifierBoxTemp{ identifierBox + std::to_string(i) };
 		gui->addDynamicSprite(identifierBoxTemp, uncheckedMqbTextureName, curPos, { 1.f, 1.f }, sf::IntRect{}, sf::degrees(0), gui::Alignment::Top | gui::Alignment::Left);
 		gui->getDynamicSprite(identifierBoxTemp)->addTexture(checkedMqbTextureName);
-		gui->addInteractive(identifierBoxTemp, [identifierBox, i, multipleChoices, atLeastOne] (InteractiveInterface* gui) { checkBox(gui, identifierBox, i, multipleChoices, atLeastOne); });
+		gui->addInteractive(identifierBoxTemp, [identifierBox, i, multipleChoices, atLeastOne](InteractiveInterface* gui) { checkBox(gui, identifierBox, i, multipleChoices, atLeastOne); }); // Will execute checkBox on click.
 
 		if (i == defaultCheckedBox) 
 			gui->getDynamicSprite(identifierBoxTemp)->switchToNextTexture();
@@ -381,11 +386,11 @@ bool updateWritingText(TextWrapper* text, char32_t unicodeValue, const WritingFu
 	sf::String content{ text->getText().getString() };
 	bool returnValue{ true };
 
-	if (unicodeValue == 13)
+	if (unicodeValue == 13) // carriage return is replaced by line feed
 		unicodeValue =  10;
 
 	if (func != nullptr)
-		returnValue = func(unicodeValue, content, text);
+		returnValue = func(unicodeValue, content, text); // Call the user function before adding the character.
 
 	if ((unicodeValue == 8) && !content.isEmpty()) // Backspace
 		content.erase(content.getSize() - 1);
@@ -411,7 +416,7 @@ bool basicWritingFunction(char32_t& c, sf::String& str, TextWrapper* txt) noexce
 {
 	if (c != 27 && c != '\n')
 	{
-		txt->setStyle(sf::Text::Style::Italic);
+		txt->setStyle(sf::Text::Style::Italic); // Italic when writing.
 		return true;
 	}
 

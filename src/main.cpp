@@ -1,14 +1,14 @@
 ﻿#include <SFML/Graphics.hpp> 
 #include <string>
 #include <optional>
-#include "GUI.hpp"
+#include "GUI/GUI.hpp"
 
-
+// The current impl is an example used in the code example of GUI.hpp
 int main()
 {
 	sf::Vector2u windowSize{ 1000, 1000 };
 	sf::ContextSettings settings{};
-	settings.antiAliasingLevel = 64; 
+	settings.antiAliasingLevel = 16; 
 	sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3", sf::State{}, settings };
 	
 	// Creates interfaces.

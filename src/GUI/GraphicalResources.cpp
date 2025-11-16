@@ -259,7 +259,7 @@ SpriteWrapper::SpriteWrapper(std::string_view textureName, sf::Vector2f pos, sf:
 	if (!addTexture(textureName, rect))
 		throw std::invalid_argument{ "Precondition violated; the texture " + std::string{ textureName } + " was not found when the constructor of SpriteWrapper was called" };
 	
-	switchToNextTexture(0);
+	switchToNextTexture(0); // Switching to current texture -> sets properly the texture.
 	setColor(color);
 	setAlignment(alignment);
 }
@@ -270,7 +270,7 @@ SpriteWrapper::SpriteWrapper(SpriteWrapper&& other) noexcept
 	std::swap(this->m_alignment, other.m_alignment);
 	std::swap(this->hide,		 other.hide);
 
-	other.m_transformable = nullptr;
+	other.m_transformable = nullptr; // The default move constructor would not handle the base pointer correctly.
 	this->m_transformable = &m_wrappedSprite;
 }
 
@@ -283,7 +283,7 @@ SpriteWrapper& SpriteWrapper::operator=(SpriteWrapper&& other) noexcept
 	std::swap(this->m_alignment,	   other.m_alignment);
 	std::swap(this->hide,			   other.hide);
 
-	other.m_transformable = nullptr;
+	other.m_transformable = &other.m_wrappedSprite; // The default move assignment would not handle the base pointer correclty.
 	this->m_transformable = &m_wrappedSprite;
 
 	return *this;
@@ -316,6 +316,7 @@ void SpriteWrapper::setAlignment(Alignment alignment) noexcept
 
 void SpriteWrapper::switchToNextTexture(long long indexOffset)
 {
+	// Calculating new index.
 	const long long totalIndex{ static_cast<long long>(m_curTextureIndex) + indexOffset };
 	const size_t textureSize{ m_textures.size() };
 	m_curTextureIndex = ((totalIndex % textureSize) + textureSize) % textureSize; // Correctly handle negative indices and wrap around.
@@ -346,7 +347,7 @@ void SpriteWrapper::switchToTexture(size_t index)
 {
 	ENSURE_NOT_OUT_OF_RANGE(index, m_textures.size(), "Precondition violated; index is out of range for the texture vector in the function switchToTexture of SpriteWrapper");
 
-	if (index == m_curTextureIndex) [[unlikely]]
+	if (index == m_curTextureIndex)
 		return;
 
 	m_curTextureIndex = index; 

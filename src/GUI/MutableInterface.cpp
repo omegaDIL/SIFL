@@ -8,9 +8,9 @@ void MutableInterface::addDynamicSprite(std::string identifier, std::string_view
 	if (m_dynamicSprites.find(identifier) != m_dynamicSprites.end())
 		return;
 
-	addSprite(textureName, pos, scale, rect, rot, alignment, color);
+	addSprite(textureName, pos, scale, rect, rot, alignment, color); // Actual addition of the sprite.
 	auto mapIterator{ m_dynamicSprites.insert(std::make_pair(std::move(identifier), m_sprites.size() - 1)).first }; // Insert returns a pair, where the first element is an iterator to the inserted element.
-	m_indexesForEachDynamicSprites[m_sprites.size() - 1] = mapIterator;
+	m_indexesForEachDynamicSprites[m_sprites.size() - 1] = mapIterator; // Mapping the index to the iterator for O(1) removal.
 }
 
 void MutableInterface::addDynamicSprite(std::string identifier, sf::Texture texture, sf::Vector2f pos, sf::Vector2f scale, sf::IntRect rect, sf::Angle rot, Alignment alignment, sf::Color color) noexcept
@@ -18,9 +18,9 @@ void MutableInterface::addDynamicSprite(std::string identifier, sf::Texture text
 	if (m_dynamicSprites.find(identifier) != m_dynamicSprites.end())
 		return;
 
-	addSprite(texture, pos, scale, rect, rot, alignment, color);
+	addSprite(texture, pos, scale, rect, rot, alignment, color); // Actual addition of the sprite.
 	auto mapIterator{ m_dynamicSprites.insert(std::make_pair(std::move(identifier), m_sprites.size() - 1)).first }; // Insert returns a pair, where the first element is an iterator to the inserted element.
-	m_indexesForEachDynamicSprites[m_sprites.size() - 1] = mapIterator;
+	m_indexesForEachDynamicSprites[m_sprites.size() - 1] = mapIterator; // Mapping the index to the iterator for O(1) removal.
 }
 
 void MutableInterface::removeDynamicText(std::string_view identifier) noexcept

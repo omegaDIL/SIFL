@@ -64,25 +64,33 @@ constexpr GUIPtr& GUIPtr::operator=(gui::InteractiveInterface* ptr) noexcept
 	return *this;
 }
 
-void populateGUI(GUIPtr& cur, std::string& writing, IGUI* main, IGUI* other, MGUI* overlay) noexcept
+void populateGUI(GUIPtr& cur, IGUI* main, IGUI* settings, MGUI* overlay, sf::RenderWindow* window, sf::ContextSettings* context) noexcept
 {
 	ENSURE_VALID_PTR(main, "main was nullptr when populateGUI was called");
 
-	main->addDynamicText("text1", "entry", { 500, 400 });
-	main->addInteractive("text1", [&writing](IGUI*) mutable { writing = "text1"; });
-	main->addDynamicText("text2", "entry", { 500, 500 });
-	main->addInteractive("text2", [&writing](IGUI* igui) mutable { writing = "text2"; });
-	main->addDynamicText("other", "switch", { 500, 800 });
-	main->addInteractive("other", [other, &cur](IGUI*) mutable { cur = other; });
-	main->addText("Hi!!\nWelcome to my GUI", sf::Vector2f{ 200, 150 }, 48, sf::Color{ 255, 255, 255 }, "__default", gui::Alignment::Left);
-	gui::addMQB(main, "mqb", { 50, 50 }, { 0, 50 }, 10, true, true, 1);
+	main->addDynamicText("play", "play", { 500, 400 });
+	main->addInteractive("play");
+	main->addDynamicText("settings", "settings", { 500, 600 });
+	main->addInteractive("settings", [&cur, settings](IGUI*) mutable {cur = settings; });
+	main->addDynamicText("close", "close", { 500, 800 });
+	main->addInteractive("close", [window](IGUI*) { window->close(); });
+	main->addText("My Awesome Game\n(GUI example)", sf::Vector2f{ 500, 150 }, 48);
 
-	sf::RectangleShape rect{ { 50, 50 } };
-	other->addDynamicSprite("colorChanger", gui::createTextureFromDrawables(rect), sf::Vector2f{ 500, 850 });
-	other->addInteractive("colorChanger");
-	other->addDynamicText("main", "switch", { 500, 500 });
-	other->addInteractive("main", [main, &cur](IGUI*) mutable { cur = main; });
-	gui::addSlider(other, "slider", { 300, 500 });
+	settings->addDynamicText("back", "back", sf::Vector2f{ 500, 200 });
+	settings->addInteractive("back", [&cur, main](IGUI*) mutable {cur = main; });
+	settings->addDynamicText("fs", "fullscreen", { 700, 400 });
+	settings->addInteractive("fs", [window, context](IGUI*) 
+	{
+		sf::Vector2u prevSize{ window->getSize() };	
+		window->create(sf::VideoMode::getDesktopMode(), "Template sfml 3", sf::State::Fullscreen, *context);
+		prevSize;
+	});
+	settings->addDynamicText("wd", "windowed", { 700, 600 });
+	settings->addInteractive("wd", [window, context](IGUI*)
+	{
+		window->create(sf::VideoMode{ sf::Vector2u{ 1000, 1000 } }, "Template sfml 3", sf::State::Windowed, *context);
+	});
+	gui::addSlider(settings, "aliasing", { 300, 500 });
 
 	sf::CircleShape overlayTex{ 20, 120 };
 	overlayTex.setFillColor(sf::Color{ 255, 255, 255, 80 });

@@ -112,8 +112,9 @@ struct GUIPtr
 
 
 //TODO: Complete you own populateGUI function. You may omit the noexcept if you want to throw exceptions.
-// The current impl is an example used in the code portion below.
-void populateGUI(GUIPtr& cur, std::string& writing, IGUI* main, IGUI* other, MGUI* overlay) noexcept;
+// The current impl is an example
+// You can also remove this function and put everything directly in main.cpp if you want (but might be less clean).
+void populateGUI(GUIPtr& cur, IGUI* main, IGUI* other, MGUI* overlay, sf::RenderWindow* window, sf::ContextSettings* context) noexcept;
 
 /**
  * Below is a code portion showing how to use the library.

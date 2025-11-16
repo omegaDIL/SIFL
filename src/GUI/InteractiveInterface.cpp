@@ -65,6 +65,11 @@ void InteractiveInterface::addInteractive(std::string identifier, ButtonFunction
 	const bool doesTextExist  { textIterator   != m_dynamicTexts.end()   };
 	const bool doesSpriteExist{ spriteIterator != m_dynamicSprites.end() };
 
+	assert(!m_lockState && "Precondition violated; the interface is locked when the function addInteractive of InteractiveInterface was called");
+
+	if (!doesTextExist && !doesSpriteExist)
+		return;
+
 	// The check "textIterator->second >= m_nb" verifies if the text is not already an interactive.
 	// We guarantee that all interactive elements are at the beginning of the vector by swapping with the
 	// element at index m_nbOfButtonTexts, before adding one to report the new number of interactive texts.

@@ -3,29 +3,30 @@
 #include <optional>
 #include "GUI/GUI.hpp"
 
-// The current impl is an example used in the code example of GUI.hpp
+// The current impl is an example
 int main()
 {
 	sf::Vector2u windowSize{ 1000, 1000 };
-	sf::ContextSettings settings{};
-	settings.antiAliasingLevel = 16; 
-	sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3", sf::State{}, settings };
+	sf::ContextSettings conSettings{};
+	conSettings.antiAliasingLevel = 16;
+	sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3", sf::State{}, conSettings };
 	
 	// Creates interfaces.
 	IGUI mainInterface{ &window, 1080 };
-	IGUI otherInterface{ &window, 1080 };
+	IGUI settingsInterface{ &window, 1080 };
 	MGUI overlayInterface{ &window, 1080 }; // An overlay interface that will always be drawn. Not mean to be the main one
 
 	// This is used to get information about the currently hovered item.
 	GUIPtr curGUI{};
 	curGUI = &mainInterface; // Start with the main interface. The operator= is overriden to allow any interface type.
-	std::string writingText{ "text1" }; // Identifier of which text is being written to.
 
 	// Populates both interfaces.
-	populateGUI(curGUI, writingText, &mainInterface, &otherInterface, &overlayInterface); // Adds all elements to both interfaces. see the code example. above
+	populateGUI(curGUI, &mainInterface, &settingsInterface, &overlayInterface, &window, &conSettings); // Adds all elements to both interfaces. see the code example. above
 	mainInterface.lockInterface(); 
-	otherInterface.lockInterface();
+	settingsInterface.lockInterface();
 	overlayInterface.lockInterface();
+
+	float targetAliasing = conSettings.antiAliasingLevel;
 
 	while (window.isOpen()) [[likely]]
 	{
@@ -45,21 +46,17 @@ int main()
 				curGUI.mainItem = curGUI.gInteractive->eventUpdateHovered(window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position)); // Updates the hovered item (only for IGUI). The argument is the mouse position (see SFML doc).
 				overlayInterface.getDynamicSprite("overlay")->setPosition(window.mapPixelToCoords(event->getIf<sf::Event::MouseMoved>()->position)); // Moves the overlay sprite to follow the mouse.
 			}
-		
-			else if (curGUI.gMutable != nullptr && event->is<sf::Event::TextEntered>() && writingText != "")
-				if (!gui::updateWritingText(&mainInterface, writingText, event->getIf<sf::Event::TextEntered>()->unicode, gui::basicWritingFunction))
-					writingText = "";
+
+			if (targetAliasing != conSettings.antiAliasingLevel && curGUI.mainItem.identifier != "aliasing")
+			{
+				conSettings.antiAliasingLevel = targetAliasing;
+				window.create(sf::VideoMode{ windowSize }, "Template sfml 3", sf::State{}, conSettings);
+			}
 		}
 
-
 		// First check if we are in the right interface, then check the identifier.
-
-		if (curGUI.gInteractive == &otherInterface && curGUI.mainItem.identifier == "colorChanger") 
-			otherInterface.getDynamicSprite("colorChanger")->rotate(sf::degrees(1));
-		
-		if (curGUI.gInteractive == &otherInterface && curGUI.mainItem.identifier == "slider" && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
-			gui::moveSlider(&otherInterface, curGUI.mainItem.identifier, window.mapPixelToCoords(sf::Mouse::getPosition(window)).y, 99); // 99 is good value for a slider: the delta interval is exactly 0.01
-
+		if (curGUI.gInteractive == &settingsInterface && curGUI.mainItem.identifier == "aliasing" && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+			targetAliasing = gui::moveSlider(&settingsInterface, curGUI.mainItem.identifier, window.mapPixelToCoords(sf::Mouse::getPosition(window)).y, 15, [](double x) {return x * 16; }); // 99 is good value for a slider: the delta interval is exactly 0.01
 
 		window.clear(sf::Color{ 20, 20, 20 });
 		curGUI->draw();

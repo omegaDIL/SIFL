@@ -1,53 +1,51 @@
-﻿Summary:
+﻿**Summary**<br>
 This project is a SFML-based library designed to easily create performant yet visually-rich graphical user interfaces.
 Most functions run in (amortized) O(1) time and are safe to call repeatedly, to support fallback behavoir mechanisms.
-Therefore, it is very suitable for 2D simulations, games and other apps that heavily depends on visuals but need a user-friendly API
+Therefore, it is very suitable for 2D simulations, games and other apps that heavily depends on visuals but need a user-friendly API<br>
+-------------------‐-------------------------------------------------<br>
+**Compatibility**<br>
+Fully compatible with desktop OS (windows, macOS, linux)<br>
+While the library has not been tested on mobile or touch-enabled devices (Android/iOS), there is no inherent reason it would be incompatible. For touch input, simply call updateHovered and pressed when a touch began or moved, and unpressed when the touch ends.<br>
+You may need to change the CMakeLists.txt to properly link SFML on your platform.<br>
+-------------------‐-------------------------------------------------<br>
+**Key Features**<br>
+- Fine-grained control over memory management for sf\::Texture, enabling sprite animation, resolution-specific textures, and more.
+- Handle of window resizing.
+- Pre-made features such as writing over sf\::text, progress bar and more
+- Hover detection for any sf::Transformable object
+- Simple menu switching system.
+- Button creation with custom function bindings for specific events.
+- Different interfaces available for different menu types
 
--------------------‐-------------------------------------------------
-Compatibility:
-Fully compatible with desktop OS (windows, macOS, linux)
+-------------------‐-------------------------------------------------<br>
+**Overview - what you should get familiar with up**<br>
+<u>Exceptions:</u><br>
+- loadingGraphicalResourceFailure (file: GraphicalResources)<br>
 
-While the library has not been tested on mobile or touch-enabled devices (Android/iOS), there is no inherent reason it would be incompatible. For touch input, simply call updateHovered and pressed when a touch began or moved, and unpressed when the touch ends.
-
--------------------‐-------------------------------------------------
-Key Features:
-• Fine-grained control over memory management for sf::Texture, enabling sprite animation, resolution-specific textures, and more.
-• Handle of window resizing.
-• Pre-made features such as writing over sf::text, progress bar and more
-• Hover detection for any sf::Transformable object
-• Simple menu switching system.
-• Button creation with custom function bindings for specific events.
-• Different interfaces available for different menu types
-
--------------------‐-------------------------------------------------
-Overview - what you should get familiar with up:
-* are the most important
-- are less
-
-Exceptions:
-- loadingGraphicalResourceFailure (file: GraphicalResources)
-Functions:
-* populateGUI (file: GUI)
+<u>Functions:</u><br>
+- **populateGUI** (file: GUI)
 - showErrorUsingWindow (file: GUI)
 - createTextureFromDrawables (file: GraphicalResources)
 - loadFontFromFile (file: GraphicalResources)
 - loadTextureFromFile (file: GraphicalResources)
-Classes:
-* TextWrapper (file: GraphicalResources)
-* SpriteWrapper (file: GraphicalResources)
-* BasicInterface (file: BasicInterface)
+
+<u>Classes:</u><br>
+- **TextWrapper** (file: GraphicalResources)
+- **SpriteWrapper** (file: GraphicalResources)
+- **BasicInterface** (file: BasicInterface)
 - MutableInterface (file: MutableInterface)
-* InteractiveInterface (file: InteractiveInterface)
+- **InteractiveInterface** (file: InteractiveInterface)
 - struct InteractiveInterface::Item (file: InteractiveInterface)
-* currentGUI (file: GUI)
-Files:
+- **currentGUI** (file: GUI)
+
+<u>Files:</u><br>
 - CompoundElements (divided in 4 sections: progress bar, mqb, slider and writing; each may be useful depending on your use case)
 
--------------------‐-------------------------------------------------
-Code example:
-(see GUI.hpp for full example with populateGUI)
-The current implementation of main.cpp/populateGUI are another example of how to use the library.
-Change them in your project as you see fit.
+-------------------‐-------------------------------------------------<br>
+**Code example**<br>
+(see GUI.hpp for full example with populateGUI)<br>
+The current implementation of main.cpp/populateGUI are another example of how to use the library.<br>
+Change them in your project as you see fit.<br>
 ```
 int main()
 {
@@ -115,32 +113,31 @@ int main()
 	return 0;
 }
 ```
--------------------‐-------------------------------------------------
-Concerns:
-• All features of sf::sprite and sf::text are still available
-• Does maintain good cache locality with both the hover detection and the drawing function.
+-------------------‐-------------------------------------------------<br>
+**Concerns**<br>
+- All features of sf\::sprite and sf\::text are still available
+- Does maintain good cache locality with both the hover detection and the drawing function.
 
--------------------‐-------------------------------------------------
-Limitations & common mistakes:
-• Interfaces don't support sf::Shader. (But works with SpriteWrapper)
-• The order of drawing is fixed and can't be modified nor fully controlled easily.
-• The first time you create a text using any gui type, a default font is loaded. Do it yourself if you want to load it before.
+-------------------‐-------------------------------------------------<br>
+**Limitations & common mistakes**<br>
+- Interfaces don't support sf::Shader. (But works with SpriteWrapper)
+- The order of drawing is fixed and can't be modified nor fully controlled easily.
+- The first time you create a text using any gui type, a default font is loaded. Do it yourself if you want to load it before.
 
--------------------‐-------------------------------------------------
-Advanced features:
-There are a few features that can seem more complex than the rest. While most of them can be "harder" to understand, they are still easy to use.
+-------------------‐-------------------------------------------------<br>
+**Advanced features**<br>
+There are a few features that can seem more complex than the rest. While most of them can be "harder" to understand, they are still easy to use. Ranked from hardest to easiest:<br>
+- Order of drawing
+- Reserved textures
+- Switching between interfaces
+- Interface locking
 
-• Order of drawing
-• Reserved textures
-• Switching between interfaces
-• Interface locking
-(From hardest to use to easiest)
+<u>Order of drawing</u>:<br>
+The order of drawing represents which elements are drawn first within an interface. In sfml, the sooner an element is drawn, the less prioritized the element is if it overlaps. The interfaces store all elements in a vector to improve cache locality, but that means that in order to maintain O(1) removal, it has to do some manipulation. Thus, the actual order can change throughout runtime. Ultimately, you can be sure of 2 things:<br>
+- texts are drawn after all sprites<br>
+- interactive sprites are drawn before non interactive ones ; and so do the texts.<br>
 
-Order of drawing:
-The order of drawing represents which elements are drawn first within an interface. In sfml, the sooner an element is drawn, the less prioritized the element is if it overlaps. The interfaces store all elements in a vector to improve cache locality, but that means that in order to maintain O(1) removal, it has to do some manipulation. Thus, the actual order can change throughout runtime. Ultimately, you can be sure of 2 things:
-- texts are drawn after all sprites
-- interactive sprites are drawn before non interactive ones ; and so do the texts.
-Then the actual order within them depends on the interface type and what functions you call. BasicInterface is the simplest: the later an element is added, the later it is drawn. MutableInterface is almost identical as BasicInterface except when you remove something. There, it swaps it with the last element to remove it in O(1). That means that the previous last element (which had the highest priority) has now the same position as the element that you just removed. It makes it hard to track but it is still doable. The most complex one is InteractiveInterface. Each vector (sprite + text) is splitted into 2 parts: the interactive first, then the non-interactive. Both parts are always continuous. For example, you might have a vector with 5 elements including 3 interactives. In such a case, the vector contains the 3 interactives at indexes 0,1,2 and then the non interactive at indexes 3 and 4. Therefore and at first, it respects the mutable interface order, until an element is made interactive. When you do so, it swaps that new interactive element with the first element of the non interactive part, making the interactive part (the first part) grow by one, and the none interactive part (the second part) smaller. Thus, interactive are drawn in order they are made interactive, but not in addition order (until removal). The non-interactive order is hence also modified: the element at the beginning of the second part is swapped with the previous position of that interactive element. The difficulty increases when removals are performed. Non-interactives behaves like MutableInterfaces, but interactives on the other hand are (again) more complicated. They are still swapped with the last element but it creates a "hole" in the interactive continuity. That's because the last element of the vector, that is to say the last element of the second part, is non interactive (unless there are no non interactives). It is solved by swapping the last interactive with the non interactive that makes up this hole. Ultimately, when an interactive element is removed, the last non interactive becomes the first non interactive ; and the last interactive gets the position of the previously deleted interactive. To fully understand, see the explanation file
+Then the actual order within them depends on the interface type and what functions you call. BasicInterface is the simplest: the later an element is added, the later it is drawn. MutableInterface is almost identical as BasicInterface except when you remove something. There, it swaps it with the last element to remove it in O(1). That means that the previous last element (which had the highest priority) has now the same position as the element that you just removed. It makes it hard to track but it is still doable. The most complex one is InteractiveInterface. Each vector (sprite + text) is splitted into 2 parts: the interactive first, then the non-interactive. Both parts are always continuous. For example, you might have a vector with 5 elements including 3 interactives. In such a case, the vector contains the 3 interactives at indexes 0,1,2 and then the non interactive at indexes 3 and 4. Therefore and at first, it respects the mutable interface order, until an element is made interactive. When you do so, it swaps that new interactive element with the first element of the non interactive part, making the interactive part (the first part) grow by one, and the none interactive part (the second part) smaller. Thus, interactive are drawn in order they are made interactive, but not in addition order (until removal). The non-interactive order is hence also modified: the element at the beginning of the second part is swapped with the previous position of that interactive element. The difficulty increases when removals are performed. Non-interactives behaves like MutableInterfaces, but interactives on the other hand are (again) more complicated. They are still swapped with the last element but it creates a "hole" in the interactive continuity. That's because the last element of the vector, that is to say the last element of the second part, is non interactive (unless there are no non interactives). It is solved by swapping the last interactive with the non interactive that makes up this hole. Ultimately, when an interactive element is removed, the last non interactive becomes the first non interactive ; and the last interactive gets the position of the previously deleted interactive. To fully understand, see the explanation file<br>
 
 Reserved textures:
 Textures within SpriteWrapper are categorized as either

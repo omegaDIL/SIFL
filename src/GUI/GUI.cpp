@@ -79,17 +79,7 @@ void populateGUI(GUIPtr& cur, IGUI* main, IGUI* settings, MGUI* overlay, sf::Ren
 	settings->addDynamicText("back", "back", sf::Vector2f{ 500, 200 });
 	settings->addInteractive("back", [&cur, main](IGUI*) mutable {cur = main; });
 	settings->addDynamicText("fs", "fullscreen", { 700, 400 });
-	settings->addInteractive("fs", [window, context](IGUI*) 
-	{
-		sf::Vector2u prevSize{ window->getSize() };	
-		window->create(sf::VideoMode::getDesktopMode(), "Template sfml 3", sf::State::Fullscreen, *context);
-		prevSize;
-	});
-	settings->addDynamicText("wd", "windowed", { 700, 600 });
-	settings->addInteractive("wd", [window, context](IGUI*)
-	{
-		window->create(sf::VideoMode{ sf::Vector2u{ 1000, 1000 } }, "Template sfml 3", sf::State::Windowed, *context);
-	});
+	settings->addInteractive("fs");
 	gui::addSlider(settings, "aliasing", { 300, 500 });
 
 	sf::CircleShape overlayTex{ 20, 120 };

@@ -6,11 +6,13 @@
 // The current impl is an example
 int main()
 {
-	sf::Vector2u windowSize{ 1000, 1000 };
 	sf::ContextSettings conSettings{};
-	conSettings.antiAliasingLevel = 16;
-	sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3", sf::State::Windowed, conSettings };
-	
+	conSettings.antiAliasingLevel = 16;	
+	sf::State currentState{ sf::State::Windowed() };
+
+	sf::RenderWindow window{ sf::VideoMode{ { 1000, 1000 } }, "Template sfml 3", sf::State::Windowed, conSettings };
+	sf::View currentView{ window.getView() };
+
 	// Creates interfaces.
 	IGUI mainInterface{ &window, 1080 };
 	IGUI settingsInterface{ &window, 1080 };
@@ -21,13 +23,12 @@ int main()
 	curGUI = &mainInterface; // Start with the main interface. The operator= is overriden to allow any interface type.
 
 	// Populates both interfaces.
-	populateGUI(curGUI, &mainInterface, &settingsInterface, &overlayInterface, &window, &conSettings); // Adds all elements to both interfaces. see the code example. above
+	populateGUI(curGUI, &mainInterface, &settingsInterface, &overlayInterface, &window, conSettings, currentView, currentState); // Adds all elements to both interfaces. see the code example. above
 	mainInterface.lockInterface(); 
 	settingsInterface.lockInterface();
 	overlayInterface.lockInterface();
 
 	float targetAliasing = conSettings.antiAliasingLevel;
-	sf::State currentState = sf::State::Windowed();
 
 	while (window.isOpen()) [[likely]]
 	{
@@ -37,17 +38,10 @@ int main()
 				window.close();
 
 			else if (event->is<sf::Event::Resized>()) [[unlikely]]
-				BGUI::windowResized(&window, windowSize); // Resizes the window and the interfaces.
+				BGUI::windowResized(&window, currentView); // Resizes the window and the interfaces.
 
 			else if (curGUI.gInteractive != nullptr && event->is<sf::Event::MouseButtonPressed>() && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
-			{
 				curGUI.gInteractive->eventPressed(); // Handles button pressing (only for IGUI).
-				if (curGUI.mainItem.identifier == "fs")
-				{
-					currentState = (currentState == sf::State::Fullscreen) ? sf::State::Windowed : sf::State::Fullscreen;
-					window.create(sf::VideoMode{ windowSize }, "Template sfml 3", currentState, conSettings);
-				}
-			}
 
 			else if (curGUI.gInteractive != nullptr && event->is<sf::Event::MouseMoved>() && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) [[likely]]
 			{
@@ -56,9 +50,10 @@ int main()
 			}
 
 			if (targetAliasing != conSettings.antiAliasingLevel && curGUI.mainItem.identifier != "aliasing")
-			{
+			{	// checking the identifier avoids multiple recreations while sliding.
 				conSettings.antiAliasingLevel = targetAliasing;
-				window.create(sf::VideoMode{ windowSize }, "Template sfml 3", currentState, conSettings);
+				window.create(sf::VideoMode::getDesktopMode(), "Template sfml 3", currentState, conSettings);
+				BGUI::windowResized(&window, currentView); // create would not trigger a resize event.
 			}
 		}
 

@@ -51,8 +51,8 @@ namespace gui
  * \see `sf::RenderWindow`, `TextWrapper`, `SpriteWrapper`.
  *
  * \code
- * sf::Vector2u windowSize{ 1000, 1000 };
- * sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3" };
+ * sf::RenderWindow window{ sf::VideoMode{ { 1000, 1000 } }, "Template sfml 3" };
+ * sf::View currentView{ window.getView() };
  * BGUI myInterface{ &window, 1080 }; // Create the interface with the window and the relative scaling definition.
  *
  * myInterface.addText("Welcome to the GUI!", { 500, 900 }, 48, sf::Color{ 255, 255, 255 }, "__default", gui::Alignment::Center, sf::Text::Bold | sf::Text::Underlined);
@@ -66,7 +66,7 @@ namespace gui
  *     while (const std::optional event = window.pollEvent())
  * 	   {
  * 	       if (event->is<sf::Event::Resized>())
- *		       BGUI::windowResized(&window, windowSize);
+ *		       BGUI::windowResized(&window, currentView);
  *
  *		   if (event->is<sf::Event::Closed>() || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
  *			   window.close();
@@ -140,7 +140,7 @@ public:
 	 * \post The default font is loaded and available for use.
 	 * \throw LoadingGraphicalRessourceFailure Strong exception guarantee: nothing happens.
 	 * 
-	 * \pre   A font must have been loaded with the name you gave, either using the function `createFont`
+	 * \pre   A font must have been loaded with the name you gave, either using the function `createFont`.
 	 *		  or being the default font under the name __default. 
 	 * \post  A font will be used.
 	 * \throw std::invalid_argument Strong exception guarantee: nothing happens.
@@ -235,58 +235,61 @@ public:
 	 *						 with the resized window (if their 'relativeScalingDefinition's were not set to 0). And M
 	 *						 is the number of views passed as arguments.
 	 *
-	 * This function should be called after a window has been resized. It updates the current view
-	 * of the window, rescales interface elements according to their respective `relativeScalingDefinition`,
-	 * and adjusts the provided views. If an interface has a scaling definition of `0`, it will not be
-	 * modifies.
+	 * This function should be called after a window has been resized (or recreated). It updates all of
+	 * the window's views and rescales interface elements according to their respective `relativeScalingDefinition`.
+	 * If an interface has a scaling definition of `0`, it will not be modifies.
+	 * 
 	 * The scales and positions/centers are modified for both transformables and views, but without distortion.
 	 * The resized window is always constrained to the screen resolution, and larger than 480 px on each axis.
+	 * 
+	 * Call this function after recreation of the window if the size changed, since recreation (create()) does not.
 	 *
 	 * \param[in,out] resizedWindow A valid pointer to the window that was resized.
-	 * \param[in,out] previousSize The window's size before resizing; updated after the call.
-	 * \param[out] views A variadic list of pointers to `sf::View` objects that should be resized
-	 *                   consistently with the window. Must include the currently applied view as well.
+	 * \param[in,out] previousView: The previous view of the window before the resize. Updated after call.
+	 * \param[out] otherViews A variadic list of pointers to `sf::View` objects that should be resized
+	 *						  consistently with the window. Must include the currently applied view as well.
 	 *
-	 * \note The function internally resizes and re-applies the current view of the window. However,
-	 *       since the view is copied internally, all relevant views (including the one currently in use)
-	 *       must be passed explicitly as arguments.
+	 * \note The function internally updates the previous view and re-applies it. You should keep it as
+	 *		 the current view.
 	 * \note If your application keeps a fixed window size, you do not need to call this function.
 	 *       Simply restore the previous window size if needed.
 	 *
 	 * \pre `resizedWindow` must be a valid window.
-	 * \pre `previousSize` must represent a valid size.
+	 * \pre `previousView` must be a valid view (size not equal to (0,0)).
 	 * \post The interfaces/views will be resized.
 	 * \warning The program will assert otherwise.
+	 * 
+	 * \code
+	   if (event->is<sf::Event::Resized>()) [[unlikely]]
+	       BGUI::windowResized(&window, currentView); // Resizes the window and the interfaces.
+	 * \endcode
 	 */
 	template<typename... Ts> requires (std::same_as<Ts, sf::View*> && ...)
-	inline static void windowResized(sf::RenderWindow* resizedWindow, sf::Vector2u& previousSize, Ts... views) noexcept
+	inline static void windowResized(sf::RenderWindow* resizedWindow, sf::View& previousView, Ts... otherViews) noexcept
 	{
 		ENSURE_SFML_WINDOW_VALIDITY(resizedWindow, "Precondition violated; The window is invalid in the function windowResized of BasicInterface");
-		ENSURE_NOT_ZERO(previousSize.x, "Precondition violated; The previous size is invalid in the function windowResized of BasicInterface");
-		ENSURE_NOT_ZERO(previousSize.y, "Precondition violated; The previous size is invalid in the function windowResized of BasicInterface");
+		assert(previousView.getSize() != sf::Vector2f{} && "Precondition violated; The previous view is invalid in the function windowResized of BasicInterface");
 
 		const sf::Vector2u maxSize{ sf::VideoMode::getDesktopMode().size };
 		sf::Vector2u newSize{ resizedWindow->getSize() };
-
-		newSize.x = std::clamp(newSize.x, 480u, maxSize.x); // Not larger than the current window
+		newSize.x = std::clamp(newSize.x, 480u, maxSize.x); // Smaller than the current window
 		newSize.y = std::clamp(newSize.y, 480u, maxSize.y); // And bigger than 480
-		
-		// Updates current view and the others.
-		const sf::Vector2f scaleFactor{ newSize.x / static_cast<float>(previousSize.x), newSize.y / static_cast<float>(previousSize.y) };
-		sf::View view{ resizedWindow->getView() }; 
-		view.setSize(sf::Vector2f{ view.getSize().x * scaleFactor.x, view.getSize().y * scaleFactor.y});
-		view.setCenter(sf::Vector2f{ view.getCenter().x * scaleFactor.x, view.getCenter().y * scaleFactor.y});
-		(views->setSize(sf::Vector2f{ views->getSize().x * scaleFactor.x, views->getSize().y * scaleFactor.y }), ...);
-		(views->setCenter(sf::Vector2f{ views->getCenter().x * scaleFactor.x, views->getCenter().y * scaleFactor.y }), ...);
 
-		// Update drawables.
-		const float relativeMinAxisScale{ static_cast<float>(std::min(newSize.x, newSize.y)) / std::min(previousSize.x, previousSize.y) };
-		proportionKeeper(resizedWindow, scaleFactor, relativeMinAxisScale);
+		const sf::Vector2f previousSize{ previousView.getSize() };
+		const sf::Vector2f scaleFactor{ newSize.x / previousSize.x, newSize.y / previousSize.y };
+
+		previousView.setSize(static_cast<sf::Vector2f>(newSize));
+		(otherViews->setSize(static_cast<sf::Vector2f>(newSize)), ...);
+		previousView.setCenter(sf::Vector2f{ previousView.getCenter().x * scaleFactor.x, previousView.getCenter().y * scaleFactor.y });
+		(otherViews->setCenter(sf::Vector2f{ otherViews->getCenter().x  * scaleFactor.x, otherViews->getCenter().y  * scaleFactor.y }), ...);
 
 		// Update window.
-		previousSize = newSize; // Updates previous size.
-		resizedWindow->setView(view);
+		resizedWindow->setView(previousView);
 		resizedWindow->setSize(newSize);
+
+		// Update drawables.
+		const float relativeMinAxisScale{ std::min(newSize.x, newSize.y) / std::min(previousSize.x, previousSize.y) };
+		proportionKeeper(resizedWindow, scaleFactor, relativeMinAxisScale);
 	}
 
 protected:

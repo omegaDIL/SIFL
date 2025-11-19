@@ -114,11 +114,12 @@ struct GUIPtr
 //TODO: Complete you own populateGUI function. You may omit the noexcept if you want to throw exceptions.
 // The current impl is an example
 // You can also remove this function and put everything directly in main.cpp if you want (but might be less clean).
-void populateGUI(GUIPtr& cur, IGUI* main, IGUI* other, MGUI* overlay, sf::RenderWindow* window, sf::ContextSettings* context) noexcept;
+void populateGUI(GUIPtr& cur, IGUI* main, IGUI* settings, MGUI* overlay, sf::RenderWindow* window, sf::ContextSettings& context, sf::View& currentView, sf::State& currentState) noexcept;
 
 /**
  * Below is a code portion showing how to use the library.
- * It may be easier to understand if you check the other example files first (begin with GraphicalResources.hpp, then BasicInterface...).
+ * It may be easier to understand if you check the other example files first: begin with BasicInterface,
+ * then MutableInterface, InteractiveInterface, GraphicalResources and CompoundElements.
  * 
  * \code PopulateGUI function example:
  void populateGUI(GUIPtr& cur, std::string& writing, IGUI* main, IGUI* other, MGUI* overlay) noexcept
@@ -150,11 +151,11 @@ void populateGUI(GUIPtr& cur, IGUI* main, IGUI* other, MGUI* overlay, sf::Render
  * \code main.cpp
  int main()
  {
-	sf::Vector2u windowSize{ 1000, 1000 };
 	sf::ContextSettings settings{};
-	settings.antiAliasingLevel = 64; 
-	sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3", sf::State{}, settings };
-	
+	settings.antiAliasingLevel = 16; 
+	sf::RenderWindow window{ sf::VideoMode{ { 1000, 1000 } }, "Template sfml 3", sf::State{}, settings };
+	sf::View currentView{ window.getView() };
+
 	// Creates interfaces.
 	IGUI mainInterface{ &window, 1080 };
 	IGUI otherInterface{ &window, 1080 };
@@ -179,7 +180,7 @@ void populateGUI(GUIPtr& cur, IGUI* main, IGUI* other, MGUI* overlay, sf::Render
 				window.close();
 
 			else if (event->is<sf::Event::Resized>()) [[unlikely]]
-				BGUI::windowResized(&window, windowSize); // Resizes the window and the interfaces.
+				BGUI::windowResized(&window, currentView); // Resizes the window and the interfaces.
 
 			else if (curGUI.gInteractive != nullptr && event->is<sf::Event::MouseButtonPressed>() && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				curGUI.gInteractive->eventPressed(); // Handles button pressing (only for IGUI).

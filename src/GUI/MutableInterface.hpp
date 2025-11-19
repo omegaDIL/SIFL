@@ -38,8 +38,9 @@ namespace gui
  * \see `BasicInterface`.
  *
  * \code
- * sf::Vector2u windowSize{ 1000, 1000 };
- * sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3" };
+ * sf::RenderWindow window{ sf::VideoMode{ { 1000, 1000 } }, "Template sfml 3" };
+ * sf::View currentView{ window.getView() };
+ * 
  * MGUI myInterface{ &window, 1080 }; // Create the interface with the window and the relative scaling definition.
  *
  * myInterface.addDynamicText("welcome", "Welcome to the GUI!", { 500, 200 }, 48, sf::Color{ 255, 255, 255 }, "__default", gui::Alignment::Center, sf::Text::Bold | sf::Text::Underlined);

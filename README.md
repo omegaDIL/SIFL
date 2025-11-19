@@ -18,16 +18,28 @@ You may need to change the CMakeLists.txt to properly link SFML on your platform
 - Different interfaces available for different menu types
 
 -------------------‐-------------------------------------------------<br>
-**Overview - what you should get familiar with up**<br>
-<u>Exceptions:</u><br>
-- loadingGraphicalResourceFailure (file: GraphicalResources)<br>
+**Set up**<br>
+First of all, this library requires CMake, SFML and C++20 or higher installed on your system. You need to have SFML's windows, graphics and system linked to your project<br>
+To use the library in your project, you should copy the files .hpp/.cpp available on GitHub "src/GUI/*" to your project folder. You may create a sub folder GUI if clearer<br>
+When you have done so, include the header ```#include "your_folder/GUI.hpp"``` where you want to use the library.<br>
+<br>
+The library uses the namespace ```gui```, but you can change it if you encounter naming conflicts. The same goes for aliases defined in GUI.hpp (BGUI, MGUI, IGUI).<br>
+Functions ```loadTextureFromFile``` and ```loadFontFromFile``` in file GraphicalResources.hpp have a default value corresponding to the path to go to to load resources. It is ../assets/. You can modify these values to fit your project structure<br>
+The function ```populateGUI()``` is a function where you could add all your interface elements. You SHOULD modify it to fit your project needs, or remove it to do somewhere else. You decide.<br>
+You SHOULD NOT modify anything else unless you are 100% sure<br>
+<br>
+You can use the file example.cpp as a starting point for your project (also available on GitHub "src/example.cpp").<br>
 
-<u>Functions:</u><br>
-- **populateGUI** (file: GUI)
-- showErrorUsingWindow (file: GUI)
-- createTextureFromDrawables (file: GraphicalResources)
-- loadFontFromFile (file: GraphicalResources)
-- loadTextureFromFile (file: GraphicalResources)
+-------------------‐-------------------------------------------------<br>
+**Overview - How to learn**<br>
+Before continuing reading, make sure you are familiar with SFML basics, especially sf\::RenderWindow, sf\::Sprite, sf\::Text, sf\::Texture and sf\::Font.<br>
+<br>
+From now on, you should focus on understanding the components within the list below. It is an exhaustive list, sorted by type, of what you need to know (other components exist, but are used internally). They are the core building blocks to use it properly.<br>
+Once you see how they work, you should go reading the code example of, in order, BasicInterface, MutableInterface, InteractiveInterface and the GUI.hpp/GUIPtr class example. Then, you can read the code example at the following section of this readme to see how to use everything together.<br>
+There is also some code example in GraphicalResources and CompoundElements that may be useful depending on your use case.<br>
+<br>
+<u>Exceptions:</u><br>
+- loadingGraphicalResourceFailure (file: GraphicalResources)
 
 <u>Classes:</u><br>
 - **TextWrapper** (file: GraphicalResources)
@@ -38,22 +50,28 @@ You may need to change the CMakeLists.txt to properly link SFML on your platform
 - struct InteractiveInterface::Item (file: InteractiveInterface)
 - **currentGUI** (file: GUI)
 
+<u>Functions:</u><br>
+- **populateGUI** (file: GUI)
+- showErrorUsingWindow (file: GUI)
+- createTextureFromDrawables (file: GraphicalResources)
+- loadFontFromFile (file: GraphicalResources)
+- loadTextureFromFile (file: GraphicalResources)
+
 <u>Files:</u><br>
 - CompoundElements (divided in 4 sections: progress bar, mqb, slider and writing; each may be useful depending on your use case)
 
 -------------------‐-------------------------------------------------<br>
 **Code example**<br>
-(see GUI.hpp for full example with populateGUI)<br>
-The current implementation of main.cpp/populateGUI are another example of how to use the library.<br>
+This is the same example as in GUI.hpp. The current implementation of example.cpp/populateGUI are another example of how to use the library.<br>
 Change them in your project as you see fit.<br>
 ```
 int main()
 {
-	sf::Vector2u windowSize{ 1000, 1000 };
 	sf::ContextSettings settings{};
-	settings.antiAliasingLevel = 64; 
-	sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3", sf::State{}, settings };
-	
+	settings.antiAliasingLevel = 16; 
+	sf::RenderWindow window{ sf::VideoMode{ { 1000, 1000 } }, "Template sfml 3", sf::State{}, settings };
+	sf::View currentView{ window.getView() };
+
 	// Creates interfaces.
 	IGUI mainInterface{ &window, 1080 };
 	IGUI otherInterface{ &window, 1080 };
@@ -78,7 +96,7 @@ int main()
 				window.close();
 
 			else if (event->is<sf::Event::Resized>()) [[unlikely]]
-				BGUI::windowResized(&window, windowSize); // Resizes the window and the interfaces.
+				BGUI::windowResized(&window, currentView); // Resizes the window and the interfaces.
 
 			else if (curGUI.gInteractive != nullptr && event->is<sf::Event::MouseButtonPressed>() && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				curGUI.gInteractive->eventPressed(); // Handles button pressing (only for IGUI).
@@ -133,12 +151,37 @@ There are a few features that can seem more complex than the rest. While most of
 - Interface locking
 
 <u>Order of drawing</u>:<br>
-The order of drawing represents which elements are drawn first within an interface. In sfml, the sooner an element is drawn, the less prioritized the element is if it overlaps. The interfaces store all elements in a vector to improve cache locality, but that means that in order to maintain O(1) removal, it has to do some manipulation. Thus, the actual order can change throughout runtime. Ultimately, you can be sure of 2 things:<br>
-- texts are drawn after all sprites<br>
-- interactive sprites are drawn before non interactive ones ; and so do the texts.<br>
+The drawing order determines which interface elements appear on top when they overlap. In SFML, elements drawn later have higher visual priority. Interfaces store their elements in a vector for cache locality, but because removals must remain O(1), this vector is frequently rearranged. As a result, the exact internal order can change at runtime. <br>
+However, two rules are always guaranteed:
+- All texts are drawn **after** all sprites.
+- Interactive sprites are **drawn** before non-interactive ones (and the same applies to texts).
 
-Then the actual order within them depends on the interface type and what functions you call. BasicInterface is the simplest: the later an element is added, the later it is drawn. MutableInterface is almost identical as BasicInterface except when you remove something. There, it swaps it with the last element to remove it in O(1). That means that the previous last element (which had the highest priority) has now the same position as the element that you just removed. It makes it hard to track but it is still doable. The most complex one is InteractiveInterface. Each vector (sprite + text) is splitted into 2 parts: the interactive first, then the non-interactive. Both parts are always continuous. For example, you might have a vector with 5 elements including 3 interactives. In such a case, the vector contains the 3 interactives at indexes 0,1,2 and then the non interactive at indexes 3 and 4. Therefore and at first, it respects the mutable interface order, until an element is made interactive. When you do so, it swaps that new interactive element with the first element of the non interactive part, making the interactive part (the first part) grow by one, and the none interactive part (the second part) smaller. Thus, interactive are drawn in order they are made interactive, but not in addition order (until removal). The non-interactive order is hence also modified: the element at the beginning of the second part is swapped with the previous position of that interactive element. The difficulty increases when removals are performed. Non-interactives behaves like MutableInterfaces, but interactives on the other hand are (again) more complicated. They are still swapped with the last element but it creates a "hole" in the interactive continuity. That's because the last element of the vector, that is to say the last element of the second part, is non interactive (unless there are no non interactives). It is solved by swapping the last interactive with the non interactive that makes up this hole. Ultimately, when an interactive element is removed, the last non interactive becomes the first non interactive ; and the last interactive gets the position of the previously deleted interactive. To fully understand, see the explanation file<br>
-Locking an interface (below) can help you avoid dealing with unexpected swaps. Use another interface if you need <br>
+Beyond that, the order inside each category depends on the interface type and on the operations you perform.<br>
+
+*BasicInterface*:<br>
+The simplest behavior: elements are drawn in the order they were added. Adding something later means it will be drawn later.<br>
+<br>
+*MutableInterface*:<br>
+Same as BasicInterface, except for removals. When you remove an element, it is swapped with the last one to allow O(1) deletion. This means the former last element (the most recently added) suddenly takes the position of the removed one. Tracking the exact order becomes harder, but still manageable.<br>
+<br>
+*InteractiveInterface*:<br>
+The most complex case. Each vector (sprites and texts) is split into two continuous segments:
+- All interactive elements (first part).
+- All non-interactive elements (second part).
+
+Example: if there are 5 elements with 3 interactives, the interactive ones occupy indices 0–2, and the non-interactive ones occupy indices 3–4.<br>
+Initially, the order behaves like a MutableInterface. But things change when you toggle interactivity: when an element becomes interactive, it is swapped with the first non-interactive element.
+This grows the interactive segment and shrinks the non-interactive segment. → Interactive elements are therefore drawn in the order they **become** interactive, not in the order they were added.<br>
+Because of this swap, the non-interactive ordering also shifts: the non-interactive element that was at the start of the second segment moves to the old position of the newly-interactive element.<br>
+Removals complicate things further:
+- Removing a non-interactive element behaves like MutableInterface.
+- Removing an interactive element is different: it is swapped with the last element of the vector—which is normally non-interactive. This breaks the continuity of the interactive segment, creating a “hole”.
+
+To fix this hole, the last interactive element is swapped into it, while the swapped-out non-interactive moves to the start of the non-interactive segment. In short: When an interactive element is removed, the last non-interactive becomes the first non-interactive, and the last interactive moves into the removed element’s position.<br>
+<br>
+For a complete understanding, refer to the explanation file.<br>
+Locking an interface (see below) can help you avoid unexpected swaps. Use a different interface type if you need stricter ordering guarantees.<br>
+
 
 <u>Reserved textures</u>:<br>
 Textures within SpriteWrapper are categorized as either<br>
@@ -150,7 +193,11 @@ Reserved are textures that can be used by only one instance. They can't be remov
 Loading, unloading and accessing are made by static functions even for reserved textures.<br>
 
 <u>Main interface switching</u>:<br>
-In a software, you usually have distinct menus that you can switch to. Here, each menu can be represented by an interface, and in that context, you need to be able to switch to another interface. To do so, you should use the structure currentGUI. This structure consists mainly of 3 public pointers: gBasic, gMutable and gInteractice. currentGUI have an overloaded operator= with all three interface pointers. When you set a currentGUI, it sets its pointers to the targeted instance, except the pointers that point to a derived type. For instance, if you set currentGUI to a mutable interface, the pointers gBasic and gMutable are valid and point to the same instance, but gInteractive is set to nullptr. Note that using the operator= also clears both hovered items: its own and the one of the InteractiveInterface class. currentGUI also provides conversion functions to all interfaces types (so you can directly put a currentGUI instance as an arg). Additionally, currentGUI has an operator-> that allows you to use as if it were a pointer to a basic interface.<br>
+In a software, you usually have distinct menus that you can switch to. Here, each menu can be represented by an interface, and in that context, you need to be able to switch to another interface.<br>
+To do so, you should use the structure GUIPtr. This structure consists mainly of 3 public pointers: gBasic, gMutable and gInteractice. GUIPtr has an overloaded operator= with all three interface pointers. When you set a GUIPtr, it sets its pointers to the targeted instance, except the pointers that point to a derived type. For instance, if you set an instance to a mutable interface, the pointers gBasic and gMutable are valid and point to the same instance, but gInteractive is set to nullptr.<br>
 
-Interface locking:<br>
-Locking an interface is done by a simple call to .lockInterface(). It prevents any removal, addition for a specific interface in order to ensure that its pointers remain stable. Note that you can still modify any dynamic element because it does not move around pointers. However, you can't make an existing element interactive as it may require to swap elements under the hood, thus failing to ensure pointer stability. That stability can improve memory usage (see doc for each interface type) and performance by not calling getDynamics which have pointer redirections (see std::unordered_map::find()). Keep in mind that locking or not an interface heavily depends on your use case, so not all interfaces might benefit from it. Sometimes, it can't even be locked (but you can optimize that by using layer of interfaces). 
+<u>Interface locking:</u><br>
+Locking an interface is done by a simple call to .lockInterface(). It prevents any removal, addition for a specific interface in order to ensure that its pointers remain stable.<br>
+You can still modify any dynamic element because it does not move around pointers. However, you can't make an existing element interactive as it may require to swap elements under the hood, thus failing to ensure pointer stability. That stability can improve memory usage (see doc for each interface type) and performance by not calling getDynamics, which have pointer redirections (see std\::unordered_map\::find()).<br>
+Locking is recommended.<br>
+Keep in mind that since locking prevents additions and removals, it may not be suitable for all use cases. You can still split the interface, locking the static one and leaving the dynamic ones unlocked.<br>

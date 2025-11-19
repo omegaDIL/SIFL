@@ -246,8 +246,8 @@ private:
  * \code
  int main()
  {
-	sf::Vector2u windowSize{ 1000, 1000 };
 	sf::RenderWindow window{ sf::VideoMode{ windowSize }, "Template sfml 3" };
+	sf::View currentView{ window.getView() };
 
 	// Creates the two interfaces.
 	gui::InteractiveInterface mainInterface{ &window, 1080 };
@@ -280,7 +280,7 @@ private:
 				window.close();
 
 			else if (event->is<sf::Event::Resized>()) [[unlikely]]
-				gui::BasicInterface::windowResized(&window, windowSize); // Resizes the window and the interfaces.
+				gui::BasicInterface::windowResized(&window, currentView); // Resizes the window and the interfaces.
 
 			else if (event->is<sf::Event::MouseButtonPressed>() && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				currentInterface->eventPressed(); // Handles button pressing.

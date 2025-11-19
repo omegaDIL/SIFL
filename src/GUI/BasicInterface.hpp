@@ -246,6 +246,7 @@ public:
 	 *
 	 * \param[in,out] resizedWindow A valid pointer to the window that was resized.
 	 * \param[in,out] previousView: The previous view of the window before the resize. Updated after call.
+	 *								This view is then reapplied to the window.
 	 * \param[out] otherViews A variadic list of pointers to `sf::View` objects that should be resized
 	 *						  consistently with the window. Must include the currently applied view as well.
 	 *
@@ -278,8 +279,8 @@ public:
 		const sf::Vector2f previousSize{ previousView.getSize() };
 		const sf::Vector2f scaleFactor{ newSize.x / previousSize.x, newSize.y / previousSize.y };
 
-		previousView.setSize(static_cast<sf::Vector2f>(newSize));
-		(otherViews->setSize(static_cast<sf::Vector2f>(newSize)), ...);
+		previousView.setSize(sf::Vector2f{ previousView.getSize().x * scaleFactor.x, previousView.getSize().y * scaleFactor.y }); // Could simplify to newSize
+		(otherViews->setSize(sf::Vector2f{ otherViews->getSize().x  * scaleFactor.x, otherViews->getSize().y  * scaleFactor.y }), ...); // ... except when there are custom viewports. 
 		previousView.setCenter(sf::Vector2f{ previousView.getCenter().x * scaleFactor.x, previousView.getCenter().y * scaleFactor.y });
 		(otherViews->setCenter(sf::Vector2f{ otherViews->getCenter().x  * scaleFactor.x, otherViews->getCenter().y  * scaleFactor.y }), ...);
 

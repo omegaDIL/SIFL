@@ -19,12 +19,12 @@ You may need to change the CMakeLists.txt to properly link SFML on your platform
 
 -------------------‐-------------------------------------------------<br>
 **Set up**<br>
-First of all, this library requires CMake, SFML and C++20 or higher installed on your system. You need to have SFML's windows, graphics and system linked to your project<br>
+First of all, this library requires x64 SFML, CMake and C++20 or higher installed on your system. You need to have SFML's windows, graphics and system linked to your project<br>
 To use the library in your project, you should copy the files .hpp/.cpp available on GitHub "src/GUI/*" to your project folder. You may create a sub folder GUI if clearer<br>
 When you have done so, include the header ```#include "your_folder/GUI.hpp"``` where you want to use the library.<br>
 <br>
 The library uses the namespace ```gui```, but you can change it if you encounter naming conflicts. The same goes for aliases defined in GUI.hpp (BGUI, MGUI, IGUI).<br>
-Functions ```loadTextureFromFile``` and ```loadFontFromFile``` in file GraphicalResources.hpp have a default value corresponding to the path to go to to load resources. It is ../assets/. You can modify these values to fit your project structure<br>
+Functions ```loadTextureFromFile``` and ```loadFontFromFile``` in file GraphicalResources.hpp have a default value corresponding to the path to go to to load resources. It is ../assets/. You can modify these values to fit your project structure or copy the assets folder and put it next to the src folder<br>
 The function ```populateGUI()``` is a function where you could add all your interface elements. You SHOULD modify it to fit your project needs, or remove it to do somewhere else. You decide.<br>
 You SHOULD NOT modify anything else unless you are 100% sure<br>
 <br>
@@ -138,6 +138,7 @@ int main()
 
 -------------------‐-------------------------------------------------<br>
 **Limitations & common mistakes**<br>
+- It does not use modules to support C++20 compilers that did not implement them yet.
 - Interfaces don't support sf::Shader. (But works with SpriteWrapper)
 - The order of drawing is fixed and can't be modified nor fully controlled easily.
 - The first time you create a text using any gui type, a default font is loaded. Do it yourself if you want to load it before.

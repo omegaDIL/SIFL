@@ -22,6 +22,7 @@
 #include "CompoundElements.hpp"
 #include <string>
 #include <sstream>
+#include <cstddef>
 
 using BGUI = gui::BasicInterface; // don't hesitate to change this alias if you encounter ambiguity
 using MGUI = gui::MutableInterface; // issues. Nothing in this library use them, it is really just

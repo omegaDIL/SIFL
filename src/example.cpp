@@ -8,7 +8,7 @@ int main()
 {
 	sf::ContextSettings conSettings{};
 	conSettings.antiAliasingLevel = 16;	
-	sf::State currentState{ sf::State::Windowed() };
+	sf::State currentState{ sf::State::Windowed };
 
 	sf::RenderWindow window{ sf::VideoMode{ { 1000, 1000 } }, "Template sfml 3", sf::State::Windowed, conSettings };
 	sf::View currentView{ window.getView() };

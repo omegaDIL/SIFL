@@ -28,7 +28,7 @@ int main()
 	settingsInterface.lockInterface();
 	overlayInterface.lockInterface();
 
-	float targetAliasing = conSettings.antiAliasingLevel;
+	unsigned int targetAliasing{ conSettings.antiAliasingLevel };
 
 	while (window.isOpen()) [[likely]]
 	{
@@ -59,7 +59,7 @@ int main()
 
 		// First check if we are in the right interface, then check the identifier.
 		if (curGUI.gInteractive == &settingsInterface && curGUI.mainItem.identifier == "aliasing" && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
-			targetAliasing = gui::moveSlider(&settingsInterface, curGUI.mainItem.identifier, window.mapPixelToCoords(sf::Mouse::getPosition(window)).y, 15, [](double x) {return x * 16; }); // 99 is good value for a slider: the delta interval is exactly 0.01
+			targetAliasing = static_cast<unsigned int>(gui::moveSlider(&settingsInterface, curGUI.mainItem.identifier, window.mapPixelToCoords(sf::Mouse::getPosition(window)).y, 15, [](double x) {return x * 16; })); // 99 is good value for a slider: the delta interval is exactly 0.01
 
 		window.clear(sf::Color{ 20, 20, 20 });
 		curGUI->draw();

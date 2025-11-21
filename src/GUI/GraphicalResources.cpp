@@ -8,27 +8,6 @@ namespace gui
 /// A `sf::Transformable` wrapper.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr sf::Vector2f computeNewOrigin(sf::FloatRect bound, Alignment alignment) noexcept
-{
-	sf::Vector2f originTopLeft{ 0, 0 };
-	sf::Vector2f originBottomRight{ bound.size };
-	sf::Vector2f origin{ bound.getCenter() }; // Center origin by default.
-
-	uint8_t value = static_cast<uint8_t>(alignment);
-	if ((value >> 3) & 1)
-		origin.x = originTopLeft.x; // Left side.
-	else if ((value >> 2) & 1)
-		origin.x = originBottomRight.x; // Right side.
-
-	if ((value >> 1) & 1)
-		origin.y = originTopLeft.y; // Top side.
-	else if ((value >> 0) & 1)
-		origin.y = originBottomRight.y; // Bottom side.
-
-	return origin;
-}
-
-
 void TransformableWrapper::move(sf::Vector2f pos) noexcept
 {
 	ENSURE_VALID_PTR(m_transformable, "Pointer to sf::Transformable in TransformableWrapper is nullptr when the function move is called");
@@ -283,7 +262,7 @@ SpriteWrapper& SpriteWrapper::operator=(SpriteWrapper&& other) noexcept
 	std::swap(this->m_alignment,	   other.m_alignment);
 	std::swap(this->hide,			   other.hide);
 
-	other.m_transformable = &other.m_wrappedSprite; // The default move assignment would not handle the base pointer correclty.
+	other.m_transformable = &other.m_wrappedSprite; // The default move assignment would not handle the base pointer correctly.
 	this->m_transformable = &m_wrappedSprite;
 
 	return *this;

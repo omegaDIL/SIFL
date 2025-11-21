@@ -94,7 +94,7 @@ void BasicInterface::addSprite(std::string_view textureName, sf::Vector2f pos, s
 
 	float relativeScalingValue{ 1.f };
 	if (m_relativeScalingDefinition != 0)
-		relativeScalingValue *= std::min(m_window->getSize().x, m_window->getSize().y) / static_cast<float>(m_relativeScalingDefinition);
+		relativeScalingValue *= static_cast<float>(std::min(m_window->getSize().x, m_window->getSize().y)) / static_cast<float>(m_relativeScalingDefinition);
 
 	SpriteWrapper newSprite{ textureName, pos, scale * relativeScalingValue, rect, rot, alignment, color };
 	m_sprites.push_back(std::move(newSprite));

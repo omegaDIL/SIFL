@@ -91,11 +91,38 @@ struct GUIPtr
 	constexpr ~GUIPtr() noexcept = default;
 
 	// Assignment operator -> sets to nullptr derived pointers
-	constexpr GUIPtr& operator=(std::nullptr_t) noexcept;
-	constexpr GUIPtr& operator=(gui::BasicInterface* ptr) noexcept;
-	constexpr GUIPtr& operator=(gui::MutableInterface* ptr) noexcept;
-	constexpr GUIPtr& operator=(gui::InteractiveInterface* ptr) noexcept;
+	constexpr GUIPtr& operator=(std::nullptr_t) noexcept
+	{
+		gBasic = nullptr;
+		gMutable = nullptr;
+		gInteractive = nullptr;
 
+		return *this;
+	}
+	constexpr GUIPtr& operator=(gui::BasicInterface* ptr) noexcept
+	{
+		gBasic = ptr;
+		gMutable = nullptr;
+		gInteractive = nullptr;
+
+		return *this;
+	}
+	constexpr GUIPtr& operator=(gui::MutableInterface* ptr) noexcept
+	{
+		gBasic = ptr;
+		gMutable = ptr;
+		gInteractive = nullptr;
+
+		return *this;
+	}
+	constexpr GUIPtr& operator=(gui::InteractiveInterface* ptr) noexcept
+	{
+		gBasic = ptr;
+		gMutable = ptr;
+		gInteractive = ptr;
+
+		return *this;
+	}
 	// Conversion functions -> returns nullptr if the conversion is not possible
 	constexpr operator gui::BasicInterface*() noexcept { return gBasic;	     }
 	constexpr operator gui::MutableInterface*() noexcept { return gMutable;	 }

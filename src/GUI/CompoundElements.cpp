@@ -138,7 +138,7 @@ void addSlider(InteractiveInterface* gui, std::string identifier, sf::Vector2f p
 	if (SpriteWrapper::getTexture(sliderBackgroundTextureName) == nullptr) // If first call, create the texture (only once).
 	{
 		SpriteWrapper::createTexture(std::string{ sliderBackgroundTextureName }, loadSolidRectangle(sf::Vector2f{ size, size * size }, -outlineThickness), SpriteWrapper::Reserved::No);
-		SpriteWrapper::createTexture(std::string{ sliderCursorTextureName },     loadSolidRectangle(sf::Vector2f{ size * std::numbers::phi, size }, -outlineThickness), SpriteWrapper::Reserved::No);
+		SpriteWrapper::createTexture(std::string{ sliderCursorTextureName },     loadSolidRectangle(sf::Vector2f{ static_cast<float>(size * std::numbers::phi), size }, -outlineThickness), SpriteWrapper::Reserved::No);
 	}
 
 	const float lengthFactor{ length / 400.f };

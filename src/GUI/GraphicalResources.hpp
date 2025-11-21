@@ -100,8 +100,8 @@ private:
 
 		uint64_t hash = seed ^ (s.size() * _wyp0);
 
-		for (unsigned char c : s)
-			hash = wyHash_mix(hash ^ c, _wyp1);
+		for (auto c : s)
+			hash = wyHash_mix(hash ^ static_cast<unsigned char>(c), _wyp1);
 
 		return static_cast<size_t>(wyHash_mix(hash, static_cast<uint64_t>(s.size())));
 	}
@@ -211,7 +211,25 @@ constexpr inline Alignment operator|(Alignment lhs, Alignment rhs) noexcept
  * 
  * \see `Alignment`, `sf::Transformable::setOrigin`.
  */
-constexpr sf::Vector2f computeNewOrigin(sf::FloatRect bound, Alignment alignment) noexcept;
+constexpr sf::Vector2f computeNewOrigin(sf::FloatRect bound, Alignment alignment) noexcept
+{
+	sf::Vector2f originTopLeft{ 0, 0 };
+	sf::Vector2f originBottomRight{ bound.size };
+	sf::Vector2f origin{ bound.getCenter() }; // Center origin by default.
+
+	uint8_t value = static_cast<uint8_t>(alignment);
+	if ((value >> 3) & 1)
+		origin.x = originTopLeft.x; // Left side.
+	else if ((value >> 2) & 1)
+		origin.x = originBottomRight.x; // Right side.
+
+	if ((value >> 1) & 1)
+		origin.y = originTopLeft.y; // Top side.
+	else if ((value >> 0) & 1)
+		origin.y = originBottomRight.y; // Bottom side.
+
+	return origin;
+}
 
 
 /**
@@ -309,7 +327,7 @@ public:
 
 protected:
 	
-	constexpr inline TransformableWrapper() noexcept : hide{ true }, m_alignment{ Alignment::Center }, m_transformable{ nullptr } {}
+	constexpr inline TransformableWrapper() noexcept : hide{ true }, m_transformable{ nullptr }, m_alignment{ Alignment::Center } {}
 	
 	/**
 	 * \brief Initializes the wrapper.

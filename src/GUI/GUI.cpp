@@ -3,7 +3,7 @@
 void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstream& errorMessage, unsigned int characterSize) noexcept
 {
 	sf::RenderWindow window{ sf::VideoMode{ { 720, 720 } }, errorTitle };
-	auto view{ window.getView() };
+	sf::View view{ window.getView() };
 	gui::BasicInterface gui{ &window }; // Create the interface to use the GUI.
 
 	gui.addText(errorMessage.str(), sf::Vector2f{ 360, 260 }, characterSize);
@@ -26,42 +26,6 @@ void showErrorsUsingWindow(const std::string& errorTitle, const std::ostringstre
 		gui.draw();
 		window.display();
 	}
-}
-
-constexpr GUIPtr& GUIPtr::operator=(std::nullptr_t) noexcept
-{
-	gBasic = nullptr;
-	gMutable = nullptr;
-	gInteractive = nullptr;
-
-	return *this;
-}
-
-constexpr GUIPtr& GUIPtr::operator=(gui::BasicInterface* ptr) noexcept
-{
-	gBasic = ptr;
-	gMutable = nullptr;
-	gInteractive = nullptr;
-
-	return *this;
-}
-
-constexpr GUIPtr& GUIPtr::operator=(gui::MutableInterface* ptr) noexcept
-{
-	gBasic = ptr;
-	gMutable = ptr;
-	gInteractive = nullptr;
-
-	return *this;
-}
-
-constexpr GUIPtr& GUIPtr::operator=(gui::InteractiveInterface* ptr) noexcept
-{
-	gBasic = ptr;
-	gMutable = ptr;
-	gInteractive = ptr;
-
-	return *this;
 }
 
 void populateGUI(GUIPtr& cur, IGUI* main, IGUI* settings, MGUI* overlay, sf::RenderWindow* window, sf::ContextSettings& context, sf::View& currentView, sf::State& currentState) noexcept

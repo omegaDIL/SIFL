@@ -273,7 +273,11 @@ SpriteWrapper::~SpriteWrapper() noexcept
 	for (auto& reservedTexture : m_uniqueTextures)
 	{
 		auto mapAccessIterator{ s_accessToTextures.find(reservedTexture) };
+#ifndef NDEBUG
 		s_allUniqueTextures.erase(&*mapAccessIterator->second); // Remove the texture from the reserved map.
+#endif //NDEBUG
+		mapAccessIterator->second->actualTexture.reset(); // Free the actual texture memory.
+		mapAccessIterator->second->fileName.clear(); // as well as the path
 		s_allTextures.erase(mapAccessIterator->second); // Remove the actual texture from the list.
 		s_accessToTextures.erase(mapAccessIterator); // Remove the access toward the texture from the access map.
 	}
@@ -384,6 +388,8 @@ void SpriteWrapper::removeTexture(std::string_view name) noexcept
 	
 	assert(s_allUniqueTextures.find(&*mapIterator->second) == s_allUniqueTextures.end() && "Precondition violated: a reserved texture cannot be removed using the removeTexture function of SpriteWrapper");
 
+	mapIterator->second->actualTexture.reset(); // Free the actual texture memory.
+	mapIterator->second->fileName.clear(); // as well as the path.
 	s_allTextures.erase(mapIterator->second); // First, removing the actual texture.
 	s_accessToTextures.erase(mapIterator); // Then, the accessing item within the map.
 }

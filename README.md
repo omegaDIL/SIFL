@@ -135,6 +135,7 @@ int main()
 **Concerns**<br>
 - All features of sf\::sprite and sf\::text are still available
 - Does maintain good cache locality with both the hover detection and the drawing function.
+- All asserts are only active in debug mode to avoid performance loss in release mode. You can technically bypass all of them in release mode, but obviously that may lead to undefined behavior like crashes.
 
 -------------------‐-------------------------------------------------<br>
 **Limitations & common mistakes**<br>
@@ -190,7 +191,7 @@ Textures within SpriteWrapper are categorized as either<br>
 - Non reserved (or put simply 'shared')
 
 The differences lie in the resource lifetime and the number of sprites that use them.<br>
-Reserved are textures that can be used by only one instance. They can't be removed using the function removeTexture, but they are removed when the sprite's destructor is called. Shared textures on the other hand can be applied to any amount of sprites. They are removed by you (call the removeTexture function) and not by the destructor of the instances (even if all of them were to be deleted). One sprite can have as many textures as you want, and you can stack reserved textures with shared ones. When a reserved texture is created with createTexture, the first instance to use it becomes its owner. If you try to set a claimed reserved texture to an instance it will either crash (debug mode) or do nothing (release mode). You can technically bypass all verifications in release mode without any ub, except if you delete the owning instance. In that case, the texture will be deleted, possibly crashing your program if other instances still used it.<br>
+Reserved are textures that can be used by only one instance. They can't be removed using the function removeTexture, but they are removed when the sprite's destructor is called. Shared textures on the other hand can be applied to any amount of sprites. They are removed by you (call the removeTexture function) and not by the destructor of the instances (even if all of them were to be deleted). One sprite can have as many textures as you want, and you can stack reserved textures with shared ones. When a reserved texture is created with createTexture, the first instance to use it becomes its owner. If you try to set a claimed reserved texture to an instance it will either crash (debug mode) or do nothing (release mode). You can technically bypass all verifications in release mode without any ub, except if you delete the owning instance. In that case, the texture will be deleted, possibly crashing your program if other instances still used it. Those other instances would have acted like the texture was shared.<br>
 Loading, unloading and accessing are made by static functions even for reserved textures.<br>
 
 <u>Main interface switching</u>:<br>

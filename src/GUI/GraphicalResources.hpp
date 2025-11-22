@@ -929,7 +929,8 @@ public:
 	 * 
 	 * \pre The texture can't be reserved.
 	 * \post The removal of the texture is possible.
-	 * \warning Asserts if the texture is reserved.
+	 * \warning Asserts if the texture is reserved (in debug mode).
+	 * \warning The texture will be deleted and the owner sprite instance will have a dangling pointer (in release mode).
 	 */
 	static void removeTexture(std::string_view name) noexcept;
 

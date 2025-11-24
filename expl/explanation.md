@@ -177,7 +177,7 @@ There is a actually a scenario where this happens: if the removed interactive wa
 Edge Case: All Elements Are Interactive<br>
 If the vector contains only interactives, removing one still removes it cleanly — but the usual fixing step would cause an out-of-range swap (there is no “first non-interactive”).<br>
 So in this case, the second swap must simply be skipped.<br>	
-![no hole after reomval](figure2_4.png)<br>
+![no hole after removal](figure2_4.png)<br>
 
 ```
 void InteractiveInterface::removeDynamicSprite(std::string_view identifier) noexcept
@@ -208,3 +208,96 @@ void InteractiveInterface::removeDynamicSprite(std::string_view identifier) noex
 }
 ```
 ---------------------------------------------------------------------------------------------------<br>
+**Texture and Font Management**<br>
+Originally, wrappers for sprites and texts existed mainly to keep graphical resources alive. Over time, especially for SpriteWrapper, their responsibilities grew (details below).<br>
+But the core idea remains: resources must outlive the elements that use them.<br>
+To achieve that, all textures and fonts are stored in a static container shared by every interface and every wrapper.<br>
+If each interface owned its own copies, memory usage would explode — textures and fonts are far heavier than the GUI elements themselves.<br>
+
+Because wrappers collectively manage all resources in the application, several constraints appear:<br>
+1. No reallocation is allowed: Reallocating this container would involve moving all resources, which is **CATASTROPHICALLY INEFFICIENT**.
+2. Pointers must stay valid: GUI elements hold pointers to their resources; moving a resource would invalidate these pointers.
+3. Resource lookup must be O(1): An element must be able to retrieve its texture/font instantly.
+4. Cache locality is irrelevant here: We do not iterate over the entire resource container; we only search inside it.
+
+Choosing the Right Container:<br>
+To satisfy points 1 and 2, the best fit is std::list. It is a doubly linked list. The ISO standard guarantees that nodes never move, and no reallocation happens. Therefore, resource pointers remain stable forever.<br>
+The downside: Iterating is fine, but random access is not — only iterator movement is O(1).<br>
+
+So how do we get fast lookups?<br>
+We pair the list with an std\::unordered_map:<br>
+- The key is the resource’s identifier (string).
+- The value is an iterator pointing to the correct node in the std::list.
+
+This gives us:<br>
+- Stable storage via the list
+- O(1) lookup via the unordered map
+
+Below is the internal layout (shown with fonts here, but the same pattern applies to textures—textures simply have additional constraints):<br>
+![font management](figure3_0.png)<br>
+
+So, what’s the extra constraint for sf::Texture?<br>
+
+You may have noticed that fonts are never unloaded.<br>
+That’s intentional:<br>
+- Fonts are relatively lightweight compared to textures
+- They tend to be reused often
+- There are only a handful of them in typical applications
+
+*Assumption #3*: the memory saved by unloading fonts is not worth the cost of implementing font unloading.<br>
+This assumption works fine for fonts.<br>
+
+But it is **completely false** for textures:<br>
+- There can be many textures
+- They are often large
+- Most of them are not used simultaneously
+
+So texture management needs an additional mechanism.<br>
+
+The Texture-Specific Solution:<br>
+Instead of storing only a pointer to an sf::Texture in the static list, each entry stores:<br>
+- a pointer to the texture
+- the file path used to load it
+Both are bundled together inside a simple struct: ```TextureHolder```<br>
+
+Each wrapper or GUI element keeps a pointer to its TextureHolder.<br>
+→ This enables a key feature: If the texture was previously unloaded, the element can reload it automatically using the stored file path.<br>
+- If holder->texture is not nullptr, use it.
+- If it is nullptr, reload the texture from holder->path.
+
+In short: textures behave like dynamic, reloadable resources, whereas fonts behave like static, persistent ones.<br>
+
+But that's not it yet. If you went through the code, you might have noticed the struct ```TextureInfo```. This is because there is another important feature for sprites: having multiple textures.<br>
+Each sprite has a vector storing TextureInfo instances. Each TextureInfo contains a ptr to a TextureHolder (as we saw previously) and an sf::IntRect defining the sub-area of the texture to use.<br>
+This allows a single sprite to switch between multiple textures (or sub-textures) at runtime, simply by changing the active TextureInfo index. This is particularly useful for animations or state changes (e.g., button hover effects) without needing to load/unload textures constantly.<br>
+![texture management](figure3_1.png)<br>
+```
+void SpriteWrapper::switchToNextTexture(long long indexOffset)
+{
+	// Calculating new index.
+	const long long totalIndex{ static_cast<long long>(m_curTextureIndex) + indexOffset };
+	const size_t textureSize{ m_textures.size() };
+	m_curTextureIndex = ((totalIndex % textureSize) + textureSize) % textureSize; // Correctly handle negative indices and wrap around.
+	
+	TextureInfo& textureInfo{ m_textures[m_curTextureIndex] };
+	ENSURE_VALID_PTR(textureInfo.texture, "A textureHolder within a TextureInfo was nullptr somehow when the switchToNextTexture function was called in SpriteWrapper");
+	std::unique_ptr<sf::Texture>& newTexture{ textureInfo.texture->actualTexture }; // From texture holder
+
+	if (newTexture == nullptr) [[unlikely]]
+	{	// Not loaded yet, so we need to load it first.
+		std::ostringstream errorMessage{};
+		auto optTexture{ loadTextureFromFile(errorMessage, textureInfo.texture->fileName) };
+		
+		if (!optTexture.has_value()) [[unlikely]]
+			throw LoadingGraphicalResourceFailure{ errorMessage.str() };
+
+		newTexture = std::make_unique<sf::Texture>(std::move(optTexture.value()));
+	}	
+	
+	if (textureInfo.displayedTexturePart == sf::IntRect{}) [[unlikely]] // If rect is 0,0 then the rect should cover the whole texture.
+		textureInfo.displayedTexturePart.size = static_cast<sf::Vector2i>(newTexture->getSize());
+
+	m_wrappedSprite.setTextureRect(textureInfo.displayedTexturePart);
+	m_wrappedSprite.setTexture(*newTexture);
+}
+```

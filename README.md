@@ -1,5 +1,5 @@
 ﻿**Summary**<br>
-This project is a SFML-based library designed to easily create performant yet visually-rich graphical user interfaces.
+SIFL stands for SFML Interface Framework Layer and is a SFML-based library designed to easily create performant yet visually-rich graphical user interfaces.
 Most functions run in (amortized) O(1) time and are safe to call repeatedly, to support fallback behavoir mechanisms.
 Therefore, it is very suitable for 2D simulations, games and other apps that heavily depends on visuals but need a user-friendly API<br>
 -------------------‐-------------------------------------------------<br>

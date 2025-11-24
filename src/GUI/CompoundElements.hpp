@@ -255,7 +255,7 @@ void removeSlider(InteractiveInterface* gui, const std::string& identifier) noex
  * 
  * \see getMQBStatus, hideMQB, removeMQB.
  */
-void addMQB(InteractiveInterface* gui, const std::string& identifier, sf::Vector2f initPos, sf::Vector2f deltaPos, unsigned short numberOfBoxes, bool multipleChoices = false, bool atLeastOne = true, unsigned short defaultCheckedBox = 0) noexcept;
+void addMQB(InteractiveInterface* gui, const std::string& identifier, sf::Vector2f initPos, sf::Vector2f deltaPos, unsigned short numberOfBoxes, bool multipleChoices = false, bool atLeastOne = true, unsigned short defaultCheckedBox = 1) noexcept;
 
 /**
  * \brief get the mqb status, that is to say the indexes of all boxes checked.

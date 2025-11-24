@@ -22,7 +22,7 @@ void InteractiveInterface::removeDynamicText(std::string_view identifier) noexce
 	// interactive was swapped is now in the middle of the interactive part.
 
 	--m_nbOfButtonTexts;
-	if (index < m_texts.size()) // If this is false, it means we removed the last element and every elements are interactives, so no swap happened.
+	if (m_nbOfButtonTexts < m_texts.size()) // If this is false, it means there is only interactives in the interface - no hole to fix
 		swapElement(index, m_nbOfButtonTexts, m_texts, m_dynamicTexts, m_indexesForEachDynamicTexts); // Guaranteeing the contiguity of interactive texts. 
 
 	auto buttonIterator{ m_allButtons.find(identifier) };
@@ -49,7 +49,7 @@ void InteractiveInterface::removeDynamicSprite(std::string_view identifier) noex
 	// interactive was swapped is now in the middle of the interactive part.
 
 	--m_nbOfButtonSprites;
-	if (index < m_sprites.size()) // If this is false, it means we removed the last element and every elements are interactives, so no swap happened.
+	if (m_nbOfButtonSprites < m_sprites.size()) // If this is false, it means there is only interactives in the interface - no hole to fix
 		swapElement(index, m_nbOfButtonSprites, m_sprites, m_dynamicSprites, m_indexesForEachDynamicSprites); // Guaranteeing the contiguity of interactive sprites. 
 
 	auto buttonIterator{ m_allButtons.find(identifier) };

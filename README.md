@@ -1,6 +1,6 @@
 **License**<br>
-![License](https://img.shields.io/badge/license-CC_BY--NC_4.0-blue)<br>
-![Language](https://img.shields.io/badge/C++-20-lightgrey)<br>
+![License](https://img.shields.io/badge/license-CC_BY--NC_4.0-blue)
+![Language](https://img.shields.io/badge/C++-20-lightgrey)
 ![SFML](https://img.shields.io/badge/SFML-3.0-green)<br>
 This project is licensed under the Creative Commons Attribution–NonCommercial 4.0 International License (CC BY-NC 4.0).<br>
 
@@ -8,7 +8,6 @@ Additional Permission:<br>
 Commercial use is permitted only when this library is included as part of a larger project.<br>
 The library itself may not be sold, licensed, or distributed as a standalone commercial product.<br>
 -------------------‐-------------------------------------------------<br>
- 
  **Summary**<br>
 SIFL stands for SFML Interface Framework Layer and is a SFML-based library designed to easily create performant yet visually-rich graphical user interfaces.
 Most functions run in (amortized) O(1) time and are safe to call repeatedly, to support fallback behavoir mechanisms.

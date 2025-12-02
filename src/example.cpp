@@ -24,9 +24,6 @@ int main()
 
 	// Populates both interfaces.
 	populateGUI(curGUI, &mainInterface, &settingsInterface, &overlayInterface, &window, conSettings, currentView, currentState); // Adds all elements to both interfaces. see the code example. above
-	
-	gui::addMQB(&settingsInterface, "mqb2", { 800, 50 }, { 0, 50 }, 5);
-	settingsInterface.removeDynamicSprite("_mqb_mqb2_5");
 
 	mainInterface.lockInterface(); 
 	settingsInterface.lockInterface();

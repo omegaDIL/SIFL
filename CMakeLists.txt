@@ -1,5 +1,5 @@
 ﻿cmake_minimum_required (VERSION 3.20)
-project("SFML_3_Template" VERSION 1.0 LANGUAGES CXX)
+project("SIFL3" VERSION 1.0 LANGUAGES CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Compile dynamiquement. 

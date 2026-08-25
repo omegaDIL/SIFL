@@ -1,24 +1,28 @@
-**License**<br>
-![License](https://img.shields.io/badge/license-CC_BY--NC_4.0-blue)
-![Language](https://img.shields.io/badge/C++-20-lightgrey)
-![SFML](https://img.shields.io/badge/SFML-3.0-green)<br>
-This project is licensed under the Creative Commons Attribution–NonCommercial 4.0 International License (CC BY-NC 4.0).<br>
+# SFML INTERFACE FRAMEWORK LAYER 
 
-Additional Permission:<br>
-Commercial use is permitted only when this library is included as part of a larger project.<br>
-The library itself may not be sold, licensed, or distributed as a standalone commercial product.<br>
--------------------‐-------------------------------------------------<br>
- **Summary**<br>
+---
+## Summary
 SIFL stands for SFML Interface Framework Layer and is a SFML-based library designed to easily create performant yet visually-rich graphical user interfaces.
-Most functions run in (amortized) O(1) time and are safe to call repeatedly, to support fallback behavoir mechanisms.
+Most functions run in (amortized) O(1) time and are safe to call repeatedly, to support fallback behavior mechanisms.
 Therefore, it is very suitable for 2D simulations, games and other apps that heavily depends on visuals but need a user-friendly API<br>
--------------------‐-------------------------------------------------<br>
-**Compatibility**<br>
+
+---
+## Author & License
+This library was created by Lesaffre Ismael, under the pseudonym "[omegaDIL](https://github.com/omegaDIL)".<br>
+email: Contact me at <lesaffreismael@proton.me><br>
+repo: Find SIFL on GitHub [here](https://github.com/omegaDIL/SIFL).
+
+This project is licensed under the Boost software license, version 1.0. See the LICENSE.txt file for details.<br>
+Simply put, you can use, reproduce, display, distribute, execute, and transmit the software, and prepare derivative works of it, for commercial or non-commercial purposes, free of charge, as long as you keep the copyright notice and license text when distributing the source code.
+
+---
+## Compatibility
 Fully compatible with desktop OS (windows, macOS, linux)<br>
 While the library has not been tested on mobile or touch-enabled devices (Android/iOS), there is no inherent reason it would be incompatible. For touch input, simply call updateHovered and pressed when a touch began or moved, and unpressed when the touch ends.<br>
 You may need to change the CMakeLists.txt to properly link SFML on your platform.<br>
--------------------‐-------------------------------------------------<br>
-**Key Features**<br>
+
+---
+## Key features
 - Fine-grained control over memory management for sf\::Texture, enabling sprite animation, resolution-specific textures, and more.
 - Handle of window resizing.
 - Pre-made features such as writing over sf\::text, progress bar and more
@@ -27,27 +31,33 @@ You may need to change the CMakeLists.txt to properly link SFML on your platform
 - Button creation with custom function bindings for specific events.
 - Different interfaces available for different menu types
 
--------------------‐-------------------------------------------------<br>
-**Set up**<br>
-First of all, this library requires x64 SFML, CMake and C++20 or higher installed on your system. You need to have SFML's windows, graphics and system linked to your project<br>
-To use the library in your project, you should copy the files .hpp/.cpp available on GitHub "src/GUI/*" to your project folder. You may create a sub folder GUI if clearer<br>
-When you have done so, include the header ```#include "your_folder/GUI.hpp"``` where you want to use the library.<br>
-<br>
-The library uses the namespace ```gui```, but you can change it if you encounter naming conflicts. The same goes for aliases defined in GUI.hpp (BGUI, MGUI, IGUI).<br>
-Functions ```loadTextureFromFile``` and ```loadFontFromFile``` in file GraphicalResources.hpp have a default value corresponding to the path to go to to load resources. It is ../assets/. You can modify these values to fit your project structure or copy the assets folder and put it next to the src folder<br>
-The function ```populateGUI()``` is a function where you could add all your interface elements. You SHOULD modify it to fit your project needs, or remove it to do somewhere else. You decide.<br>
+---
+### Set up
+First of all, this library requires x64 SFML, CMake and C++20 or higher installed on your system. You need to have SFML's windows, graphics and system linked to your project
+
+To use the library in your project, you should copy the files .hpp/.cpp available on GitHub "src/GUI/*" to your project folder. You may create a sub folder GUI if clearer
+
+When you have done so, include the header ```#include "your_folder/GUI.hpp"``` where you want to use the library.
+
+The library uses the namespace ```gui```, but you can change it if you encounter naming conflicts. The same goes for aliases defined in GUI.hpp (BGUI, MGUI, IGUI).
+
+Functions ```loadTextureFromFile``` and ```loadFontFromFile``` in file GraphicalResources.hpp have a default value corresponding to the path to go to load resources. It is ../../assets/. You can modify these values to fit your project structure or copy the assets folder and put it next to the src folder<br>
+**If you are on windows, you have to change `../../assets/` to `../assets`.**
+
+The function ```populateGUI()``` is a function where you could add all your interface elements. You SHOULD modify it to fit your project needs, or remove it to do somewhere else. You decide.
+
 You SHOULD NOT modify anything else unless you are 100% sure<br>
-<br>
+
 You can use the file example.cpp as a starting point for your project (also available on GitHub "src/example.cpp").<br>
 
--------------------‐-------------------------------------------------<br>
-**Overview - How to learn**<br>
+---
+## Overview - How to learn
 Before continuing reading, make sure you are familiar with SFML basics, especially sf\::RenderWindow, sf\::Sprite, sf\::Text, sf\::Texture and sf\::Font.<br>
-<br>
+
 From now on, you should focus on understanding the components within the list below. It is an exhaustive list, sorted by type, of what you need to know (other components exist, but are used internally). They are the core building blocks to use it properly.<br>
 Once you see how they work, you should go reading the code example of, in order, BasicInterface, MutableInterface, InteractiveInterface and the GUI.hpp/GUIPtr class example. Then, you can read the code example at the following section of this readme to see how to use everything together.<br>
 There is also some code example in GraphicalResources and CompoundElements that may be useful depending on your use case.<br>
-<br>
+
 <u>Exceptions:</u><br>
 - loadingGraphicalResourceFailure (file: GraphicalResources)
 
@@ -70,8 +80,8 @@ There is also some code example in GraphicalResources and CompoundElements that 
 <u>Files:</u><br>
 - CompoundElements (divided in 4 sections: progress bar, mqb, slider and writing; each may be useful depending on your use case)
 
--------------------‐-------------------------------------------------<br>
-**Code example**<br>
+---
+## Code example
 This is the same example as in GUI.hpp. The current implementation of example.cpp/populateGUI are another example of how to use the library.<br>
 Change them in your project as you see fit.<br>
 ```
@@ -141,28 +151,29 @@ int main()
 	return 0;
 }
 ```
--------------------‐-------------------------------------------------<br>
-**Concerns**<br>
+
+---
+## Concerns
 - All features of sf\::sprite and sf\::text are still available
 - Does maintain good cache locality with both the hover detection and the drawing function.
 - All asserts are only active in debug mode to avoid performance loss in release mode. You can technically bypass all of them in release mode, but obviously that may lead to undefined behavior like crashes.
 
--------------------‐-------------------------------------------------<br>
-**Limitations & common mistakes**<br>
+---
+## Limitations & common mistakes
 - It does not use modules to support C++20 compilers that did not implement them yet.
 - Interfaces don't support sf::Shader. (But works with SpriteWrapper)
 - The order of drawing is fixed and can't be modified nor fully controlled easily.
 - The first time you create a text using any gui type, a default font is loaded. Do it yourself if you want to load it before.
 
--------------------‐-------------------------------------------------<br>
-**Advanced features**<br>
+---
+## Advanced features
 There are a few features that can seem more complex than the rest. While most of them can be "harder" to understand, they are still easy to use. Ranked from hardest to easiest:<br>
 - Order of drawing
 - Reserved textures
 - Switching between interfaces
 - Interface locking
 
-<u>Order of drawing</u>:<br>
+### Order of drawing:
 The drawing order determines which interface elements appear on top when they overlap. In SFML, elements drawn later have higher visual priority. Interfaces store their elements in a vector for cache locality, but because removals must remain O(1), this vector is frequently rearranged. As a result, the exact internal order can change at runtime. <br>
 However, two rules are always guaranteed:
 - All texts are drawn **after** all sprites.
@@ -170,46 +181,75 @@ However, two rules are always guaranteed:
 
 Beyond that, the order inside each category depends on the interface type and on the operations you perform.<br>
 
-*BasicInterface*:<br>
+<u>**BasicInterface**</u>:<br>
 The simplest behavior: elements are drawn in the order they were added. Adding something later means it will be drawn later.<br>
-<br>
-*MutableInterface*:<br>
+
+<u>**MutableInterface**</u>:<br>
 Same as BasicInterface, except for removals. When you remove an element, it is swapped with the last one to allow O(1) deletion. This means the former last element (the most recently added) suddenly takes the position of the removed one. Tracking the exact order becomes harder, but still manageable.<br>
-<br>
-*InteractiveInterface*:<br>
+
+<u>**InteractiveInterface**</u>:<br>
 The most complex case. Each vector (sprites and texts) is split into two continuous segments:
 - All interactive elements (first part).
 - All non-interactive elements (second part).
 
-Example: if there are 5 elements with 3 interactives, the interactive ones occupy indices 0–2, and the non-interactive ones occupy indices 3–4.<br>
-Initially, the order behaves like a MutableInterface. But things change when you toggle interactivity: when an element becomes interactive, it is swapped with the first non-interactive element.
-This grows the interactive segment and shrinks the non-interactive segment. → Interactive elements are therefore drawn in the order they **become** interactive, not in the order they were added.<br>
-Because of this swap, the non-interactive ordering also shifts: the non-interactive element that was at the start of the second segment moves to the old position of the newly-interactive element.<br>
+Example: if there are 5 elements with three interactives, the interactive ones occupy indices 0–2, and the non-interactive ones occupy indices 3–4.
+
+Initially, the order behaves like a MutableInterface. But things change when you toggle interactivity: when an element becomes interactive, it is swapped with the first non-interactive element. This grows the interactive segment and shrinks the non-interactive segment.<br>
+Interactive elements are therefore drawn in the order they **become** interactive, not in the order they were added.
+
+Because of this swap, the non-interactive ordering also shifts: the non-interactive element that was at the start of the second segment moves to the old position of the newly-interactive element.
+
 Removals complicate things further:
 - Removing a non-interactive element behaves like MutableInterface.
 - Removing an interactive element is different: it is swapped with the last element of the vector—which is normally non-interactive. This breaks the continuity of the interactive segment, creating a “hole”.
 
 To fix this hole, the last interactive element is swapped into it, while the swapped-out non-interactive moves to the start of the non-interactive segment. In short: When an interactive element is removed, the last non-interactive becomes the first non-interactive, and the last interactive moves into the removed element’s position.<br>
-<br>
+
 For a complete understanding, refer to the explanation file.<br>
-Locking an interface (see below) can help you avoid unexpected swaps. Use a different interface type if you need stricter ordering guarantees.<br>
+Locking an interface (see below) can help you avoid unexpected swaps. Use a different interface type if you need stricter ordering guarantees.
 
-
-<u>Reserved textures</u>:<br>
+### Reserved textures:
 Textures within SpriteWrapper are categorized as either<br>
 - Reserved
 - Non reserved (or put simply 'shared')
 
-The differences lie in the resource lifetime and the number of sprites that use them.<br>
-Reserved are textures that can be used by only one instance. They can't be removed using the function removeTexture, but they are removed when the sprite's destructor is called. Shared textures on the other hand can be applied to any amount of sprites. They are removed by you (call the removeTexture function) and not by the destructor of the instances (even if all of them were to be deleted). One sprite can have as many textures as you want, and you can stack reserved textures with shared ones. When a reserved texture is created with createTexture, the first instance to use it becomes its owner. If you try to set a claimed reserved texture to an instance it will either crash (debug mode) or do nothing (release mode). You can technically bypass all verifications in release mode without any ub, except if you delete the owning instance. In that case, the texture will be deleted, possibly crashing your program if other instances still used it. Those other instances would have acted like the texture was shared.<br>
-Loading, unloading and accessing are made by static functions even for reserved textures.<br>
+The differences lie in the resource lifetime and the number of sprites that use them.
 
-<u>Main interface switching</u>:<br>
-In a software, you usually have distinct menus that you can switch to. Here, each menu can be represented by an interface, and in that context, you need to be able to switch to another interface.<br>
-To do so, you should use the structure GUIPtr. This structure consists mainly of 3 public pointers: gBasic, gMutable and gInteractice. GUIPtr has an overloaded operator= with all three interface pointers. When you set a GUIPtr, it sets its pointers to the targeted instance, except the pointers that point to a derived type. For instance, if you set an instance to a mutable interface, the pointers gBasic and gMutable are valid and point to the same instance, but gInteractive is set to nullptr.<br>
+Reserved are textures that can be used by only one instance. They can't be removed using the function removeTexture, but they are removed when the sprite's destructor is called. Shared textures on the other hand can be applied to any amount of sprites. They are removed by you (call the removeTexture function) and not by the destructor of the instances (even if all of them were to be deleted). One sprite can have as many textures as you want, and you can stack reserved textures with shared ones. When a reserved texture is created with createTexture, the first instance to use it becomes its owner. If you try to set a claimed reserved texture to an instance it will either crash (debug mode) or do nothing (release mode). You can technically bypass all verifications in release mode without any ub, except if you delete the owning instance. In that case, the texture will be deleted, possibly crashing your program if other instances still used it. Those other instances would have acted like the texture was shared.
 
-<u>Interface locking:</u><br>
-Locking an interface is done by a simple call to .lockInterface(). It prevents any removal, addition for a specific interface in order to ensure that its pointers remain stable.<br>
-You can still modify any dynamic element because it does not move around pointers. However, you can't make an existing element interactive as it may require to swap elements under the hood, thus failing to ensure pointer stability. That stability can improve memory usage (see doc for each interface type) and performance by not calling getDynamics, which have pointer redirections (see std\::unordered_map\::find()).<br>
-Locking is recommended.<br>
-Keep in mind that since locking prevents additions and removals, it may not be suitable for all use cases. You can still split the interface, locking the static one and leaving the dynamic ones unlocked.<br>
+Loading, unloading and accessing are made by static functions even for reserved textures.
+
+### Main interface switching:
+In a software, you usually have distinct menus that you can switch to. Here, each menu can be represented by an interface, and in that context, you need to be able to switch to another interface.
+
+To do so, you should use the structure GUIPtr. This structure consists mainly of 3 public pointers: gBasic, gMutable and gInteractive. GUIPtr has an overloaded operator= with all three interface pointers. When you set a GUIPtr, it sets its pointers to the targeted instance, except the pointers that point to a derived type. For instance, if you set an instance to a mutable interface, the pointers gBasic and gMutable are valid and point to the same instance, but gInteractive is set to nullptr.<br>
+
+### Interface locking:
+Locking an interface is done by a simple call to .lockInterface(). It prevents any removal, addition for a specific interface in order to ensure that its pointers remain stable.
+
+You can still modify any dynamic element because it does not move around pointers. However, you can't make an existing element interactive as it may require to swap elements under the hood, thus failing to ensure pointer stability. That stability can improve memory usage (see doc for each interface type) and performance by not calling getDynamics, which have pointer redirections (see std\::unordered_map\::find()).
+
+Locking is recommended. Keep in mind that since locking prevents additions and removals, it may not be suitable for all use cases. You can still split the interface, locking the static one and leaving the dynamic ones unlocked.<br>
+
+--- 
+## Maintenance policy
+The library is maintained by Lesaffre Ismael.
+
+This project will be maintained as long as it is useful to the author. While it is realistically impossible to say that this library will be maintained forever, SIFL is guaranteed to be maintained at least until September 2029 for now. It will likely extend beyond this point.<br>
+If the project stop being maintained, it will be clearly stated in the README.md file of the latest release.
+
+This project will have updates other than bug fixes to add new features or improve existing ones, at least until September 2029. After that, it will depend on the author's availability and interest. The README.md file will be adjusted accordingly to reflect whether new features will be added to the project.<br>
+Until September 2029, the goal is to have at least one important update per year.
+
+ABI stability is NOT guaranteed.
+
+### Here are potential future updates
+- explaining LLM usage during development
+- using modules instead of headers
+- adding proper testing and benchmarking
+- simplifying some parts of the library like the files GraphicalResources.
+- adding a feature to group elements to offer similar performance than interactive in regard to cache locality
+- new CMakeLists to make the installation of the library easier.
+- fixing all warnings with clang-tidy
+- adding the boost license at the top of every files
+- using [this wyhash](https://github.com/tommyettinger/waterhash/tree/master) instead to eliminate the hash that was generated (derived from the actual wyhash) by an llm

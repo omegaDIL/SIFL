@@ -153,7 +153,7 @@ struct TransparentEqual
 /**
  * \brief Enum representing the alignment of a `sf::Transformable` object.
  * 
- * The alignment is defined separately for each axis—horizontal (x-axis) and vertical (y-axis)—with
+ * The alignment is defined separately for each axisï¿½horizontal (x-axis) and vertical (y-axis)ï¿½with
  * three possible positions for each: Top/Left/Center, and Bottom/Right/Center. The alignment encoding
  * uses two bits per axis: the lower two bits for the y-axis, and the next two bits for the x-axis
  * The default value `Center` is encoded as `0b0000`, meaning both axes are centered (both bit pairs are 0).
@@ -190,7 +190,7 @@ enum class Alignment : uint8_t
  */
 constexpr inline Alignment operator|(Alignment lhs, Alignment rhs) noexcept
 {
-	int8_t newAlignment{ static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs) };
+	std::int8_t newAlignment{ static_cast<std::int8_t>(static_cast<int8_t>(lhs) | static_cast<int8_t>(rhs))};
 
 	// Checking if alignment are not compatible.
 	if (((newAlignment & 0b00000011) == 0b00000011)
@@ -239,7 +239,7 @@ constexpr sf::Vector2f computeNewOrigin(sf::FloatRect bound, Alignment alignment
  * It redefines the basic transformation functions such as `move`, `scale`, `rotate`, `setPosition`, etc.,
  * with the notable exception of `setOrigin`, which is replaced by a pure virtual `setAlignment` method.
  * This method is intended to serve as a replacement for `setOrigin`, incorporating alignment logic.
- * Additionally, the class maintains a boolean flag indicating whether the transformable should be drawn—
+ * Additionally, the class maintains a boolean flag indicating whether the transformable should be drawnï¿½
  * useful when combined with `sf::Drawable`.
  *
  * \note This is a pure virtual class. The pure virtual methods are `setAlignment` and `setColor`.
@@ -514,7 +514,7 @@ public:
 	 *
 	 * This function loads a font from the specified file and stores it under the provided alias.
 	 * Fonts are stored in a shared internal list to prevent reallocation and duplication.
-	 * If a font with the same name already exists, the function does nothing—allowing safe repeated calls.
+	 * If a font with the same name already exists, the function does nothingï¿½allowing safe repeated calls.
 	 *
 	 * \param[in] name The alias under which the font will be stored.
 	 * \param[in] fileName The path to the font file within the assets folder.
@@ -535,7 +535,7 @@ public:
 	 *
 	 * This function loads a font from the specified file and stores it under the provided alias.
 	 * Fonts are stored in a shared internal list to prevent reallocation and duplication.
-	 * If a font with the same name already exists, the function does nothing—allowing safe repeated calls.
+	 * If a font with the same name already exists, the function does nothingï¿½allowing safe repeated calls.
 	 *
 	 * \param[in] name The alias under which the font will be stored.
 	 * \param[in] fileName The path to the font file within the assets folder.
@@ -550,7 +550,7 @@ public:
 	 * \brief Removes the font from the wrapper with the given name.
 	 * \complexity Amortized O(1).
 	 *
-	 * If no font with exist under that name, the function does nothing—allowing safe repeated calls.
+	 * If no font with exist under that name, the function does nothingï¿½allowing safe repeated calls.
 	 *
 	 * \param[in] name The alias under which the font was stored.
 	 *
@@ -606,7 +606,7 @@ private:
  * 
  * \see `TextWrapper`, `sf::Font::openFromFile`.
  */
-[[nodiscard]] std::optional<sf::Font> loadFontFromFile(std::ostringstream& errorMessage, std::string_view fileName, std::string_view path = "../assets/") noexcept;
+[[nodiscard]] std::optional<sf::Font> loadFontFromFile(std::ostringstream& errorMessage, std::string_view fileName, std::string_view path = "../../assets/") noexcept;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// A `sf::Text` wrapper.
@@ -726,7 +726,7 @@ public:
 	 * \brief Switches the currently displayed texture of the sprite to another one in the texture vector.
 	 * \complexity O(1).
 	 * 
-	 * This function updates the sprite’s currently active texture and sub-rectangle by applying the given
+	 * This function updates the spriteï¿½s currently active texture and sub-rectangle by applying the given
 	 * `offset` to the current texture index. The texture vector is treated as circular: the resulting index
 	 * wraps around using modulo if it goes out of bounds.
 	 * 
@@ -807,7 +807,7 @@ public:
 	 *		 useful when texture loading may have failed earlier, and fallback attempts are expected behavior.
 	 *
 	 * \pre For reserved textures, they must not be claimed by another instance.
-	 * \post The texture(s) will be appended to this instance’s texture vector.
+	 * \post The texture(s) will be appended to this instanceï¿½s texture vector.
 	 * \warning The program asserts if the texture is reserved, claimed, but not by this instance.
 	 *
 	 * \see `createTexture`, `loadTexture`, `unloadTexture`, `switchToNextTexture`
@@ -870,7 +870,7 @@ public:
 	 * 
 	 * This function loads a texture from the specified file and stores it under the provided alias.
 	 * Textures are stored in a shared internal list to prevent reallocation and duplication.
-	 * If a texture with the same name already exists, the function does nothing—allowing safe repeated 
+	 * If a texture with the same name already exists, the function does nothingï¿½allowing safe repeated 
 	 * calls.
 	 *
 	 * \param[in] name The alias under which the texture will be stored.
@@ -897,7 +897,7 @@ public:
 	 *
 	 * This function loads a texture from the specified file and stores it under the provided alias.
 	 * Textures are stored in a shared internal list to prevent reallocation and duplication.
-	 * If a texture with the same name already exists, the function does nothing—allowing safe repeated
+	 * If a texture with the same name already exists, the function does nothingï¿½allowing safe repeated
 	 * calls.
 	 *
 	 * \param[in] name The alias under which the texture will be stored.
@@ -916,7 +916,7 @@ public:
 	 * \brief Removes a shared texture from the wrapper with the given name. 
 	 * \complexity Amortized O(1).
 	 *
-	 * If no texture with exist under that name, the function does nothing—allowing safe repeated calls.
+	 * If no texture with exist under that name, the function does nothingï¿½allowing safe repeated calls.
 	 *
 	 * \param[in] name The alias under which the texture was stored.
 	 *
@@ -1132,7 +1132,7 @@ private:
  * 
  * \see `SpriteWrapper`, `sf::Sprite::loadFromFile`.
  */
-[[nodiscard]] std::optional<sf::Texture> loadTextureFromFile(std::ostringstream& errorMessage, std::string_view fileName, std::string_view path = "../assets/") noexcept;
+[[nodiscard]] std::optional<sf::Texture> loadTextureFromFile(std::ostringstream& errorMessage, std::string_view fileName, std::string_view path = "../../assets/") noexcept;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// A `sf::Sprite` wrapper.

@@ -16,7 +16,7 @@
 #ifndef COMPOUNDELEMENTS_HPP
 #define COMPOUNDELEMENTS_HPP
 
-#include "Interactiveinterface.hpp"
+#include "InteractiveInterface.hpp"
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <functional>

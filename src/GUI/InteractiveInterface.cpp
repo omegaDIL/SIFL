@@ -80,7 +80,7 @@ void InteractiveInterface::addInteractive(std::string identifier, ButtonFunction
 	if (doesSpriteExist && spriteIterator->second >= m_nbOfButtonSprites)
 		swapElement(spriteIterator->second, m_nbOfButtonSprites++, m_sprites, m_dynamicSprites, m_indexesForEachDynamicSprites);
 	
-	short elemsThatUseFunction{ static_cast<short>(doesSpriteExist) + static_cast<short>(doesTextExist) };
+	int elemsThatUseFunction{ static_cast<int>(doesSpriteExist) + static_cast<int>(doesTextExist) };
 	m_allButtons.insert_or_assign(std::move(identifier), std::make_pair(std::move(function), elemsThatUseFunction));
 }
 

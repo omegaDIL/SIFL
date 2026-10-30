@@ -62,10 +62,12 @@ jobs:
             libxcursor-dev \
             libxi-dev \
             libudev-dev \
-            libgl1-mesa-dev \
-            libopenal-dev \
             libfreetype-dev \
-            libharfbuzz-dev
+            libflac-dev \
+            libvorbis-dev \
+            libgl1-mesa-dev \
+            libegl1-mesa-dev \
+            libfreetype-dev
 
       - name: Set up GCC on Linux
         if: matrix.os == 'ubuntu-latest' #matrix.compiler == 'gcc' # GCC is installed even if the compiler is clang because clang needs libstdc++ in this project

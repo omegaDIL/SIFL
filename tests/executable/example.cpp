@@ -1,13 +1,13 @@
 ﻿#include <SFML/Graphics.hpp> 
 #include <string>
 #include <optional>
-#include "GUI/GUI.hpp"
+#include "../../src/SIFL/GUI.hpp"
 
 // The current impl is an example
 int main()
 {
 	sf::ContextSettings conSettings{};
-	conSettings.antiAliasingLevel = 16;	
+	conSettings.antiAliasingLevel = 8;
 	sf::State currentState{ sf::State::Windowed };
 
 	sf::RenderWindow window{ sf::VideoMode{ { 1000, 1000 } }, "Template sfml 3", sf::State::Windowed, conSettings };

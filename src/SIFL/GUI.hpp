@@ -180,7 +180,7 @@ void populateGUI(GUIPtr& cur, IGUI* main, IGUI* settings, MGUI* overlay, sf::Ren
  int main()
  {
 	sf::ContextSettings settings{};
-	settings.antiAliasingLevel = 16; 
+	settings.antiAliasingLevel = 8;
 	sf::RenderWindow window{ sf::VideoMode{ { 1000, 1000 } }, "Template sfml 3", sf::State{}, settings };
 	sf::View currentView{ window.getView() };
 

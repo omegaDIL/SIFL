@@ -1,5 +1,5 @@
 # SFML INTERFACE FRAMEWORK LAYER
-SIFL 1.0.1
+Thanks for checking out SILF 1.0.2!<br>
 
 ---
 ## Summary
@@ -34,7 +34,7 @@ You may need to change the CMakeLists.txt to properly link SFML on your platform
 
 ---
 ### Set up
-First of all, this library requires x64 SFML, CMake and C++20 or higher installed on your system. You need to have SFML's windows, graphics and system linked to your project
+First of all, this library requires x64 SFML and C++20 or higher installed on your system.
 
 To use the library in your project, you should copy the files .hpp/.cpp available on GitHub "src/GUI/*" to your project folder. You may create a sub folder GUI if clearer
 
@@ -253,4 +253,5 @@ ABI stability is NOT guaranteed.
 - new CMakeLists to make the installation of the library easier.
 - fixing all warnings with clang-tidy
 - adding the boost license at the top of every files
+- removing populateGUI, and more generally rework on the GUI.?pp file.
 - using [this wyhash](https://github.com/tommyettinger/waterhash/tree/master) instead to eliminate the hash that was generated (derived from the actual wyhash) by an llm

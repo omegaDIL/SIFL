@@ -131,6 +131,12 @@ target_sources(${PROJECT_NAME}
             ${SOURCE_IMPLEMENTATIONS}
 )
 
+# This is used to load the font.
+target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+        SIFL_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
+)
+
 # ---------------------------------------------------------------------------------------------------------------------
 # The library target
 # ---------------------------------------------------------------------------------------------------------------------

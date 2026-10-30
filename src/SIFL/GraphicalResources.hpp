@@ -42,6 +42,12 @@
 #define ENSURE_NOT_OUT_OF_RANGE(index, size, errorMessage)
 #endif
 
+#ifndef SIFL_ASSET_DIR
+// This macro is defined by cmake. If not, this is a fallback
+// Please note that this fallback works on macOS and GNU/Linux only, not windows.
+#define SIFL_ASSET_DIR "../../assets/"
+#endif
+
 namespace gui
 {
 
@@ -606,7 +612,7 @@ private:
  * 
  * \see `TextWrapper`, `sf::Font::openFromFile`.
  */
-[[nodiscard]] std::optional<sf::Font> loadFontFromFile(std::ostringstream& errorMessage, std::string_view fileName, std::string_view path = "../../assets/") noexcept;
+[[nodiscard]] std::optional<sf::Font> loadFontFromFile(std::ostringstream& errorMessage, std::string_view fileName, std::string_view path = SIFL_ASSET_DIR) noexcept;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// A `sf::Text` wrapper.
@@ -1132,7 +1138,7 @@ private:
  * 
  * \see `SpriteWrapper`, `sf::Sprite::loadFromFile`.
  */
-[[nodiscard]] std::optional<sf::Texture> loadTextureFromFile(std::ostringstream& errorMessage, std::string_view fileName, std::string_view path = "../../assets/") noexcept;
+[[nodiscard]] std::optional<sf::Texture> loadTextureFromFile(std::ostringstream& errorMessage, std::string_view fileName, std::string_view path = SIFL_ASSET_DIR) noexcept;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// A `sf::Sprite` wrapper.

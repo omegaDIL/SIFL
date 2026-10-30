@@ -36,20 +36,52 @@ You may need to change the CMakeLists.txt to properly link SFML on your platform
 ### Set up
 First of all, this library requires x64 SFML and C++20 or higher installed on your system.
 
-To use the library in your project, you should copy the files .hpp/.cpp available on GitHub "src/GUI/*" to your project folder. You may create a sub folder GUI if clearer
+You have then two options to install the library:
+1. Copy and paste the content of the src/SIFL folder in your own project.
+2. Use fetch content with CMake (recommended).
 
-When you have done so, include the header ```#include "your_folder/GUI.hpp"``` where you want to use the library.
+If you choose the first option, you will have to set up everything yourself, including sfml. You will also need to adapt your include directives to point to your proper local location where you have installed SIFL. 
 
-The library uses the namespace ```gui```, but you can change it if you encounter naming conflicts. The same goes for aliases defined in GUI.hpp (BGUI, MGUI, IGUI).
+If you choose the second option (recommended), you will have to edit your CMakeLists a little bit. Below is how you do it.
+```cmake
+# First, C++20 or higher must be set.
+set(CMAKE_CXX_STANDARD 23) 
 
-Functions ```loadTextureFromFile``` and ```loadFontFromFile``` in file GraphicalResources.hpp have a default value corresponding to the path to go to load resources. It is ../../assets/. You can modify these values to fit your project structure or copy the assets folder and put it next to the src folder<br>
-**If you are on windows, you have to change `../../assets/` to `../assets`.**
+# ...
 
-The function ```populateGUI()``` is a function where you could add all your interface elements. You SHOULD modify it to fit your project needs, or remove it to do somewhere else. You decide.
+include(FetchContent) # Not needed if you already do it.
+
+# The actual library
+FetchContent_Declare(
+    SIFL
+    GIT_REPOSITORY https://github.com/omegaDIL/SIFL.git
+    GIT_TAG        v1.0.2
+)
+FetchContent_MakeAvailable(SIFL)
+
+# ...
+
+# add_executable(YourProject main.cpp) # This is your executable/library. 
+target_link_libraries(YourProject PRIVATE SIFL::SIFL) # After "add_executable/library". "YourProject" should be replaced by the actual name of your project.
+
+# ...
+```
+
+
+Functions ```loadTextureFromFile``` and ```loadFontFromFile``` in file GraphicalResources.hpp have a default value corresponding to the path to go to load resources. It is the folder assets of the SIFL library by default, which has a preinstalled font. You may change the folder yourself if you want another place to load your textures from.<br>
+However, when using texts, the library will try to load `defaultFont.ttf` by default. Be sure to have a font named like that if you decided to change the folder.
+
+Note that the file `"src/SIFL/GUI.hpp"` includes the whole library.
+
+The library is implemented in the namespace `gui`.
+
+The library uses `using` directives to shorten the name of the gui classes (BGUI, MGUI, IGUI). It is not used anywhere in the library, so you can rename them if you encounter naming conflict. They are not defined inb the `gui` namespace.
+
+The function `populateGUI()` (defined in `GUI.cpp`) is where you could add all your interface elements. You may modify it to fit your project needs, or remove it to do that somewhere else. You decide.
 
 You SHOULD NOT modify anything else unless you are 100% sure<br>
 
-You can use the file example.cpp as a starting point for your project (also available on GitHub "src/example.cpp").<br>
+You can use the file example.cpp as a starting point for your project ("tests/executable/example.cpp").<br>
 
 ---
 ## Overview - How to learn
@@ -242,16 +274,15 @@ If the project stop being maintained, it will be clearly stated in the README.md
 This project will have updates other than bug fixes to add new features or improve existing ones, at least until September 2029. After that, it will depend on the author's availability and interest. The README.md file will be adjusted accordingly to reflect whether new features will be added to the project.<br>
 Until September 2029, the goal is to have at least one important update per year.
 
-ABI stability is NOT guaranteed.
-
 ### Here are potential future updates
 - explaining LLM usage during development
 - using modules instead of headers
 - adding proper testing and benchmarking
 - simplifying some parts of the library like the files GraphicalResources.
 - adding a feature to group elements to offer similar performance than interactive in regard to cache locality
-- new CMakeLists to make the installation of the library easier.
 - fixing all warnings with clang-tidy
+- allow the user to change the default font name and path more easily
+- allow the user to change the assets folder more easily.
 - adding the boost license at the top of every files
 - removing populateGUI, and more generally rework on the GUI.?pp file.
 - using [this wyhash](https://github.com/tommyettinger/waterhash/tree/master) instead to eliminate the hash that was generated (derived from the actual wyhash) by an llm

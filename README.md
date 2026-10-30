@@ -40,12 +40,12 @@ You have then two options to install the library:
 1. Copy and paste the content of the src/SIFL folder in your own project.
 2. Use fetch content with CMake (recommended).
 
-If you choose the first option, you will have to set up everything yourself, including sfml. You will also need to adapt your include directives to point to your proper local location where you have installed SIFL. 
+If you choose the first option, you will have to set up everything yourself, including sfml. You will also need to adapt your include directives to point to your own local directory where you have installed SIFL. 
 
 If you choose the second option (recommended), you will have to edit your CMakeLists a little bit. Below is how you do it.
 ```cmake
 # First, C++20 or higher must be set.
-set(CMAKE_CXX_STANDARD 23) 
+set(CMAKE_CXX_STANDARD 20) 
 
 # ...
 
@@ -66,12 +66,10 @@ target_link_libraries(YourProject PRIVATE SIFL::SIFL) # After "add_executable/li
 
 # ...
 ```
-
+If you chose the second option, your `#include` directives should contain the name of the folder `SIFL\` followed by the specific file such as `#include <SIFL/GUI.hpp>` or `#include <SIFL\BasicInterface.hpp>`. Note that the GUI.hpp file contains includes the whole library.
 
 Functions ```loadTextureFromFile``` and ```loadFontFromFile``` in file GraphicalResources.hpp have a default value corresponding to the path to go to load resources. It is the folder assets of the SIFL library by default, which has a preinstalled font. You may change the folder yourself if you want another place to load your textures from.<br>
 However, when using texts, the library will try to load `defaultFont.ttf` by default. Be sure to have a font named like that if you decided to change the folder.
-
-Note that the file `"src/SIFL/GUI.hpp"` includes the whole library.
 
 The library is implemented in the namespace `gui`.
 

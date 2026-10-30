@@ -52,6 +52,19 @@ jobs:
       # Linux.
       # ---------------------------------------------------------------------------------------------------------------
 
+      - name: Set up SFML dependencies
+        if: matrix.os == 'macos-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libx11-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxi-dev \
+            libudev-dev \
+            libgl1-mesa-dev \
+            libopenal-dev
+
       - name: Set up GCC on Linux
         if: matrix.os == 'ubuntu-latest' #matrix.compiler == 'gcc' # GCC is installed even if the compiler is clang because clang needs libstdc++ in this project
         run: |

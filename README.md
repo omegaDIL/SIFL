@@ -66,7 +66,24 @@ target_link_libraries(YourProject PRIVATE SIFL::SIFL) # After "add_executable/li
 
 # ...
 ```
-If you chose the second option, your `#include` directives should contain the name of the folder `SIFL\` followed by the specific file such as `#include <SIFL/GUI.hpp>` or `#include <SIFL\BasicInterface.hpp>`. Note that the GUI.hpp file contains includes the whole library.
+However, you may encounter this error (usually on Linux). This happens because SFML tries to find its dependencies for its network components.
+```
+CMake Error at /usr/share/cmake-4.4/Modules/FindPackageHandleStandardArgs.cmake:XXX (message):
+  Could NOT find MbedTLS (missing: MBEDTLS_INCLUDE_DIR MBEDTLS_LIBRARY
+  MBEDX509_LIBRARY MBEDCRYPTO_LIBRARY)
+```
+You have two possibilities: either install MbedTLS if you need the network capability of SFML, or add the following line in the |`CMakeLists.txt` file
+
+```
+FetchContent_Declare(
+        SIFL
+		# blabla
+) # The declare instruction is here
+set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE) # This must be placed "FetchContent_MakeAvailable(SIFL)"
+FetchContent_MakeAvailable(SIFL)
+```
+
+If you chose that option with FetchContent, your `#include` directives should contain the name of the folder `SIFL\` followed by the specific file such as `#include <SIFL/GUI.hpp>` or `#include <SIFL\BasicInterface.hpp>`. Note that the GUI.hpp file contains includes the whole library.
 
 Functions ```loadTextureFromFile``` and ```loadFontFromFile``` in file GraphicalResources.hpp have a default value corresponding to the path to go to load resources. It is the folder assets of the SIFL library by default, which has a preinstalled font. You may change the folder yourself if you want another place to load your textures from.<br>
 However, when using texts, the library will try to load `defaultFont.ttf` by default. Be sure to have a font named like that if you decided to change the folder.
